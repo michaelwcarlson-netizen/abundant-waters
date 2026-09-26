@@ -1,0 +1,970 @@
+<title>Storm Tarp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@500;700&display=swap">
+<style>
+  /* Same world as the other prototypes: camp, with weather coming. Single theme by design. */
+  :root {
+    --ink: #1C2A2E;
+    --paper: #F1EBDD;
+    --paper-2: #E2D8C2;
+    --line: #C9BC9F;
+    --pine: #223D2C;
+    --canoe: #C0452B;
+    --green: #3E7D52;
+    --amber: #C9851F;
+    --muted: #5B6662;
+    --bar: rgba(22, 34, 36, 0.8);
+    --display: "Zilla Slab", "Rockwell", "Roboto Slab", Georgia, serif;
+    --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html { height: 100%; box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { height: 100%; margin: 0; overflow: hidden; background: var(--pine); color: var(--paper); font: 15px/1.45 var(--body); }
+  #app { position: relative; height: 100%; overflow: hidden; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+  .bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    background: var(--bar);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 2;
+  }
+  .brand { display: flex; flex-direction: column; line-height: 1.1; }
+  .brand b { font: 700 19px/1.1 var(--display); letter-spacing: 0.01em; white-space: nowrap; }
+  .brand span { font-size: 12px; color: var(--line); letter-spacing: 0.06em; text-transform: uppercase; }
+  .mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .prog { position: relative; height: 8px; border-radius: 4px; background: rgba(241, 235, 221, 0.18); overflow: hidden; }
+  #progFill { position: absolute; inset: 0 auto 0 0; width: 0; background: #7E93A6; border-radius: 4px; }
+  .stats { font-size: 13px; color: var(--paper-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .btn {
+    font: 700 14px var(--body);
+    color: var(--ink); background: var(--paper);
+    border: 0; border-radius: 8px;
+    padding: 8px 14px; cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn.ghost { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 1.5px rgba(241, 235, 221, 0.5); }
+  .btn.primary { background: var(--canoe); color: #FFF7EE; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn:focus-visible, input:focus-visible, .knot:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  .tools {
+    position: absolute; left: 0; right: 0; bottom: 12px;
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    padding-inline: 16px; z-index: 2;
+  }
+  .tools .btn { min-height: 44px; border-radius: 22px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+
+  .picker {
+    position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%);
+    width: min(440px, calc(100% - 32px));
+    padding: 14px; border-radius: 12px;
+    background: var(--paper); color: var(--ink);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    display: flex; flex-direction: column; gap: 8px; z-index: 3;
+  }
+  .picker p { margin: 0; font: 700 16px var(--display); }
+  .knots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .knot {
+    display: flex; flex-direction: column; gap: 3px; text-align: left;
+    font: 700 13px/1.2 var(--body); color: var(--ink);
+    background: #FBF7EE; border: 1.5px solid var(--line); border-radius: 8px;
+    padding: 9px 9px; cursor: pointer; min-height: 44px;
+  }
+  .knot span { font-weight: 400; font-size: 12px; color: var(--muted); }
+
+  .hint {
+    position: absolute; left: 50%; top: 74px;
+    transform: translate(-50%, -6px);
+    width: max-content; max-width: min(520px, calc(100% - 32px));
+    padding: 10px 14px;
+    background: var(--paper); color: var(--ink);
+    border-radius: 10px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    font-size: 15px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s, transform 0.35s; z-index: 3;
+  }
+  .hint.on { opacity: 1; transform: translate(-50%, 0); }
+
+  .toast { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); pointer-events: none; z-index: 5; }
+  .stamp {
+    --ink-c: var(--green);
+    width: 128px; height: 128px; border-radius: 50%;
+    display: grid; place-content: center; gap: 2px; text-align: center;
+    color: var(--ink-c); background: rgba(241, 235, 221, 0.96);
+    border: 3px double var(--ink-c);
+    box-shadow: inset 0 0 0 6px rgba(241, 235, 221, 0.96), inset 0 0 0 7.5px var(--ink-c);
+    transform: rotate(-8deg); padding: 16px;
+  }
+  .stamp small { font: 700 9px var(--body); letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; }
+  .stamp b { font: 700 15px/1.1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; text-wrap: balance; }
+  .toast .stamp { animation: thunk 0.45s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @keyframes thunk { from { transform: rotate(-14deg) scale(1.7); opacity: 0; } to { transform: rotate(-8deg) scale(1); opacity: 1; } }
+
+  .tune {
+    position: absolute; right: 16px; top: 68px;
+    width: min(300px, calc(100% - 32px)); max-height: calc(100% - 150px); overflow: auto;
+    padding: 16px; background: var(--paper); color: var(--ink);
+    border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex; flex-direction: column; gap: 10px; z-index: 6;
+  }
+  .tune h3 { margin: 0; font: 700 17px var(--display); }
+  .tune label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; }
+  .tune output { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tune input { width: 100%; accent-color: var(--canoe); margin: 0; }
+  .tune .field { display: flex; flex-direction: column; gap: 2px; }
+  .tune .note { margin: 0; font-size: 12px; color: var(--muted); }
+  .tune .btn { align-self: flex-start; background: var(--paper-2); }
+
+  .end { position: absolute; inset: 0; display: grid; place-items: center; padding-inline: 16px; background: rgba(18, 28, 30, 0.55); z-index: 7; }
+  .card {
+    width: min(470px, 100%); max-height: calc(100% - 32px); overflow: auto;
+    padding: 22px; background: var(--paper); color: var(--ink);
+    border-radius: 6px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    display: flex; flex-direction: column; gap: 14px;
+    background-image: repeating-linear-gradient(0deg, transparent 0 27px, rgba(201, 188, 159, 0.35) 27px 28px);
+  }
+  .eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .card h2 { margin: -8px 0 0; font: 700 26px/1.1 var(--display); text-wrap: balance; }
+  .card p { margin: 0; }
+  .stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; justify-items: center; }
+  .stamps .stamp { width: 100%; max-width: 116px; height: auto; aspect-ratio: 1; padding: 10px; }
+  .stamps .stamp b { font-size: 12px; }
+  .stamps .stamp:nth-child(2n) { transform: rotate(6deg); }
+  .stamps .stamp.missing { color: var(--line); border: 2px dashed var(--line); box-shadow: none; background: transparent; transform: none; }
+  dl.stats-list { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-variant-numeric: tabular-nums; }
+  dl.stats-list dt { color: var(--muted); }
+  dl.stats-list dd { margin: 0; font-weight: 700; text-align: right; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  @media (max-width: 460px) {
+    .brand { display: none; }
+    .knots { grid-template-columns: 1fr; gap: 6px; }
+    .knot { flex-direction: row; align-items: baseline; gap: 8px; padding-block: 7px; }
+  }
+  @media (max-width: 560px) { .brand span { display: none; } .bar { gap: 10px; padding-inline: 12px; } }
+  @media (prefers-reduced-motion: reduce) { .toast .stamp { animation: none; } .hint { transition: none; } }
+</style>
+
+<div id="app">
+  <canvas id="c" aria-label="Looking along a tarp ridgeline at camp as a storm approaches from the left. Drag the ridgeline and tarp edges to pitch the tarp." role="img"></canvas>
+
+  <header class="bar">
+    <div class="brand"><b>Storm day</b><span>Tarp practice</span></div>
+    <div class="mid">
+      <div class="prog" aria-hidden="true"><div id="progFill"></div></div>
+      <div class="stats" id="stats">Storm coming</div>
+    </div>
+    <button class="btn ghost" id="tuneBtn" aria-expanded="false" aria-controls="tune">Tune</button>
+  </header>
+
+  <div class="hint" id="hint" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <div class="picker" id="picker" hidden role="dialog" aria-labelledby="pickerTitle">
+    <p id="pickerTitle">Tie it off with:</p>
+    <div class="knots">
+      <button class="knot" data-k="taut">Taut-line hitch <span>Slides to tighten, grips when pulled</span></button>
+      <button class="knot" data-k="bowline">Bowline <span>A fixed loop, easy to untie</span></button>
+      <button class="knot" data-k="granny">Granny knot <span>Two overhand knots, quick</span></button>
+    </div>
+  </div>
+
+  <div class="tools">
+    <button class="btn primary" id="readyBtn" disabled>Ready for the storm</button>
+    <button class="btn" id="tightL" hidden>Tighten left</button>
+    <button class="btn" id="tightR" hidden>Tighten ridge</button>
+    <button class="btn" id="tightE" hidden>Tighten right</button>
+  </div>
+
+  <aside class="tune" id="tune" hidden aria-label="Tune the feel">
+    <h3>Tune the feel</h3>
+    <div class="field"><label for="tPrep">Time before the storm <output id="oPrep"></output></label><input type="range" id="tPrep" min="30" max="180" step="5"></div>
+    <div class="field"><label for="tRain">Rain <output id="oRain"></output></label><input type="range" id="tRain" min="0.3" max="2" step="0.05"></div>
+    <div class="field"><label for="tWind">Wind <output id="oWind"></output></label><input type="range" id="tWind" min="0" max="2" step="0.05"></div>
+    <div class="field"><label for="tStretch">Fabric stretch <output id="oStretch"></output></label><input type="range" id="tStretch" min="0" max="2" step="0.05"></div>
+    <button class="btn" id="tReset">Reset to defaults</button>
+    <p class="note">Fabric stretch is how much pooled water sags the tarp. Higher makes flat pitches fail faster. Time before the storm applies the next time you start.</p>
+  </aside>
+
+  <div class="end" id="end" hidden>
+    <div class="card" role="dialog" aria-labelledby="endTitle">
+      <p class="eyebrow">Adventure Passport · Storm day</p>
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="stamps" id="endStamps"></div>
+      <dl class="stats-list" id="endStats"></dl>
+      <div class="actions"><button class="btn primary" id="again">Pitch it again</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const $ = (id) => document.getElementById(id);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // ---------- Tunables (feet, y up) ----------
+  const DEF = { prep: 90, rain: 1, wind: 1, stretch: 1 };
+  const P = { ...DEF };
+  const STORM_LEN = 40;
+  const GRAV = 32;
+  const NN = 25, MID = 12, SEGL = 0.5, HALF = MID * SEGL; // a 12 ft tarp over the ridgeline, 6 ft per side
+  const HEAD = 3.3;                                      // sitting headroom you need
+  const DUMP_AT = 3.2;
+  const FAMILY = [
+    { who: 'Parent', col: '#3E7D52', hat: '#5B6B3A', h: 3.4 },
+    { who: 'You', col: '#E07A2F', hat: '#C0452B', h: 2.8 },
+    { who: 'Sibling', col: '#E5B53A', hat: '#2B5C8A', h: 2.6 },
+    { who: 'Sibling', col: '#7A5C9A', hat: '#3A3F5C', h: 2.4 },
+    { who: 'Sibling', col: '#3F8C8C', hat: '#8A3B2A', h: 2.2 },
+    { who: 'Parent', col: '#2B5C8A', hat: '#1C2A2E', h: 3.4 },
+  ];
+
+  // ---------- State ----------
+  let W = 0, H = 0, DPR = 1, S = 18, GY = 0;
+  let mode, tMode, cloth, ridge, edges, drops, splashes, pops, people, gear, stats, got, lightning, bubble, lastInput, storyDone, stormK, picking, acc, windNow;
+  let tNow = 0;
+
+  function reset() {
+    mode = 'prep'; tMode = 0; stormK = 0; acc = 0; windNow = 0;
+    ridge = { h: 4.5, h0: 4.5, knot: null, slip: 0, failed: false };
+    edges = [
+      { side: -1, E: null, E0: null, knot: null, slip: 0, failed: false, name: 'left' },
+      { side: 1, E: null, E0: null, knot: null, slip: 0, failed: false, name: 'right' },
+    ];
+    cloth = [];
+    for (let i = 0; i < NN; i++) {
+      const k = i - MID, s = Math.sign(k);
+      const x = s * Math.abs(k) * 0.16, y = ridge.h - Math.abs(k) * 0.3; // bundled tarp flopped over the line
+      cloth.push({ x, y: Math.max(0.08, y), px: x, py: Math.max(0.08, y), w: 0 });
+    }
+    drops = []; splashes = []; pops = [];
+    people = FAMILY.map((f, i) => ({ ...f, x: i < 3 ? -13 - i * 1.4 : 13 + (i - 3) * 1.4, tx: null, wet: 0 }));
+    gear = [
+      { id: 'wood', name: 'Firewood', x: 7.5, w: 1.6, h: 0.9, col: '#8B6A43', wet: 0 },
+      { id: 'packs', name: 'Packs', x: -7.5, w: 1.4, h: 1.5, col: '#5B6B3A', wet: 0 },
+    ];
+    stats = { dumps: 0, knotFails: [], early: false };
+    got = new Set();
+    lightning = { next: 6, flash: 0, boomAt: -1, count: 0, n: 0 };
+    bubble = null; lastInput = 0; storyDone = false; picking = null;
+    $('picker').hidden = true; $('end').hidden = true;
+    toastQueue.length = 0; $('toast').innerHTML = '';
+    setTools();
+    hint('start', 'A storm is rolling in from the west, on the left. Get the tarp up before it hits. Drag the <b>ridgeline knot</b> up or down on the tree, then drag each <b>tarp edge</b> out and tie it off. Drag the firewood and packs under too.', 14000, true);
+  }
+
+  // ---------- Hints, bubbles, stamps ----------
+  const hintEl = $('hint');
+  const shownHints = new Set();
+  let hintTimer = 0;
+  function hint(id, html, ms = 7000, force = false) {
+    if (shownHints.has(id) && !force) return;
+    shownHints.add(id);
+    hintEl.innerHTML = html; hintEl.classList.add('on');
+    clearTimeout(hintTimer);
+    if (ms) hintTimer = setTimeout(() => hintEl.classList.remove('on'), ms);
+  }
+  function pop(text, x, y, life = 1.4) { pops.push({ text, x, y, life }); }
+  function say(who, text, dur = 3) { bubble = { who, text, t: dur }; }
+
+  const STAMPS = [
+    { id: 'early', name: 'Tarp up before the rain', ink: '#2B5C8A' },
+    { id: 'dry', name: 'Everybody stayed dry', ink: '#2F6B4F' },
+    { id: 'knots', name: 'Every knot held', ink: '#3A3F5C' },
+    { id: 'dump', name: 'The classic tarp dump', ink: '#7A6A1F' },
+    { id: 'wood', name: 'Dry firewood', ink: '#8A3B2A' },
+    { id: 'story', name: 'A story in the rain', ink: '#2F6B4F' },
+  ];
+  const toastQueue = [];
+  let toastBusy = false;
+  function award(id) {
+    if (got.has(id)) return;
+    got.add(id);
+    toastQueue.push(STAMPS.find((s) => s.id === id));
+    if (!toastBusy) nextToast();
+  }
+  function nextToast() {
+    const s = toastQueue.shift();
+    const el = $('toast');
+    if (!s) { toastBusy = false; el.innerHTML = ''; return; }
+    toastBusy = true;
+    el.innerHTML = `<div class="stamp" style="--ink-c:${s.ink}"><small>Passport stamp</small><b>${s.name}</b></div>`;
+    setTimeout(nextToast, 2300);
+  }
+
+  const KNOT_NAMES = { taut: 'taut-line hitch', bowline: 'bowline', granny: 'granny knot' };
+  const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.max(0, Math.floor(t % 60))).padStart(2, '0')}`;
+  function updateHeader() {
+    if (mode === 'prep') {
+      $('stats').textContent = `Storm in ${fmt(P.prep - tMode)}`;
+      $('progFill').style.width = `${(100 * tMode) / P.prep}%`;
+    } else if (mode === 'storm') {
+      const dry = people.filter((p) => p.wet < 12).length;
+      $('stats').textContent = `Storm · ${fmt(STORM_LEN - tMode)} left · ${dry} of 6 dry`;
+      $('progFill').style.width = `${100 - (100 * tMode) / STORM_LEN}%`;
+    }
+  }
+  const allTied = () => ridge.knot && edges.every((e) => e.E && e.knot);
+  function setTools() {
+    $('readyBtn').hidden = mode !== 'prep';
+    $('readyBtn').disabled = !allTied();
+    const showT = (id, line) => { $(id).hidden = !(mode === 'storm' && line.knot === 'taut' && !line.failed); $(id).disabled = line.slip < 0.08; };
+    showT('tightL', edges[0]); showT('tightR', ridge); showT('tightE', edges[1]);
+  }
+
+  // ---------- Geometry helpers ----------
+  const R = () => ({ x: 0, y: ridge.h });
+  function clampReach(p) {
+    const r = R();
+    let dx = p.x - r.x, dy = p.y - r.y;
+    const d = Math.hypot(dx, dy);
+    if (d > HALF) { dx *= HALF / d; dy *= HALF / d; }
+    return { x: r.x + dx, y: Math.max(0.15, r.y + dy) };
+  }
+  // Tying off pulls the edge out to full stretch along the direction you dragged it
+  function snapTaut(p) {
+    const r = R();
+    let dx = p.x - r.x, dy = p.y - r.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const L = HALF * 1.015; // a little pretension, like pulling the line snug
+    let x = r.x + (dx / d) * L, y = r.y + (dy / d) * L;
+    if (y < 0.15) { y = 0.15; const hx = Math.sqrt(Math.max(0, L * L - (r.y - y) ** 2)); x = r.x + Math.sign(dx || 1) * hx; }
+    return { x, y };
+  }
+  function edgeTarget(e) {
+    // Slip lets the edge creep back toward the ridge along the guyline
+    const r = R();
+    const dx = r.x - e.E0.x, dy = r.y - e.E0.y, d = Math.hypot(dx, dy) || 1;
+    return { x: e.E0.x + (dx / d) * e.slip, y: e.E0.y + (dy / d) * e.slip };
+  }
+  function stakeFor(E) {
+    const r = R();
+    if (E.y < 0.35) return { x: E.x, y: 0 };
+    if (r.y - E.y > 0.1) {
+      const t = E.y / (r.y - E.y);
+      const sx = E.x + (E.x - r.x) * t;
+      return { x: clamp(sx, E.x - 5, E.x + 5), y: 0 };
+    }
+    return { x: E.x + Math.sign(E.x || 1) * 1.2, y: 0 };
+  }
+  // Tarp height above a given x (null if uncovered)
+  function clothYAt(x) {
+    let best = null;
+    for (let i = 0; i < NN - 1; i++) {
+      const a = cloth[i], b = cloth[i + 1];
+      const lo = Math.min(a.x, b.x), hi = Math.max(a.x, b.x);
+      if (x < lo || x > hi || hi - lo < 1e-4) continue;
+      const y = a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+      if (best === null || y < best) best = y;
+    }
+    return best;
+  }
+  function pitchDeg(e) {
+    if (!e.E || e.failed) return null;
+    const r = R(), t = edgeTarget(e);
+    return (Math.atan2(r.y - t.y, Math.abs(t.x - r.x)) * 180) / Math.PI;
+  }
+  function seats() {
+    const slots = [];
+    for (let x = -8; x <= 8; x += 0.1) { const y = clothYAt(x); if (y !== null && y >= HEAD) slots.push(x); }
+    if (!slots.length) return [];
+    // Greedy: spread people 1.3 ft apart from the middle of the covered span outward
+    const mid = (slots[0] + slots[slots.length - 1]) / 2;
+    const cand = slots.slice().sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid));
+    const out = [];
+    for (const x of cand) { if (out.every((o) => Math.abs(o - x) >= 1.3)) out.push(x); if (out.length === 6) break; }
+    return out.sort((a, b) => a - b);
+  }
+  function seatFamily() {
+    const s = seats();
+    const order = [1, 2, 0, 3, 5, 4];
+    let outside = 0;
+    order.forEach((pi, k) => {
+      const p = people[pi];
+      if (k < s.length) p.tx = s[k];
+      else { p.tx = (outside % 2 ? 1 : -1) * (9.5 + Math.floor(outside / 2) * 1.3); outside++; }
+    });
+    return s.length;
+  }
+
+  // ---------- Cloth ----------
+  function clothStep(dt) {
+    const r = R();
+    const gust = windNow;
+    for (let i = 0; i < NN; i++) {
+      const n = cloth[i];
+      if (i === MID) { n.x = n.px = r.x; n.y = n.py = r.y; continue; }
+      const vx = (n.x - n.px) * 0.985, vy = (n.y - n.py) * 0.985;
+      n.px = n.x; n.py = n.y;
+      const flap = gust * (0.6 + 0.4 * Math.sin(tNow * 9 + i * 0.7));
+      n.x += vx + flap * 1.2 * dt * dt;
+      n.y += vy - GRAV * dt * dt + flap * 0.8 * Math.sin(tNow * 13 + i) * dt * dt;
+    }
+    for (const e of edges) {
+      const idx = e.side < 0 ? 0 : NN - 1;
+      if (e.E && !e.failed) { const t = edgeTarget(e); e.E = t; cloth[idx].x = cloth[idx].px = t.x; cloth[idx].y = cloth[idx].py = t.y; }
+      if (e.dragging) { cloth[idx].x = cloth[idx].px = e.dragging.x; cloth[idx].y = cloth[idx].py = e.dragging.y; }
+    }
+    const pinned = (i) => i === MID || (i === 0 && ((edges[0].E && !edges[0].failed) || edges[0].dragging)) || (i === NN - 1 && ((edges[1].E && !edges[1].failed) || edges[1].dragging));
+    for (let it = 0; it < 24; it++) {
+      for (let q = 0; q < NN - 1; q++) {
+        const i = it % 2 ? NN - 2 - q : q; // alternate sweep direction so tension spreads evenly
+        const a = cloth[i], b = cloth[i + 1];
+        const rest = SEGL * Math.min(1 + 0.08 * P.stretch, 1 + 0.015 * P.stretch * (a.w + b.w));
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+        if (d <= rest || d === 0) continue;
+        const ia = pinned(i) ? 0 : 1 / (1 + a.w * 3), ib = pinned(i + 1) ? 0 : 1 / (1 + b.w * 3);
+        if (ia + ib === 0) continue;
+        const k = (d - rest) / d / (ia + ib);
+        a.x += dx * k * ia; a.y += dy * k * ia;
+        b.x -= dx * k * ib; b.y -= dy * k * ib;
+      }
+      for (const n of cloth) if (n.y < 0.06) { n.y = 0.06; n.px = lerp(n.px, n.x, 0.5); }
+    }
+    // Water runs downhill along the tarp and drips off the edges
+    const flow = new Float32Array(NN);
+    for (let i = 0; i < NN; i++) {
+      const n = cloth[i];
+      if (n.w <= 0) continue;
+      let out = 0;
+      for (const j of [i - 1, i + 1]) {
+        if (j < 0 || j >= NN) continue;
+        const dh = n.y - cloth[j].y;
+        if (dh <= 0.002) continue;
+        const f = Math.min(n.w * 0.45, n.w * dh * 22 * dt);
+        flow[j] += f; out += f;
+      }
+      flow[i] -= out;
+    }
+    for (let i = 0; i < NN; i++) cloth[i].w = Math.max(0, cloth[i].w + flow[i]);
+    // A shallow lip right at the edge just spills over it
+    for (const [j, e] of [[1, 0], [NN - 2, NN - 1]]) {
+      const a = cloth[j], b = cloth[e];
+      if (a.w > 0 && a.y - b.y > -0.4) { const f = a.w * Math.min(1, 10 * dt); a.w -= f; b.w += f; }
+    }
+    for (const i of [0, NN - 1]) {
+      const n = cloth[i];
+      if (n.w > 0.02) {
+        const f = n.w * Math.min(1, 25 * dt);
+        n.w -= f;
+        if (Math.random() < f * 12) drops.push({ x: n.x, y: n.y - 0.1, vx: 0, vy: -2, drip: true });
+      }
+    }
+    // Too much water in one belly: it dumps
+    for (let i = 1; i < NN - 1; i++) {
+      const n = cloth[i];
+      if (n.w > DUMP_AT) {
+        const total = n.w + cloth[i - 1].w * 0.6 + cloth[i + 1].w * 0.6;
+        n.w = 0; cloth[i - 1].w *= 0.4; cloth[i + 1].w *= 0.4;
+        for (let k = 0; k < total * 40; k++) drops.push({ x: n.x + (Math.random() - 0.5) * 0.8, y: n.y - 0.1, vx: (Math.random() - 0.5) * 4, vy: -Math.random() * 6, drip: true });
+        stats.dumps++;
+        award('dump');
+        pop('SPLOOSH', n.x, n.y + 1.2, 1.8);
+        say('Sibling', ['WHO POKED IT?!', 'My sleeping bag!', 'AAAH, cold!'][stats.dumps % 3]);
+        hint('dump', 'A flat spot filled with water and dumped. Steeper sides shed rain before it can pool.', 8000);
+      } else if (n.w > 1.2) hint('pool', 'Water is pooling where the tarp is flat. Watch it…', 6000);
+    }
+  }
+
+  // ---------- Rain ----------
+  function segHit(p0x, p0y, p1x, p1y, ax, ay, bx, by) {
+    const d = (p1x - p0x) * (by - ay) - (p1y - p0y) * (bx - ax);
+    if (Math.abs(d) < 1e-9) return -1;
+    const t = ((ax - p0x) * (by - ay) - (ay - p0y) * (bx - ax)) / d;
+    const u = ((ax - p0x) * (p1y - p0y) - (ay - p0y) * (p1x - p0x)) / d;
+    return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? u : -1;
+  }
+  function rainStep(dt) {
+    const rate = mode === 'storm' ? stormK * 260 * P.rain : 0;
+    let n = rate * dt;
+    while (n > 0) {
+      if (Math.random() < n) {
+        const vx = windNow * 11 + (Math.random() - 0.5) * 2;
+        drops.push({ x: -16 + Math.random() * 32 - vx * 0.45, y: 13 + Math.random() * 2, vx, vy: -26 - Math.random() * 4 });
+      }
+      n -= 1;
+    }
+    const keep = [];
+    for (const d of drops) {
+      const x0 = d.x, y0 = d.y;
+      if (d.drip) d.vy -= GRAV * dt;
+      d.x += d.vx * dt; d.y += d.vy * dt;
+      let gone = false;
+      if (!d.drip) {
+        for (let i = 0; i < NN - 1 && !gone; i++) {
+          const a = cloth[i], b = cloth[i + 1];
+          const u = segHit(x0, y0, d.x, d.y, a.x, a.y, b.x, b.y);
+          if (u >= 0) { const node = u < 0.5 ? a : b; node.w += 0.035; gone = true; }
+        }
+      }
+      if (!gone) for (const p of people) {
+        if (Math.abs(d.x - p.x) < 0.55 && d.y < p.h + 0.3 && d.y > 0.3) { p.wet += d.drip ? 0.6 : 1; gone = true; break; }
+      }
+      if (!gone) for (const g of gear) {
+        if (Math.abs(d.x - g.x) < g.w / 2 && d.y < g.h && d.y > 0) { g.wet += d.drip ? 0.6 : 1; gone = true; break; }
+      }
+      if (!gone && d.y <= 0) { if (Math.random() < 0.25) splashes.push({ x: d.x, life: 0.3 }); gone = true; }
+      if (!gone && d.x > -30 && d.x < 30) keep.push(d);
+    }
+    drops = keep;
+    for (const s of splashes) s.life -= dt;
+    splashes = splashes.filter((s) => s.life > 0);
+  }
+
+  // ---------- Knots under load ----------
+  function knotStep(dt) {
+    const load = 1 + windNow * 1.5;
+    const water = (a, b) => { let w = 0; for (let i = a; i <= b; i++) w += cloth[i].w; return w; };
+    const lines = [
+      { line: edges[0], w: water(0, MID) },
+      { line: ridge, w: water(0, NN - 1) * 0.6 },
+      { line: edges[1], w: water(MID, NN - 1) },
+    ];
+    for (const { line, w } of lines) {
+      if (!line.knot || line.failed || (line !== ridge && !line.E)) continue;
+      const rate = line.knot === 'granny' ? 0.07 : 0.0025; // good knots only stretch a little
+      line.slip += rate * (load + w * 0.4) * (line === ridge ? 0.6 : 1) * dt;
+      if (line.knot === 'granny' && line.slip > 1.3) {
+        line.failed = true;
+        stats.knotFails.push(line === ridge ? 'ridgeline' : `${line.name} guyline`);
+        if (line === ridge) { pop('the ridgeline let go!', 0, ridge.h + 1.5, 2); say('Parent', 'The tarp is on our heads!'); }
+        else { pop('the knot let go!', line.E.x, line.E.y + 1, 2); say('Sibling', 'That corner is flapping everywhere!'); }
+        hint('granny', 'The granny knot slipped and let go. Granny knots slip under load. A taut-line hitch or a bowline holds.', 9000);
+        seatFamily();
+      }
+      if (line.knot === 'taut' && line.slip > 0.25) hint('taut', 'The rain and wind stretched a line. Tap <b>Tighten</b>: sliding it tight again is what a taut-line hitch is for.', 8000);
+    }
+    const rs = ridge.failed ? 2.3 : Math.max(2.3, ridge.h0 - ridge.slip);
+    ridge.h = rs;
+  }
+  function tighten(line) {
+    if (!line || line.knot !== 'taut' || line.failed) return;
+    line.slip = 0;
+    if (line === ridge) ridge.h = ridge.h0;
+    pop('zzzip', line === ridge ? 0 : line.E0.x, line === ridge ? ridge.h0 + 0.8 : line.E0.y + 0.8, 0.9);
+    lastInput = tNow;
+    seatFamily();
+  }
+  $('tightL').addEventListener('click', () => tighten(edges[0]));
+  $('tightR').addEventListener('click', () => tighten(ridge));
+  $('tightE').addEventListener('click', () => tighten(edges[1]));
+
+  // ---------- Phases ----------
+  function startStorm() {
+    if (mode !== 'prep') return;
+    stats.early = allTied() && tMode < P.prep;
+    if (stats.early) award('early');
+    mode = 'storm'; tMode = 0;
+    $('picker').hidden = true; picking = null;
+    // Anything untied just flaps
+    for (const e of edges) if (!e.E || !e.knot) { e.failed = true; e.E = e.E || null; }
+    if (!ridge.knot) ridge.knot = 'granny';
+    ridge.h0 = ridge.h;
+    const fit = seatFamily();
+    say('Parent', fit >= 6 ? 'Everybody under! Here it comes.' : fit > 0 ? `Only ${fit} of us fit under there…` : 'Nobody fits under that!');
+    lastInput = tNow;
+    setTools();
+  }
+  function endStorm() {
+    mode = 'after'; tMode = 0;
+    setTools();
+    const dryPeople = people.filter((p) => p.wet < 12).length;
+    const wood = gear.find((g) => g.id === 'wood');
+    if (dryPeople === 6) award('dry');
+    if (!stats.knotFails.length) award('knots');
+    if (wood.wet < 10) award('wood');
+    say('Parent', 'Look, a rainbow.');
+    setTimeout(showEnd, 3200);
+  }
+  function showEnd() {
+    const dryPeople = people.filter((p) => p.wet < 12).length;
+    const wood = gear.find((g) => g.id === 'wood'), packs = gear.find((g) => g.id === 'packs');
+    let title, text;
+    if (dryPeople === 6 && !stats.dumps) { title = 'Dry as a bone'; text = 'The storm blew through and nobody got wet. Cards, snacks, and a story under the tarp.'; }
+    else if (stats.dumps) { title = 'Sploosh'; text = `A flat spot filled up and dumped ${stats.dumps > 1 ? stats.dumps + ' times' : ''} on someone. The storm passed anyway, and it’s already a family story.`; }
+    else if (stats.knotFails.length) { title = 'A knot let go'; text = `The ${listJoin(stats.knotFails)} slipped in the wind. Everyone waited it out, a little soggier than planned.`; }
+    else { title = 'Soggy, but together'; text = `${dryPeople} of 6 stayed dry. Rain blows in under a high edge on the windy side.`; }
+    $('endTitle').textContent = title;
+    $('endText').textContent = text;
+    $('endStamps').innerHTML = STAMPS.map((s) => got.has(s.id)
+      ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Storm day</small><b>${s.name}</b></div>`
+      : `<div class="stamp missing"><small>Not yet</small><b>?</b></div>`).join('');
+    const pl = pitchDeg(edges[0]), pr = pitchDeg(edges[1]);
+    const rows = [
+      ['People who stayed dry', `${dryPeople} of 6`],
+      ['Firewood', wood.wet < 10 ? 'dry' : 'soaked'],
+      ['Packs', packs.wet < 10 ? 'dry' : 'soaked'],
+      ['Ridgeline height', `${ridge.h0.toFixed(1)} ft`],
+      ['Windward (left) side', pl === null ? 'flapping' : `${Math.round(pl)}°, edge ${edges[0].E0.y.toFixed(1)} ft up`],
+      ['Downwind (right) side', pr === null ? 'flapping' : `${Math.round(pr)}°, edge ${edges[1].E0.y.toFixed(1)} ft up`],
+      ['Knots', [ridge, ...edges].map((l) => KNOT_NAMES[l.knot] || 'none').join(', ')],
+      ['Tarp dumps', stats.dumps],
+    ];
+    $('endStats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    mode = 'done';
+    toastQueue.length = 0; $('toast').innerHTML = '';
+    $('end').hidden = false;
+    $('again').focus();
+  }
+  const listJoin = (a) => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
+  $('again').addEventListener('click', reset);
+  $('readyBtn').addEventListener('click', startStorm);
+
+  // ---------- Input ----------
+  const toScreen = (x, y) => [W / 2 + x * S, GY - y * S];
+  const toWorld = (sx, sy) => ({ x: (sx - W / 2) / S, y: (GY - sy) / S });
+  function local(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  let drag = null;
+  cv.addEventListener('pointerdown', (e) => {
+    lastInput = tNow;
+    if (mode !== 'prep') return;
+    const [sx, sy] = local(e);
+    const near = (x, y, r = 30) => { const [px, py] = toScreen(x, y); return Math.hypot(sx - px, sy - py) < r; };
+    let target = null;
+    if (near(0, ridge.h, 34)) target = { kind: 'ridge' };
+    for (const eg of edges) { const n = cloth[eg.side < 0 ? 0 : NN - 1]; if (!target && near(n.x, n.y, 34)) target = { kind: 'edge', e: eg }; }
+    for (const g of gear) if (!target && near(g.x, g.h / 2, 34)) target = { kind: 'gear', g };
+    if (!target) return;
+    e.preventDefault();
+    drag = { ...target, id: e.pointerId };
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    $('picker').hidden = true; picking = null;
+    moveDrag(sx, sy);
+  });
+  function moveDrag(sx, sy) {
+    const w = toWorld(sx, sy);
+    if (drag.kind === 'ridge') {
+      ridge.h = ridge.h0 = clamp(w.y, 2.5, 8.5);
+      for (const eg of edges) if (eg.E0) { eg.E0 = snapTaut(eg.E0); eg.E = eg.E0; }
+    } else if (drag.kind === 'edge') {
+      const side = drag.e.side;
+      const p = clampReach({ x: side < 0 ? Math.min(w.x, -0.3) : Math.max(w.x, 0.3), y: w.y });
+      drag.e.dragging = p;
+    } else if (drag.kind === 'gear') {
+      drag.g.x = clamp(w.x, -11, 11);
+    }
+  }
+  cv.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const [sx, sy] = local(e);
+    moveDrag(sx, sy);
+    lastInput = tNow;
+  });
+  const release = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (drag.kind === 'edge') {
+      const eg = drag.e;
+      eg.E0 = eg.E = snapTaut(eg.dragging); eg.dragging = null; eg.slip = 0;
+      if (!eg.knot) openPicker(eg);
+    } else if (drag.kind === 'ridge' && !ridge.knot) openPicker(ridge);
+    drag = null;
+    setTools();
+  };
+  cv.addEventListener('pointerup', release);
+  cv.addEventListener('pointercancel', release);
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  function openPicker(line) {
+    picking = line;
+    $('pickerTitle').textContent = line === ridge ? 'Tie the ridgeline to the tree with:' : `Tie off the ${line.name} guyline with:`;
+    $('picker').hidden = false;
+    $('picker').querySelector('.knot').focus();
+  }
+  $('picker').addEventListener('click', (e) => {
+    const b = e.target.closest('.knot');
+    if (!b || !picking) return;
+    picking.knot = b.dataset.k;
+    const [x, y] = picking === ridge ? [0, ridge.h + 0.8] : [picking.E.x, picking.E.y + 0.8];
+    pop(KNOT_NAMES[picking.knot], x, y, 1.4);
+    picking = null;
+    $('picker').hidden = true;
+    b.blur();
+    setTools();
+    if (allTied()) hint('ready', 'All tied. Tap <b>Ready for the storm</b>, or keep adjusting until it looks right.', 6000);
+  });
+
+  // ---------- Simulation ----------
+  function update(dt) {
+    tNow += dt; tMode += dt;
+    for (const p of pops) { p.y += dt * 0.8; p.life -= dt; }
+    pops = pops.filter((p) => p.life > 0);
+    if (bubble) { bubble.t -= dt; if (bubble.t <= 0) bubble = null; }
+
+    // Weather
+    if (mode === 'prep') {
+      stormK = 0;
+      windNow = 0.15 + 0.35 * (tMode / P.prep) * P.wind * (0.7 + 0.3 * Math.sin(tNow * 1.3));
+      if (tMode >= P.prep) startStorm();
+    } else if (mode === 'storm') {
+      stormK = clamp(Math.min(tMode / 5, (STORM_LEN - tMode) / 5), 0, 1);
+      const gust = 0.6 + 0.4 * Math.sin(tNow * 0.9) + 0.35 * Math.max(0, Math.sin(tNow * 2.3 + 1));
+      windNow = P.wind * stormK * gust;
+      knotStep(dt);
+      // Lightning: count the seconds to the thunder
+      if (tMode > lightning.next && lightning.boomAt < 0) {
+        lightning.flash = 0.25;
+        lightning.n = 2 + Math.floor(Math.random() * 6);
+        lightning.boomAt = tMode + lightning.n; lightning.count = 0;
+      }
+      if (lightning.boomAt > 0) {
+        const c = Math.floor(tMode - (lightning.boomAt - lightning.n));
+        if (c > lightning.count && c < lightning.n) { lightning.count = c; pop(`${c}…`, -6 + c * 1.2, 11, 0.9); }
+        if (tMode >= lightning.boomAt) {
+          pop('BOOM', 3, 11, 1.2);
+          const miles = (lightning.n / 5).toFixed(1);
+          say('Sibling', `${lightning.n} seconds. That’s about ${miles} miles away.`, 3);
+          lightning.boomAt = -1; lightning.next = tMode + 7 + Math.random() * 5;
+        }
+      }
+      // The quiet moment: stop fussing and a story starts
+      if (!storyDone && tMode > 8 && tNow - lastInput > 8) {
+        storyDone = true;
+        award('story');
+        say('Parent', 'Did I ever tell you about the moose that walked through camp?', 5);
+      }
+      if (tMode >= STORM_LEN) endStorm();
+      updateHeader();
+      setTools();
+    } else if (mode === 'after') {
+      stormK = 0; windNow *= 0.95;
+    }
+    if (mode === 'prep') updateHeader();
+    if (lightning.flash > 0) lightning.flash -= dt;
+
+    // People walk to their spots
+    for (const p of people) if (p.tx !== null) p.x = lerp(p.x, p.tx, 1 - Math.exp(-dt * 2.5));
+
+    acc += dt;
+    const STEP = 1 / 120;
+    while (acc >= STEP) { clothStep(STEP); acc -= STEP; }
+    rainStep(dt);
+  }
+
+  // ---------- Drawing ----------
+  function worldT() { ctx.setTransform(DPR * S, 0, 0, -DPR * S, DPR * (W / 2), DPR * GY); }
+  function screenT() { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  const mix = (c1, c2, t) => {
+    const a = c1.match(/\w\w/g).map((h) => parseInt(h, 16)), b = c2.match(/\w\w/g).map((h) => parseInt(h, 16));
+    return `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], t))).join(',')})`;
+  };
+
+  function draw() {
+    const dark = mode === 'prep' ? clamp(tMode / P.prep, 0, 1) * 0.6 : mode === 'storm' ? 0.6 + 0.3 * stormK : mode === 'after' ? Math.max(0, 0.6 - tMode * 0.3) : 0;
+    screenT();
+    const g = ctx.createLinearGradient(0, 0, 0, GY);
+    g.addColorStop(0, mix('8FB8CC', '3C4650', dark)); g.addColorStop(1, mix('DCE3D6', '6C7478', dark));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (lightning.flash > 0) { ctx.fillStyle = `rgba(255, 255, 255, ${lightning.flash * 2.4})`; ctx.fillRect(0, 0, W, H); }
+
+    // Clouds rolling in from the west
+    const ck = mode === 'prep' ? tMode / P.prep : mode === 'storm' ? 1 : Math.max(0, 1 - tMode * 0.4);
+    ctx.fillStyle = `rgba(70, 78, 88, ${0.85 * ck})`;
+    for (let i = 0; i < 7; i++) {
+      const cx = -W * 0.4 + ck * W * 1.1 - i * W * 0.22 + ((tNow * 6) % 40), cy = 90 + (i % 3) * 26;
+      ctx.beginPath(); ctx.ellipse(cx, cy, 90, 34, 0, 0, TAU); ctx.ellipse(cx + 60, cy + 10, 70, 28, 0, 0, TAU); ctx.fill();
+    }
+    if (mode === 'after' || mode === 'done') {
+      ctx.lineWidth = 10;
+      ['#C0452B', '#E5B53A', '#3E7D52', '#2B5C8A'].forEach((c, i) => {
+        ctx.strokeStyle = c; ctx.globalAlpha = Math.min(0.5, (mode === 'done' ? 1 : tMode) * 0.3);
+        ctx.beginPath(); ctx.arc(W * 0.75, GY + 40, W * 0.5 - i * 10, Math.PI * 1.05, Math.PI * 1.6); ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    worldT();
+    // Far treeline and ground
+    ctx.fillStyle = mix('3F5E4B', '26332C', dark);
+    ctx.beginPath(); ctx.moveTo(-40, 0);
+    for (let x = -40; x <= 40; x += 1) ctx.lineTo(x, 7 + 1.5 * Math.sin(x * 0.9) + 1.2 * Math.sin(x * 2.3) + (Math.floor(x) % 2 ? 1.2 : 0));
+    ctx.lineTo(40, 0); ctx.fill();
+    ctx.fillStyle = mix('5A4632', '3A2E22', dark); ctx.fillRect(-40, -20, 80, 20);
+    ctx.fillStyle = mix('6D7F3F', '44502A', dark); ctx.fillRect(-40, -0.2, 80, 0.25);
+
+    // The tree the ridgeline runs to (behind you, down the line of sight)
+    ctx.fillStyle = mix('4A3A2C', '2E251C', dark);
+    ctx.fillRect(-0.25, 0, 0.5, 13);
+
+    // Gear
+    for (const gd of gear) {
+      ctx.fillStyle = gd.col; roundRect(gd.x - gd.w / 2, 0, gd.w, gd.h, 0.15); ctx.fill();
+      if (gd.id === 'wood') { ctx.strokeStyle = '#5A4128'; ctx.lineWidth = 0.05; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(gd.x - 0.45 + k * 0.45, 0.45, 0.2, 0, TAU); ctx.stroke(); } }
+      if (gd.wet >= 10) { ctx.fillStyle = 'rgba(120, 170, 210, 0.45)'; roundRect(gd.x - gd.w / 2, 0, gd.w, gd.h, 0.15); ctx.fill(); }
+    }
+
+    // Guylines and stakes
+    ctx.lineCap = 'round';
+    for (const eg of edges) {
+      const idx = eg.side < 0 ? 0 : NN - 1;
+      if (!eg.E || eg.failed) continue;
+      const st = stakeFor(eg.E0);
+      ctx.strokeStyle = eg.knot === 'granny' ? '#D9962B' : '#E5B53A'; ctx.lineWidth = 0.06;
+      ctx.beginPath(); ctx.moveTo(cloth[idx].x, cloth[idx].y); ctx.lineTo(st.x, st.y); ctx.stroke();
+      ctx.fillStyle = '#8B6A43'; ctx.beginPath(); ctx.moveTo(st.x - 0.12, 0.25); ctx.lineTo(st.x + 0.12, 0.25); ctx.lineTo(st.x, -0.2); ctx.fill();
+    }
+
+    // People
+    for (const p of people) {
+      const wet = p.wet >= 12;
+      ctx.fillStyle = p.col; roundRect(p.x - 0.42, 0, 0.84, p.h - 0.7, 0.3); ctx.fill();
+      ctx.fillStyle = '#E3BE98'; ctx.beginPath(); ctx.arc(p.x, p.h - 0.35, 0.35, 0, TAU); ctx.fill();
+      ctx.fillStyle = p.hat; ctx.beginPath(); ctx.arc(p.x, p.h - 0.3, 0.36, 0, Math.PI); ctx.fill();
+      if (wet) { ctx.fillStyle = 'rgba(140, 190, 230, 0.9)'; for (const k of [-0.3, 0, 0.3]) { ctx.beginPath(); ctx.ellipse(p.x + k, p.h + 0.2 + Math.abs(k) * 0.3, 0.06, 0.12, 0, 0, TAU); ctx.fill(); } }
+    }
+
+    // Tarp: the cross-section plus a hint of its far edge, so it reads as a sheet
+    ctx.lineJoin = 'round';
+    ctx.fillStyle = 'rgba(47, 127, 122, 0.45)';
+    ctx.beginPath();
+    cloth.forEach((n, i) => (i ? ctx.lineTo(n.x, n.y) : ctx.moveTo(n.x, n.y)));
+    for (let i = NN - 1; i >= 0; i--) ctx.lineTo(cloth[i].x + 0.5, cloth[i].y + 0.55);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#2F7F7A'; ctx.lineWidth = 0.2;
+    ctx.beginPath(); cloth.forEach((n, i) => (i ? ctx.lineTo(n.x, n.y) : ctx.moveTo(n.x, n.y))); ctx.stroke();
+    // Pooled water
+    for (const n of cloth) {
+      if (n.w < 0.25) continue;
+      ctx.fillStyle = 'rgba(110, 170, 215, 0.8)';
+      ctx.beginPath(); ctx.ellipse(n.x, n.y + 0.12, 0.25 + n.w * 0.12, 0.08 + n.w * 0.06, 0, 0, TAU); ctx.fill();
+    }
+    // Ridgeline knot
+    ctx.fillStyle = ridge.knot ? '#E5B53A' : '#F1EBDD';
+    ctx.beginPath(); ctx.arc(0, ridge.h, 0.22, 0, TAU); ctx.fill();
+
+    // Rain
+    ctx.strokeStyle = 'rgba(200, 220, 235, 0.7)'; ctx.lineWidth = 0.04;
+    ctx.beginPath();
+    for (const d of drops) { const k = 0.02; ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.vx * k, d.y - d.vy * k); }
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(200, 220, 235, 0.6)';
+    for (const s of splashes) { ctx.beginPath(); ctx.ellipse(s.x, 0.05, 0.15, 0.05, 0, 0, TAU); ctx.fill(); }
+
+    drawOverlay();
+  }
+
+  function drawOverlay() {
+    screenT();
+    ctx.textAlign = 'center';
+    // Drag handles during setup
+    if (mode === 'prep') {
+      const handles = [[0, ridge.h, ridge.knot ? 'ridgeline' : 'drag the ridgeline']];
+      for (const eg of edges) { const n = cloth[eg.side < 0 ? 0 : NN - 1]; handles.push([n.x, n.y, eg.E ? '' : 'drag edge']); }
+      for (const [x, y, label] of handles) {
+        const [sx, sy] = toScreen(x, y);
+        ctx.strokeStyle = 'rgba(241, 235, 221, 0.85)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(sx, sy, 13 + Math.sin(tNow * 4) * (reduceMotion ? 0 : 2), 0, TAU); ctx.stroke();
+        if (label) { ctx.fillStyle = '#F1EBDD'; ctx.font = '700 12px "Atkinson Hyperlegible", sans-serif'; ctx.fillText(label, sx, sy - 20); }
+      }
+      // Wind arrow
+      const ax = Math.max(90, W / 2 - 9 * S), ay = toScreen(0, 10.5)[1];
+      ctx.strokeStyle = '#F1EBDD'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(ax - 26, ay); ctx.lineTo(ax + 26, ay); ctx.lineTo(ax + 18, ay - 7); ctx.moveTo(ax + 26, ay); ctx.lineTo(ax + 18, ay + 7); ctx.stroke();
+      ctx.fillStyle = '#F1EBDD'; ctx.font = '700 12px "Atkinson Hyperlegible", sans-serif'; ctx.fillText('WIND FROM THE WEST', ax, ay - 12);
+    }
+    // Popups
+    for (const p of pops) {
+      const [sx, sy] = toScreen(p.x, p.y);
+      ctx.globalAlpha = Math.min(1, p.life * 2);
+      ctx.font = '700 16px "Zilla Slab", Georgia, serif';
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(28, 42, 46, 0.85)'; ctx.strokeText(p.text, sx, sy);
+      ctx.fillStyle = '#F1EBDD'; ctx.fillText(p.text, sx, sy);
+    }
+    ctx.globalAlpha = 1;
+    // Speech
+    if (bubble) {
+      ctx.font = '700 14px "Atkinson Hyperlegible", sans-serif';
+      const text = `${bubble.who}: ${bubble.text}`;
+      const w = Math.min(W - 32, ctx.measureText(text).width + 22);
+      const bx = (W - w) / 2, by = GY - 12.2 * S - 40;
+      ctx.globalAlpha = Math.min(1, bubble.t * 3);
+      roundRect(bx, Math.max(64, by), w, 30, 10); ctx.fillStyle = '#F1EBDD'; ctx.fill();
+      ctx.fillStyle = '#1C2A2E'; ctx.textAlign = 'center';
+      ctx.save(); ctx.beginPath(); ctx.rect(bx + 6, Math.max(64, by), w - 12, 30); ctx.clip();
+      ctx.fillText(text, W / 2, Math.max(64, by) + 20); ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+    // Status panel
+    if (mode === 'done') return;
+    const rows = [];
+    const pl = pitchDeg(edges[0]), pr = pitchDeg(edges[1]);
+    const lineTxt = (l) => (l.failed ? 'let go' : l.knot ? KNOT_NAMES[l.knot] : 'not tied');
+    if (mode === 'prep') {
+      rows.push(['RIDGE', `${ridge.h.toFixed(1)} ft · ${lineTxt(ridge)}`]);
+      rows.push(['LEFT', edges[0].E ? `${Math.round(pl)}° pitch · ${lineTxt(edges[0])}` : 'loose']);
+      rows.push(['RIGHT', edges[1].E ? `${Math.round(pr)}° pitch · ${lineTxt(edges[1])}` : 'loose']);
+      rows.push(['ROOM', `${seats().length} of 6 can sit under it`]);
+    } else {
+      const dry = people.filter((p) => p.wet < 12).length;
+      const water = cloth.reduce((s, n) => s + n.w, 0);
+      rows.push(['DRY', `${dry} of 6 people · firewood ${gear[0].wet < 10 ? 'dry' : 'wet'} · packs ${gear[1].wet < 10 ? 'dry' : 'wet'}`]);
+      rows.push(['LINES', [ridge, ...edges].map((l) => (l.failed ? '✗' : l.slip > 0.25 ? 'slack' : '✓')).join(' · ') + '  (ridge · left · right)']);
+      rows.push(['WATER', water > 0.5 ? `${water.toFixed(1)} gallons-ish on the tarp` : 'running off']);
+    }
+    const pw = Math.min(400, W - 32), rh = 21, ph = rows.length * rh + 14;
+    const px = (W - pw) / 2, py = H - 72 - ph;
+    roundRect(px, py, pw, ph, 12); ctx.fillStyle = 'rgba(241, 235, 221, 0.94)'; ctx.fill();
+    ctx.textBaseline = 'middle';
+    rows.forEach(([k, v], i) => {
+      const y = py + 7 + rh * i + rh / 2;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#5B6662'; ctx.font = '700 10px "Atkinson Hyperlegible", sans-serif'; ctx.fillText(k, px + 14, y);
+      ctx.fillStyle = '#1C2A2E'; ctx.font = '400 13px "Atkinson Hyperlegible", sans-serif';
+      ctx.save(); ctx.beginPath(); ctx.rect(px + 64, y - 10, pw - 76, 20); ctx.clip(); ctx.fillText(v, px + 64, y); ctx.restore();
+    });
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  // ---------- Tuning ----------
+  const knobs = [
+    ['tPrep', 'oPrep', 'prep', (v) => v.toFixed(0) + ' s'],
+    ['tRain', 'oRain', 'rain', (v) => '×' + v.toFixed(2)],
+    ['tWind', 'oWind', 'wind', (v) => '×' + v.toFixed(2)],
+    ['tStretch', 'oStretch', 'stretch', (v) => '×' + v.toFixed(2)],
+  ];
+  function syncKnobs() { for (const [i, o, key, fmtK] of knobs) { $(i).value = P[key]; $(o).textContent = fmtK(P[key]); } }
+  for (const [i, o, key, fmtK] of knobs) $(i).addEventListener('input', () => { P[key] = parseFloat($(i).value); $(o).textContent = fmtK(P[key]); });
+  $('tReset').addEventListener('click', () => { Object.assign(P, DEF); syncKnobs(); });
+  $('tuneBtn').addEventListener('click', () => { const t = $('tune'); t.hidden = !t.hidden; $('tuneBtn').setAttribute('aria-expanded', String(!t.hidden)); });
+  syncKnobs();
+
+  // ---------- Boot ----------
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    GY = H - 175;
+    S = clamp(Math.min(W / 21.5, (GY - 90) / 13), 10, 48);
+  }
+  addEventListener('resize', resize);
+  resize();
+  reset();
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.033, (now - last) / 1000);
+    last = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
