@@ -1,0 +1,1053 @@
+<title>Bear Hang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@500;700&display=swap">
+<style>
+  /* Same world as the other prototypes: camp at dusk. Single theme by design. */
+  :root {
+    --ink: #1C2A2E;
+    --paper: #F1EBDD;
+    --paper-2: #E2D8C2;
+    --line: #C9BC9F;
+    --pine: #223D2C;
+    --canoe: #C0452B;
+    --green: #3E7D52;
+    --amber: #C9851F;
+    --muted: #5B6662;
+    --bar: rgba(22, 34, 36, 0.8);
+    --display: "Zilla Slab", "Rockwell", "Roboto Slab", Georgia, serif;
+    --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html { height: 100%; box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { height: 100%; margin: 0; overflow: hidden; background: var(--pine); color: var(--paper); font: 15px/1.45 var(--body); }
+  #app { position: relative; height: 100%; overflow: hidden; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+  .bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    background: var(--bar);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 2;
+  }
+  .brand { display: flex; flex-direction: column; line-height: 1.1; }
+  .brand b { font: 700 19px/1.1 var(--display); letter-spacing: 0.01em; white-space: nowrap; }
+  .brand span { font-size: 12px; color: var(--line); letter-spacing: 0.06em; text-transform: uppercase; }
+  .mid { flex: 1; min-width: 0; }
+  .stats { font-size: 13px; color: var(--paper-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .btn {
+    font: 700 14px var(--body);
+    color: var(--ink); background: var(--paper);
+    border: 0; border-radius: 8px;
+    padding: 8px 14px; cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn.ghost { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 1.5px rgba(241, 235, 221, 0.5); }
+  .btn.primary { background: var(--canoe); color: #FFF7EE; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  .tools {
+    position: absolute; left: 0; right: 0; bottom: 12px;
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+    padding-inline: 16px;
+    z-index: 2;
+  }
+  .tools .btn { min-height: 44px; min-width: 64px; border-radius: 22px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+
+  .hint {
+    position: absolute; left: 50%; top: 74px;
+    transform: translate(-50%, -6px);
+    width: max-content; max-width: min(520px, calc(100% - 32px));
+    padding: 10px 14px;
+    background: var(--paper); color: var(--ink);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    font-size: 15px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s, transform 0.35s;
+    z-index: 3;
+  }
+  .hint.on { opacity: 1; transform: translate(-50%, 0); }
+  .hint kbd { font: 700 12px var(--body); padding: 1px 6px; border-radius: 4px; background: var(--paper-2); box-shadow: inset 0 -1px 0 var(--line); }
+
+  .toast { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); pointer-events: none; z-index: 5; }
+  .stamp {
+    --ink-c: var(--green);
+    width: 128px; height: 128px; border-radius: 50%;
+    display: grid; place-content: center; gap: 2px; text-align: center;
+    color: var(--ink-c); background: rgba(241, 235, 221, 0.96);
+    border: 3px double var(--ink-c);
+    box-shadow: inset 0 0 0 6px rgba(241, 235, 221, 0.96), inset 0 0 0 7.5px var(--ink-c);
+    transform: rotate(-8deg); padding: 16px;
+  }
+  .stamp small { font: 700 9px var(--body); letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; }
+  .stamp b { font: 700 15px/1.1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; text-wrap: balance; }
+  .toast .stamp { animation: thunk 0.45s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @keyframes thunk { from { transform: rotate(-14deg) scale(1.7); opacity: 0; } to { transform: rotate(-8deg) scale(1); opacity: 1; } }
+
+  .tune {
+    position: absolute; right: 16px; top: 68px;
+    width: min(300px, calc(100% - 32px)); max-height: calc(100% - 150px); overflow: auto;
+    padding: 16px; background: var(--paper); color: var(--ink);
+    border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex; flex-direction: column; gap: 10px; z-index: 6;
+  }
+  .tune h3 { margin: 0; font: 700 17px var(--display); }
+  .tune label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; }
+  .tune output { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tune input { width: 100%; accent-color: var(--canoe); margin: 0; }
+  .tune .field { display: flex; flex-direction: column; gap: 2px; }
+  .tune .note { margin: 0; font-size: 12px; color: var(--muted); }
+  .tune .btn { align-self: flex-start; background: var(--paper-2); }
+
+  .end { position: absolute; inset: 0; display: grid; place-items: center; padding-inline: 16px; background: rgba(18, 28, 30, 0.55); z-index: 7; }
+  .card {
+    width: min(470px, 100%); max-height: calc(100% - 32px); overflow: auto;
+    padding: 22px; background: var(--paper); color: var(--ink);
+    border-radius: 6px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    display: flex; flex-direction: column; gap: 14px;
+    background-image: repeating-linear-gradient(0deg, transparent 0 27px, rgba(201, 188, 159, 0.35) 27px 28px);
+  }
+  .eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .card h2 { margin: -8px 0 0; font: 700 26px/1.1 var(--display); text-wrap: balance; }
+  .card p { margin: 0; }
+  .stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; justify-items: center; }
+  .stamps .stamp { width: 100%; max-width: 116px; height: auto; aspect-ratio: 1; padding: 10px; }
+  .stamps .stamp b { font-size: 12px; }
+  .stamps .stamp:nth-child(2n) { transform: rotate(6deg); }
+  .stamps .stamp.missing { color: var(--line); border: 2px dashed var(--line); box-shadow: none; background: transparent; transform: none; }
+  dl.stats-list { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-variant-numeric: tabular-nums; }
+  dl.stats-list dt { color: var(--muted); }
+  dl.stats-list dd { margin: 0; font-weight: 700; text-align: right; }
+  .rule { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+  .rule a { color: var(--ink); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  @media (max-width: 460px) { .brand { display: none; } }
+  @media (max-width: 560px) { .brand span { display: none; } .bar { gap: 10px; padding-inline: 12px; } }
+  @media (prefers-reduced-motion: reduce) { .toast .stamp { animation: none; } .hint { transition: none; } }
+</style>
+
+<div id="app">
+  <canvas id="c" aria-label="Side view of a campsite at dusk with a food pack, trees, and branches. Drag back and let go to throw a rope over a branch." role="img"></canvas>
+
+  <header class="bar">
+    <div class="brand"><b>Smoke Lake camp</b><span>Bear hang practice</span></div>
+    <div class="mid"><div class="stats" id="stats">Hang the food pack before dark</div></div>
+    <button class="btn ghost" id="tuneBtn" aria-expanded="false" aria-controls="tune">Tune</button>
+  </header>
+
+  <div class="hint" id="hint" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <div class="tools">
+    <button class="btn" id="leftBtn" aria-label="Walk left">◀ Walk</button>
+    <button class="btn" id="rightBtn" aria-label="Walk right">Walk ▶</button>
+    <button class="btn" id="lowerBtn" hidden>Let out</button>
+    <button class="btn" id="retryBtn" hidden>New branch</button>
+    <button class="btn primary" id="tieBtn" hidden disabled>Tie it off</button>
+    <button class="btn" id="peekBtn" hidden>Peek out of the tent</button>
+  </div>
+
+  <aside class="tune" id="tune" hidden aria-label="Tune the feel">
+    <h3>Tune the feel</h3>
+    <div class="field"><label for="tPow">Throw power <output id="oPow"></output></label><input type="range" id="tPow" min="28" max="60" step="1"></div>
+    <div class="field"><label for="tArc">Aim preview <output id="oArc"></output></label><input type="range" id="tArc" min="0" max="1" step="0.05"></div>
+    <div class="field"><label for="tStr">Branch strength <output id="oStr"></output></label><input type="range" id="tStr" min="0.5" max="2" step="0.05"></div>
+    <div class="field"><label for="tHaul">Haul speed <output id="oHaul"></output></label><input type="range" id="tHaul" min="0.4" max="2" step="0.05"></div>
+    <button class="btn" id="tReset">Reset to defaults</button>
+    <p class="note">Aim preview shows the first part of the rock's arc. Zero means no help at all. Branch strength scales how far out a branch can hold the pack before it cracks.</p>
+  </aside>
+
+  <div class="end" id="end" hidden>
+    <div class="card" role="dialog" aria-labelledby="endTitle">
+      <p class="eyebrow">Adventure Passport · Night 1</p>
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="stamps" id="endStamps"></div>
+      <dl class="stats-list" id="endStats"></dl>
+      <p class="rule">The real rule in the Boundary Waters: food and anything scented (soap, lip balm, toothpaste) hangs at least <b>12 feet up</b> and <b>6 feet out</b> from the trunk, or goes in a certified bear-resistant container. <a href="https://www.fs.usda.gov/r09/superior/alerts/bwcaw-bear-aware-food-storage-order" target="_blank" rel="noopener">Forest Service order</a></p>
+      <div class="actions"><button class="btn primary" id="again">Hang it again</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const $ = (id) => document.getElementById(id);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = matchMedia('(pointer: fine)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // ---------- Tunables (world units are feet; y points up) ----------
+  const DEF = { power: 44, arc: 0.35, strength: 1, haul: 1 };
+  const P = { ...DEF };
+  const GRAV = 32;
+  const PACK_H = 2.2, PACK_W = 1.6;
+  const RULE_UP = 12, RULE_OUT = 6;
+
+  // ---------- Camp layout ----------
+  const TREES = [
+    { id: 'A', x: 3, r: 0.35, top: 15, kind: 'spruce' },
+    { id: 'B', x: 20, r: 0.7, top: 34, kind: 'pine' },
+    { id: 'C', x: -14, r: 0.55, top: 29, kind: 'pine' },
+  ];
+  const treeX = (id) => TREES.find((t) => t.id === id).x;
+  const BRANCH_DEFS = [
+    { tree: 'B', side: 1, h: 17, len: 12, r: 0.22, strong: 9.5 },
+    { tree: 'B', side: -1, h: 13, len: 9, r: 0.16, strong: 7 },
+    { tree: 'B', side: 1, h: 22.5, len: 6.5, r: 0.18, strong: 6.5 },
+    { tree: 'B', side: -1, h: 19.5, len: 10, r: 0.12, strong: 3, dead: true },
+    { tree: 'A', side: 1, h: 8, len: 4, r: 0.1, strong: 4 },
+    { tree: 'A', side: -1, h: 10.5, len: 3.5, r: 0.1, strong: 3.5 },
+    { tree: 'C', side: 1, h: 18, len: 8, r: 0.2, strong: 7.5 },
+    { tree: 'C', side: -1, h: 13, len: 6, r: 0.15, strong: 6 },
+  ];
+  const SMELLY_DEFS = [
+    { id: 'toothpaste', name: 'toothpaste', x: 0.4, col: '#E8EEF2', stripe: '#2B5C8A' },
+    { id: 'balm', name: 'lip balm', x: 5.8, y: 0.9, col: '#E07A2F' },
+    { id: 'mix', name: 'trail mix', x: 11.8, col: '#C9A96B' },
+    { id: 'soap', name: 'soap', x: 14.6, col: '#F4E3A1' },
+  ];
+  const TENT_X = -3, FIRE_X = 10.5, SHORE_X = 38, PACK_START = 8;
+
+  // ---------- State ----------
+  let W = 0, H = 0, DPR = 1, S = 20, GY = 0;
+  let mode, kid, branches, smelly, rope, rock, throws, drape, hoist, packPos, night, stats, got, pops, parts, cam, aim, settleT, flyT, reelT;
+  let tNow = 0;
+  const keys = {};
+
+  function reset() {
+    mode = 'throw';
+    kid = { x: 13, face: 1, walk: 0, phase: 0 };
+    branches = BRANCH_DEFS.map((b) => ({ ...b, broken: false, lenNow: b.len }));
+    smelly = SMELLY_DEFS.map((s) => ({ ...s, y: s.y || 0, stowed: false, fly: null, eaten: false }));
+    throws = 0; drape = null; hoist = null; night = null; aim = null;
+    packPos = { x: PACK_START, y: 0 };
+    stats = { cracks: 0 };
+    got = new Set(); pops = []; parts = [];
+    cam = { x: kid.x + 3 };
+    resetRope();
+    toastQueue.length = 0; $('toast').innerHTML = '';
+    $('end').hidden = true;
+    setTools();
+    updateStats();
+    hint('start', 'Hang the food pack where a bear can’t reach it: at least <b>12 ft up</b> and <b>6 ft out</b> from the trunk. Drag back from anywhere and let go to throw the rock over a branch. Tap anything smelly around camp to pack it.' +
+      (finePointer ? ' Walk with <kbd>←</kbd><kbd>→</kbd>.' : ''), 12000, true);
+  }
+
+  // ---------- Rope: a verlet chain from your hand to the rock ----------
+  const N = 56, SEG = 1.05, STEP = 1 / 180; // rope runs on a fixed timestep
+  let ropeAcc = 0;
+  function hand() { return { x: kid.x + kid.face * 0.5, y: 4.1 }; }
+  // Rope pays out of a coil in your hand: segments join the chain only as the rock pulls them out
+  let firstOn = N - 1;
+  function resetRope() {
+    const h = hand();
+    rope = [];
+    for (let i = 0; i < N; i++) rope.push({ x: h.x, y: h.y, px: h.x, py: h.y, inv: 1 });
+    rock = rope[N - 1];
+    rock.inv = 0.05;
+    rock.maxY = 0; rock.hitTent = false;
+    firstOn = N - 1;
+    ropeAcc = 0;
+  }
+  function segCollide(p, ax, ay, bx, by, rad, fric) {
+    const dx = bx - ax, dy = by - ay;
+    const t = clamp(((p.x - ax) * dx + (p.y - ay) * dy) / (dx * dx + dy * dy), 0, 1);
+    const qx = ax + dx * t, qy = ay + dy * t;
+    const ex = p.x - qx, ey = p.y - qy, d = Math.hypot(ex, ey);
+    if (d >= rad || d === 0) return false;
+    p.x = qx + (ex / d) * rad; p.y = qy + (ey / d) * rad;
+    p.px = lerp(p.px, p.x, fric); p.py = lerp(p.py, p.y, fric);
+    return true;
+  }
+  function branchSeg(b) {
+    const tx = treeX(b.tree);
+    const L = b.lenNow;
+    return [tx, b.h, tx + b.side * L, b.h - 0.07 * L];
+  }
+  function ropeStep(dt) {
+    const h = hand();
+    rope[0].x = h.x; rope[0].y = h.y; rope[0].px = h.x; rope[0].py = h.y;
+    // Pay out another segment when the last one clears your hand
+    while (firstOn > 1) {
+      const a = rope[firstOn];
+      const d = Math.hypot(a.x - h.x, a.y - h.y);
+      if (d < SEG) break;
+      const n = rope[firstOn - 1];
+      const k = SEG / d;
+      n.x = h.x + (a.x - h.x) * (1 - k); n.y = h.y + (a.y - h.y) * (1 - k);
+      n.px = n.x - (a.x - a.px) * 0.8; n.py = n.y - (a.y - a.py) * 0.8;
+      firstOn--;
+    }
+    for (let i = firstOn; i < N; i++) {
+      const p = rope[i];
+      const vx = (p.x - p.px) * 0.999, vy = (p.y - p.py) * 0.999;
+      p.px = p.x; p.py = p.y;
+      p.x += vx; p.y += vy - GRAV * dt * dt;
+    }
+    const from = firstOn === 1 ? 0 : firstOn; // the hand only holds the rope once it's all paid out
+    for (let it = 0; it < 8; it++) {
+      for (let i = from; i < N - 1; i++) {
+        const a = rope[i], b = rope[i + 1];
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+        if (d <= SEG || d === 0) continue; // rope only resists stretching
+        const ia = i === 0 ? 0 : a.inv, ib = b.inv, k = (d - SEG) / d / (ia + ib);
+        a.x += dx * k * ia; a.y += dy * k * ia;
+        b.x -= dx * k * ib; b.y -= dy * k * ib;
+      }
+      for (let i = firstOn; i < N; i++) {
+        const p = rope[i], rad = i === N - 1 ? 0.28 : 0.08;
+        if (p.y < rad) { p.y = rad; p.px = lerp(p.px, p.x, 0.6); p.py = p.y; }
+        for (const t of TREES) segCollide(p, t.x, 0, t.x, t.top, t.r + rad, 0.4);
+        // The rock passes branches (it's beside them, in depth); the rope catches only when it comes down on top
+        if (i === N - 1) continue;
+        for (const b of branches) {
+          const [ax, ay, bx, by] = branchSeg(b);
+          const lo = Math.min(ax, bx), hi = Math.max(ax, bx);
+          if (p.x < lo || p.x > hi) continue;
+          const yb = ay + ((p.x - ax) / (bx - ax)) * (by - ay) + b.r + rad;
+          if (p.y < yb && p.py >= yb - 0.05) { p.y = yb; p.px = lerp(p.px, p.x, 0.35); p.py = yb; }
+        }
+      }
+    }
+  }
+
+  function throwRock(vx, vy) {
+    const h = hand();
+    resetRope();
+    rock.x = h.x; rock.y = h.y;
+    rock.px = h.x - vx * STEP; rock.py = h.y - vy * STEP;
+    throws++;
+    mode = 'flying'; flyT = 0; settleT = 0;
+    hideHint('start');
+    setTools(); updateStats();
+  }
+
+  // After the rock settles: is the rope draped over a branch?
+  function checkDrape() {
+    let best = null;
+    for (const b of branches) {
+      const [ax, ay, bx, by] = branchSeg(b);
+      for (let i = Math.max(2, firstOn); i < N - 2; i++) {
+        const p = rope[i];
+        const dx = bx - ax, dy = by - ay;
+        const t = clamp(((p.x - ax) * dx + (p.y - ay) * dy) / (dx * dx + dy * dy), 0, 1);
+        const qx = ax + dx * t, qy = ay + dy * t;
+        if (Math.hypot(p.x - qx, p.y - qy) > b.r + 0.45 || p.y < qy) continue;
+        const before = rope[0].y < qy - 1.5 || rope.slice(firstOn, i).some((q) => q.y < qy - 1.5);
+        const after = rock.y < qy - 0.2;
+        // It only counts if the rope actually went over: hand on one side, rock on the other
+        const hx = rope[0].x;
+        const over = Math.abs(hx - qx) > 1.5 && (Math.sign(hx - qx) !== Math.sign(rock.x - qx) || Math.abs(rock.x - qx) < 1.2);
+        if (before && after && over && (!best || qy > best.y)) best = { b, x: qx, y: qy + b.r, t };
+      }
+    }
+    return best;
+  }
+
+  // ---------- Hints, bubbles, stamps ----------
+  const hintEl = $('hint');
+  const shownHints = new Set();
+  let hintTimer = 0, hintId = null;
+  function hint(id, html, ms = 7000, force = false) {
+    if (shownHints.has(id) && !force) return;
+    shownHints.add(id);
+    hintEl.innerHTML = html; hintEl.classList.add('on'); hintId = id;
+    clearTimeout(hintTimer);
+    if (ms) hintTimer = setTimeout(() => hintEl.classList.remove('on'), ms);
+  }
+  function hideHint(id) { if (hintId === id) hintEl.classList.remove('on'); }
+  function pop(text, x, y, life = 1.4) { pops.push({ text, x, y, life }); }
+
+  const STAMPS = [
+    { id: 'first', name: 'Over on the first throw', ink: '#2B5C8A' },
+    { id: 'stowed', name: 'Everything smelly packed', ink: '#2F6B4F' },
+    { id: 'perfect', name: 'Perfect bear hang', ink: '#2F6B4F' },
+    { id: 'crack', name: 'That branch was dead', ink: '#7A6A1F' },
+    { id: 'sorted', name: 'Sorted out by a bear', ink: '#8A3B2A' },
+    { id: 'loons', name: 'Heard the loons at 2 a.m.', ink: '#3A3F5C' },
+  ];
+  const toastQueue = [];
+  let toastBusy = false;
+  function award(id) {
+    if (got.has(id)) return;
+    got.add(id);
+    toastQueue.push(STAMPS.find((s) => s.id === id));
+    if (!toastBusy) nextToast();
+  }
+  function nextToast() {
+    const s = toastQueue.shift();
+    const el = $('toast');
+    if (!s) { toastBusy = false; el.innerHTML = ''; return; }
+    toastBusy = true;
+    el.innerHTML = `<div class="stamp" style="--ink-c:${s.ink}"><small>Passport stamp</small><b>${s.name}</b></div>`;
+    setTimeout(nextToast, 2300);
+  }
+
+  function updateStats() {
+    const packed = smelly.filter((s) => s.stowed).length;
+    $('stats').textContent = `Throws ${throws} · smelly stuff packed ${packed}/${smelly.length}`;
+  }
+  function setTools() {
+    const throwing = mode === 'throw';
+    $('leftBtn').hidden = !throwing; $('rightBtn').hidden = !throwing;
+    $('lowerBtn').hidden = mode !== 'hoist';
+    $('retryBtn').hidden = mode !== 'hoist';
+    $('tieBtn').hidden = mode !== 'hoist';
+    $('peekBtn').hidden = mode !== 'night';
+  }
+
+  // ---------- Measurements ----------
+  const nearestTrunk = (x) => Math.min(...TREES.map((t) => Math.abs(x - t.x) - t.r));
+  function hangNumbers() {
+    return { up: packPos.y, out: nearestTrunk(packPos.x), packed: smelly.filter((s) => s.stowed).length };
+  }
+
+  // ---------- Hoisting: the rope now runs over the branch like a pulley ----------
+  function startHoist(d) {
+    mode = 'hoist';
+    const tx = treeX(d.b.tree);
+    hoist = { b: d.b, px: d.x, py: d.y, dist: Math.abs(d.x - tx), L: d.y - PACK_H, psi: 0, psid: 0, crackT: -1 };
+    packPos = { x: d.x, y: 0 };
+    if (throws === 1) award('first');
+    pop('It’s over!', d.x, d.y + 2, 1.6);
+    hint('haul', 'You tied the food pack on. Now pull: drag <b>down</b> over and over, hand over hand, to haul it up. Watch the numbers at the bottom.' +
+      (finePointer ? ' Or hold <kbd>↓</kbd>.' : ''), 9000);
+    setTools();
+  }
+  function haul(ft) {
+    if (!hoist || hoist.crackT >= 0) return;
+    const minL = 0.8;
+    hoist.L = clamp(hoist.L - ft, minL, hoist.py - PACK_H);
+    if (ft > 0) hoist.psid += (Math.random() - 0.5) * 0.25 * ft;
+  }
+  function crack() {
+    const b = hoist.b;
+    stats.cracks++;
+    award('crack');
+    pop('CRACK!', hoist.px, hoist.py + 1, 1.8);
+    const tx = treeX(b.tree);
+    const [, , ex, ey] = branchSeg(b);
+    parts.push({ kind: 'branch', x1: hoist.px, y1: hoist.py - b.r, x2: ex, y2: ey, vy: 0, life: 2.5, r: b.r });
+    b.lenNow = Math.max(0.6, hoist.dist - 0.4);
+    b.broken = true;
+    packPos.y = 0;
+    hoist = null;
+    mode = 'throw';
+    resetRope();
+    hint('crack', b.dead ? 'That branch was dead. Gray, bare branches snap. Look for a live one with needles on it.' : 'Too far out on a thin branch. Branches are strongest near the trunk, but the pack still has to be 6 ft out.', 8000);
+    setTools();
+  }
+
+  // ---------- Night: 2 a.m. ----------
+  function startNight() {
+    const n = hangNumbers();
+    mode = 'night';
+    setTools();
+    if (n.packed === smelly.length) award('stowed');
+    const steps = [];
+    const missing = smelly.filter((s) => !s.stowed).sort((a, b) => a.x - b.x);
+    for (const s of missing) steps.push({ t: 'walk', x: s.x - 1 }, { t: 'sniff', d: 0.5 }, { t: 'eat', item: s });
+    const px = packPos.x;
+    const trunk = TREES.reduce((a, t) => (Math.abs(t.x - px) < Math.abs(a.x - px) ? t : a));
+    let outcome;
+    if (n.up < RULE_UP) {
+      steps.push({ t: 'walk', x: px + 1.2 }, { t: 'sniff', d: 1 }, { t: 'stand', d: 0.8 }, { t: 'swat' }, { t: 'sit', d: 2.6, say: 'nom nom nom' }, { t: 'walk', x: SHORE_X + 8 });
+      outcome = 'low';
+    } else if (n.out < RULE_OUT) {
+      steps.push({ t: 'walk', x: trunk.x + 1 }, { t: 'sniff', d: 0.8 }, { t: 'climb', to: hoist.py - 2.5 }, { t: 'swat' }, { t: 'down' }, { t: 'sit', d: 2.4, say: 'nom nom nom' }, { t: 'walk', x: SHORE_X + 8 });
+      outcome = 'trunk';
+    } else {
+      steps.push({ t: 'walk', x: px + 1.2 }, { t: 'sniff', d: 1.2 }, { t: 'stand', d: 1.6, say: 'sniff sniff…' }, { t: 'sit', d: 1.6, say: 'hmph.' }, { t: 'walk', x: SHORE_X + 8 });
+      outcome = missing.length ? 'partial' : 'perfect';
+    }
+    night = { final: n, t: 0, steps, i: 0, stepT: 0, outcome, peeked: false, flash: 0, bear: { x: -22, y: 0, pose: 'walk', dir: 1, phase: 0 }, packFall: null, done: false, loonT: -1, missing: missing.map((s) => s.name) };
+    hint('night', 'Lights out. Something’s moving around camp…', 4000);
+  }
+
+  // ---------- Input ----------
+  function local(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  const toScreen = (x, y) => [W / 2 + (x - cam.x) * S, GY - y * S];
+  let ptr = null, lastY = 0;
+  cv.addEventListener('pointerdown', (e) => {
+    if (ptr !== null) return;
+    const [x, y] = local(e);
+    // Tap something smelly to pack it
+    if (mode === 'throw' || mode === 'hoist') {
+      for (const s of smelly) {
+        if (s.stowed) continue;
+        const [sx, sy] = toScreen(s.x, s.y + 0.3);
+        if (Math.hypot(x - sx, y - sy) < 28) { stow(s); return; }
+      }
+    }
+    if (mode !== 'throw' && mode !== 'hoist') return;
+    e.preventDefault();
+    ptr = e.pointerId;
+    try { cv.setPointerCapture(ptr); } catch (_) {}
+    if (mode === 'throw') aim = { ox: x, oy: y, x, y };
+    lastY = y;
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== ptr) return;
+    const [x, y] = local(e);
+    if (mode === 'throw' && aim) { aim.x = x; aim.y = y; }
+    if (mode === 'hoist') { const dy = y - lastY; if (dy > 0) haul((dy / S) * 0.9 * P.haul); }
+    lastY = y;
+  });
+  const release = (e) => {
+    if (e.pointerId !== ptr) return;
+    ptr = null;
+    if (mode === 'throw' && aim) {
+      const v = aimVelocity();
+      aim = null;
+      if (v) throwRock(v.vx, v.vy);
+    }
+  };
+  cv.addEventListener('pointerup', release);
+  cv.addEventListener('pointercancel', (e) => { if (e.pointerId === ptr) { ptr = null; aim = null; } });
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  function aimVelocity() {
+    if (!aim) return null;
+    const dx = aim.ox - aim.x, dy = aim.y - aim.oy; // pull back, launch forward (screen y down)
+    const len = Math.hypot(dx, dy);
+    if (len < 18) return null;
+    const k = Math.min(1, len / 170) * P.power;
+    return { vx: (dx / len) * k, vy: (dy / len) * k };
+  }
+
+  function stow(s) {
+    s.stowed = true;
+    s.fly = { t: 0, x0: s.x, y0: s.y };
+    pop('packed', s.x, s.y + 1.2, 1);
+    updateStats();
+    const left = smelly.filter((q) => !q.stowed).length;
+    if (left === 0) pop('everything smelly is packed', packPos.x, packPos.y + 3.5, 1.8);
+  }
+
+  let walkDir = 0;
+  const holdBtn = (id, dir) => {
+    const b = $(id);
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); walkDir = dir; });
+    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => { if (walkDir === dir) walkDir = 0; });
+    b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') walkDir = dir; });
+    b.addEventListener('keyup', () => { walkDir = 0; });
+  };
+  holdBtn('leftBtn', -1); holdBtn('rightBtn', 1);
+  $('lowerBtn').addEventListener('click', () => haul(-1.5));
+  $('retryBtn').addEventListener('click', () => {
+    if (!hoist) return;
+    hoist = null; packPos = { x: PACK_START, y: 0 }; mode = 'throw'; resetRope(); setTools();
+  });
+  $('tieBtn').addEventListener('click', () => { if (mode === 'hoist' && packPos.y > 0.5) startNight(); });
+  $('peekBtn').addEventListener('click', () => {
+    if (!night || night.done) return;
+    night.peeked = true; night.flash = 2.2;
+    pop('!', night.bear.x, 5, 1);
+    setTimeout(() => pop('Grown-up: “GO BACK TO SLEEP.”', TENT_X, 7, 2.2), 600);
+  });
+  $('again').addEventListener('click', reset);
+
+  const typing = (e) => e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON');
+  addEventListener('keydown', (e) => {
+    if (typing(e)) return;
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
+    keys[e.code] = true;
+  });
+  addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+  // ---------- Simulation ----------
+  function update(dt) {
+    tNow += dt;
+    for (const p of pops) { p.y += dt * 1.1; p.life -= dt; }
+    pops = pops.filter((p) => p.life > 0);
+    for (const q of parts) {
+      q.vy -= GRAV * dt; q.y1 += q.vy * dt; q.y2 += q.vy * dt; q.life -= dt;
+      if (Math.min(q.y1, q.y2) < 0.2) { const lift = 0.2 - Math.min(q.y1, q.y2); q.y1 += lift; q.y2 += lift; q.vy = 0; }
+    }
+    parts = parts.filter((q) => q.life > 0);
+    for (const s of smelly) if (s.fly) { s.fly.t += dt * 1.6; if (s.fly.t >= 1) s.fly = null; }
+
+    // Walking
+    const kdir = walkDir || (keys.ArrowLeft || keys.KeyA ? -1 : 0) + (keys.ArrowRight || keys.KeyD ? 1 : 0);
+    if (mode === 'throw' && kdir) {
+      kid.x = clamp(kid.x + kdir * 6 * dt, -12, SHORE_X - 2);
+      kid.face = kdir; kid.phase += dt * 10;
+    }
+
+    if (mode === 'throw') { const h = hand(); for (const p of rope) { p.x = p.px = h.x; p.y = p.py = h.y; } }
+    if (mode === 'flying') {
+      ropeAcc += dt;
+      while (ropeAcc >= STEP) { ropeStep(STEP); ropeAcc -= STEP; }
+    }
+    if (mode === 'flying') {
+      flyT += dt;
+      rock.maxY = Math.max(rock.maxY || 0, rock.y);
+      const sp = Math.hypot(rock.x - rock.px, rock.y - rock.py) / STEP;
+      settleT = sp < 1.2 ? settleT + dt : 0;
+      if (rock.y < 0.35 && flyT > 0.3 && Math.abs(rock.x - kid.x) < 1.2) { pop('ow! my head', kid.x, 6, 1.4); }
+      if (rock.y < 0.35 && Math.abs(rock.x - TENT_X) < 2.6 && flyT > 0.3 && !rock.hitTent) { rock.hitTent = true; pop('HEY! (from the tent)', TENT_X, 5.5, 1.6); }
+      const falling = rock.y < rock.maxY - 1;
+      const early = falling && flyT > 0.6 && Math.floor(flyT * 10) !== Math.floor((flyT - dt) * 10) ? checkDrape() : null;
+      if (early) startHoist(early);
+      else if (settleT > 0.5 || flyT > 6) {
+        const d = checkDrape();
+        if (d) startHoist(d);
+        else {
+          mode = 'reel'; reelT = 0;
+          pop(throws > 2 ? 'nope' : 'missed', rock.x, rock.y + 1.5, 1);
+          if (throws >= 3) hint('aim', 'Tip: throw from a spot where the branch is a little ahead of you, and throw higher than you think. The rope has to go <b>over</b> and come down the other side.', 9000);
+        }
+      }
+    } else if (mode === 'reel') {
+      reelT += dt;
+      const h = hand();
+      const k = 1 - Math.exp(-dt * 6);
+      for (const p of rope) { p.x = lerp(p.x, h.x, k); p.y = lerp(p.y, Math.max(0.1, h.y * (1 - reelT)), k); p.px = p.x; p.py = p.y; }
+      if (reelT > 0.8) { resetRope(); mode = 'throw'; setTools(); }
+    } else if (mode === 'hoist') {
+      if (keys.ArrowDown || keys.KeyS) haul(3.2 * P.haul * dt);
+      if (keys.ArrowUp || keys.KeyW) haul(-3.2 * dt);
+      const h = hoist;
+      // Pendulum sway
+      h.psid += (-GRAV / Math.max(1, h.L) * Math.sin(h.psi) - 1.2 * h.psid) * dt;
+      h.psi += h.psid * dt;
+      const x = h.px + Math.sin(h.psi) * h.L, y = h.py - Math.cos(h.psi) * h.L - PACK_H;
+      packPos = { x, y: Math.max(0, y) };
+      if (packPos.y <= 0) { packPos.x = h.px; h.psi *= 0.8; }
+      $('tieBtn').disabled = packPos.y < 0.5;
+      // Weak branch: creak, then crack
+      if (packPos.y > 1 && h.dist > h.b.strong * P.strength && h.crackT < 0) { h.crackT = 0.6; pop('creeeak', h.px, h.py + 1, 0.8); }
+      if (h.crackT >= 0) { h.crackT -= dt; if (h.crackT < 0) crack(); }
+      if (hoist && packPos.y > 0.5) {
+        const n = hangNumbers();
+        if (n.up >= RULE_UP && n.out < RULE_OUT) hint('out', 'High enough, but it’s close to the trunk. Bears climb. Try a branch where the pack hangs at least 6 ft out.', 7000);
+      }
+    } else if (mode === 'night') {
+      updateNight(dt);
+    }
+
+    // Camera
+    let fx = kid.x + 3 * kid.face;
+    if (mode === 'flying' || mode === 'reel') fx = lerp(kid.x, rock.x, 0.6);
+    if (mode === 'hoist' && hoist) fx = lerp(kid.x, hoist.px, 0.6);
+    if (mode === 'night' && night) fx = clamp(night.bear.x + 3, -16, SHORE_X);
+    cam.x = lerp(cam.x, clamp(fx, -19 + W / S / 2, SHORE_X + 6 - W / S / 2), 1 - Math.exp(-dt * 3));
+  }
+
+  function updateNight(dt) {
+    const n = night;
+    n.t += dt;
+    if (n.flash > 0) n.flash -= dt;
+    if (n.t < 1.8) return; // fade to night
+    const b = n.bear;
+    if (n.packFall) {
+      n.packFall.vy -= GRAV * dt;
+      packPos.y = Math.max(0, packPos.y + n.packFall.vy * dt);
+      if (packPos.y === 0) n.packFall = null;
+    }
+    if (n.i >= n.steps.length) {
+      if (!n.done) {
+        n.done = true;
+        setTools();
+        if (!n.peeked) { n.loonT = 0; pop('ooo-OOO-ooo', SHORE_X - 3, 12, 2.4); award('loons'); }
+        if (n.outcome === 'perfect') award('perfect');
+        if (n.outcome === 'low' || n.outcome === 'trunk') award('sorted');
+        setTimeout(showEnd, n.peeked ? 1400 : 2800);
+      }
+      return;
+    }
+    const st = n.steps[n.i];
+    n.stepT += dt;
+    const next = () => { n.i++; n.stepT = 0; };
+    if (st.t === 'walk') {
+      b.pose = 'walk';
+      const d = st.x - b.x;
+      b.dir = Math.sign(d) || b.dir;
+      b.x += Math.sign(d) * Math.min(Math.abs(d), 10 * dt);
+      b.phase += dt * 8;
+      if (Math.abs(d) < 0.05) next();
+    } else if (st.t === 'sniff') {
+      b.pose = 'sniff';
+      if (n.stepT === dt) pop('sniff', b.x + b.dir * 1.5, 3, 0.9);
+      if (n.stepT > st.d) next();
+    } else if (st.t === 'eat') {
+      b.pose = 'sniff';
+      if (!st.item.eaten) { st.item.eaten = true; pop(`munch (the ${st.item.name})`, b.x, 4, 1.6); }
+      if (n.stepT > 0.9) next();
+    } else if (st.t === 'stand') {
+      b.pose = 'stand';
+      b.dir = Math.sign(packPos.x - b.x) || b.dir;
+      if (st.say && n.stepT === dt) pop(st.say, b.x, 8.5, st.d);
+      if (n.stepT > st.d) next();
+    } else if (st.t === 'swat') {
+      b.pose = b.pose === 'climb' ? 'climb' : 'stand';
+      if (n.stepT === dt) { pop('SWAT', packPos.x, packPos.y + 3, 1); n.packFall = { vy: 2 }; hoist = null; }
+      if (n.stepT > 1.2) next();
+    } else if (st.t === 'climb') {
+      b.pose = 'climb';
+      b.y = Math.min(st.to, b.y + 5 * dt);
+      if (b.y >= st.to) next();
+    } else if (st.t === 'down') {
+      b.pose = 'climb';
+      b.y = Math.max(0, b.y - 8 * dt);
+      if (b.y <= 0) next();
+    } else if (st.t === 'sit') {
+      b.pose = 'sit';
+      if (st.say && n.stepT === dt) pop(st.say, b.x, 5, st.d);
+      if (n.stepT > st.d) next();
+    }
+  }
+
+  function showEnd() {
+    const n = night, num = night.final;
+    const titles = {
+      perfect: ['The bear went home hungry', 'It sniffed, stood up, couldn’t reach, and left. Pancakes are safe.'],
+      partial: ['The pack held, but…', `The bear couldn’t reach the pack, so it had the ${listJoin(n.missing)} instead. Everything that smells goes in the pack.`],
+      low: ['A bear sorted you out at 2 a.m.', `The pack was only ${num.up.toFixed(1)} ft up. It stood on its back legs and swatted it down. Oatmeal again tomorrow.`],
+      trunk: ['A bear sorted you out at 2 a.m.', `The pack was only ${Math.max(0, num.out).toFixed(1)} ft from the trunk. It climbed up and reached over. Oatmeal again tomorrow.`],
+    };
+    const [t, p] = titles[n.outcome];
+    $('endTitle').textContent = t;
+    $('endText').textContent = p;
+    $('endStamps').innerHTML = STAMPS.map((s) => got.has(s.id)
+      ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Smoke Lake</small><b>${s.name}</b></div>`
+      : `<div class="stamp missing"><small>Not yet</small><b>?</b></div>`).join('');
+    const rows = [
+      ['Throws', throws],
+      ['Pack height', `${num.up.toFixed(1)} ft ${num.up >= RULE_UP ? '✓' : '✗'}`],
+      ['Out from the trunk', `${Math.max(0, num.out).toFixed(1)} ft ${num.out >= RULE_OUT ? '✓' : '✗'}`],
+      ['Smelly stuff packed', `${num.packed} of ${smelly.length} ${num.packed === smelly.length ? '✓' : '✗'}`],
+      ['Branches snapped', stats.cracks],
+    ];
+    $('endStats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    mode = 'done';
+    setTools();
+    toastQueue.length = 0; $('toast').innerHTML = '';
+    $('end').hidden = false;
+    $('again').focus();
+  }
+  const listJoin = (a) => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
+
+  // ---------- Drawing ----------
+  function worldT() { ctx.setTransform(DPR * S, 0, 0, -DPR * S, DPR * (W / 2 - cam.x * S), DPR * GY); }
+  function screenT() { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  function drawScene() {
+    screenT();
+    const nightK = night ? clamp(night.t / 1.8, 0, 1) : 0;
+    const g = ctx.createLinearGradient(0, 0, 0, GY);
+    g.addColorStop(0, '#6E86A6'); g.addColorStop(0.6, '#E0B892'); g.addColorStop(1, '#E9C9A0');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    worldT();
+    const vx0 = cam.x - W / S / 2 - 2, vx1 = cam.x + W / S / 2 + 2;
+    // Far shore across the lake
+    ctx.fillStyle = '#4F6B63';
+    ctx.beginPath(); ctx.moveTo(vx0, 0);
+    for (let x = vx0; x <= vx1; x += 1) ctx.lineTo(x, 4 + 1.2 * Math.sin(x / 3.1) + 0.8 * Math.sin(x / 1.3) + (Math.floor(x) % 3 === 0 ? 1.5 : 0));
+    ctx.lineTo(vx1, 0); ctx.fill();
+    // Lake on the right
+    ctx.fillStyle = '#6F97A6'; ctx.fillRect(SHORE_X - 3, -1, 40, 1.4);
+    // Ground
+    ctx.fillStyle = '#5A4632'; ctx.fillRect(vx0, -30, vx1 - vx0, 30);
+    ctx.fillStyle = '#6D7F3F'; ctx.fillRect(vx0, -0.25, Math.min(vx1, SHORE_X - 2) - vx0, 0.3);
+    ctx.fillStyle = '#9A8C6E'; ctx.fillRect(SHORE_X - 2, -0.25, 6, 0.3);
+
+    // Tent
+    ctx.fillStyle = '#D9962B';
+    ctx.beginPath(); ctx.moveTo(TENT_X - 2.8, 0); ctx.lineTo(TENT_X, 4); ctx.lineTo(TENT_X + 2.8, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#A8701C';
+    ctx.beginPath(); ctx.moveTo(TENT_X - 0.8, 0); ctx.lineTo(TENT_X, 2.6); ctx.lineTo(TENT_X + 0.8, 0); ctx.closePath(); ctx.fill();
+    if (night) { ctx.fillStyle = `rgba(255, 220, 140, ${night.flash > 0 ? 0.9 : 0.25})`; ctx.beginPath(); ctx.moveTo(TENT_X - 0.8, 0); ctx.lineTo(TENT_X, 2.6); ctx.lineTo(TENT_X + 0.8, 0); ctx.fill(); }
+
+    // Log, fire
+    ctx.fillStyle = '#6B4B2E'; roundRect(4.6, 0, 2.4, 0.8, 0.35); ctx.fill();
+    ctx.fillStyle = '#7F7C74';
+    for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.ellipse(FIRE_X + i * 0.7, 0.2, 0.35, 0.25, 0, 0, TAU); ctx.fill(); }
+    if (!night) {
+      const f = 0.6 + 0.2 * Math.sin(tNow * 9) * (reduceMotion ? 0 : 1);
+      ctx.fillStyle = '#E07A2F'; ctx.beginPath(); ctx.moveTo(FIRE_X - 0.5, 0.3); ctx.quadraticCurveTo(FIRE_X, 1.8 * f + 0.6, FIRE_X + 0.5, 0.3); ctx.fill();
+      ctx.fillStyle = '#F2C14E'; ctx.beginPath(); ctx.moveTo(FIRE_X - 0.25, 0.3); ctx.quadraticCurveTo(FIRE_X, 1.1 * f + 0.4, FIRE_X + 0.25, 0.3); ctx.fill();
+    } else { ctx.fillStyle = '#8A3B2A'; ctx.beginPath(); ctx.ellipse(FIRE_X, 0.25, 0.5, 0.15, 0, 0, TAU); ctx.fill(); }
+
+    // Trees and branches
+    for (const t of TREES) {
+      ctx.fillStyle = t.kind === 'pine' ? '#6B4A34' : '#4A3A2C';
+      ctx.beginPath(); ctx.moveTo(t.x - t.r * 1.3, 0); ctx.lineTo(t.x - t.r * 0.5, t.top); ctx.lineTo(t.x + t.r * 0.5, t.top); ctx.lineTo(t.x + t.r * 1.3, 0); ctx.fill();
+      ctx.fillStyle = '#2B4A33';
+      if (t.kind === 'pine') { for (const [dx, dy, r] of [[0, t.top, 3.4], [-2.4, t.top - 1.6, 2.4], [2.6, t.top - 1.2, 2.6]]) { ctx.beginPath(); ctx.arc(t.x + dx, dy, r, 0, TAU); ctx.fill(); } }
+      else { for (let k = 0; k < 5; k++) { const y = 7 + k * 1.8, w = 2.6 - k * 0.45; ctx.beginPath(); ctx.moveTo(t.x - w, y); ctx.lineTo(t.x, y + 2.6); ctx.lineTo(t.x + w, y); ctx.fill(); } }
+    }
+    for (const b of branches) {
+      const [ax, ay, bx, by] = branchSeg(b);
+      ctx.strokeStyle = b.dead ? '#8E877C' : '#5A3F2C';
+      ctx.lineCap = 'round';
+      ctx.lineWidth = b.r * 2;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.lineWidth = b.r * 1.2;
+      ctx.beginPath(); ctx.moveTo(lerp(ax, bx, 0.6), lerp(ay, by, 0.6)); ctx.lineTo(lerp(ax, bx, 0.75), lerp(ay, by, 0.75) + 0.9); ctx.stroke();
+      if (!b.dead && !b.broken) {
+        ctx.fillStyle = '#2E5A38';
+        for (let k = 0.35; k <= 1.001; k += 0.16) { ctx.beginPath(); ctx.ellipse(lerp(ax, bx, k), lerp(ay, by, k) + 0.25, 0.9, 0.45, 0, 0, TAU); ctx.fill(); }
+      } else if (b.dead) {
+        ctx.strokeStyle = '#8E877C'; ctx.lineWidth = 0.06;
+        for (let k = 0.4; k <= 1.001; k += 0.2) { ctx.beginPath(); ctx.moveTo(lerp(ax, bx, k), lerp(ay, by, k)); ctx.lineTo(lerp(ax, bx, k) + b.side * 0.4, lerp(ay, by, k) + 0.6); ctx.stroke(); }
+      }
+    }
+    for (const q of parts) {
+      if (q.kind !== 'branch') continue;
+      ctx.globalAlpha = Math.min(1, q.life);
+      ctx.strokeStyle = '#8E877C'; ctx.lineWidth = q.r * 2;
+      ctx.beginPath(); ctx.moveTo(q.x1, q.y1); ctx.lineTo(q.x2, q.y2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Smelly things, with little stink lines so you notice them
+    for (const s of smelly) {
+      if (s.eaten) continue;
+      let x = s.x, y = s.y;
+      if (s.stowed) {
+        if (!s.fly) continue;
+        const k = s.fly.t;
+        x = lerp(s.fly.x0, packPos.x, k); y = lerp(s.fly.y0, packPos.y + 1.2, k) + Math.sin(k * Math.PI) * 2;
+      }
+      ctx.fillStyle = s.col; roundRect(x - 0.3, y, 0.6, 0.35, 0.08); ctx.fill();
+      if (s.stripe) { ctx.fillStyle = s.stripe; ctx.fillRect(x - 0.3, y + 0.12, 0.6, 0.1); }
+      if (!s.stowed && !night) {
+        ctx.strokeStyle = 'rgba(120, 140, 60, 0.7)'; ctx.lineWidth = 0.05;
+        for (let k = -1; k <= 1; k++) {
+          const w = Math.sin(tNow * 3 + k) * 0.08 * (reduceMotion ? 0 : 1);
+          ctx.beginPath(); ctx.moveTo(x + k * 0.18, y + 0.5); ctx.quadraticCurveTo(x + k * 0.18 + 0.15 + w, y + 0.8, x + k * 0.18, y + 1.1); ctx.stroke();
+        }
+      }
+    }
+
+    // Food pack
+    drawPack(packPos.x, packPos.y);
+
+    // Rope
+    ctx.strokeStyle = '#E5B53A'; ctx.lineWidth = 0.09; ctx.lineJoin = 'round';
+    if (mode === 'hoist' && hoist) {
+      const h = hand();
+      ctx.beginPath(); ctx.moveTo(h.x, h.y); ctx.lineTo(hoist.px, hoist.py); ctx.lineTo(packPos.x, packPos.y + PACK_H); ctx.stroke();
+    } else if (night && hoist && !night.packFall) {
+      const tie = TREES.filter((t) => t.id !== hoist.b.tree).reduce((a, t) => (Math.abs(t.x - hoist.px) < Math.abs(a.x - hoist.px) ? t : a)).x;
+      ctx.beginPath(); ctx.moveTo(tie, 4); ctx.lineTo(hoist.px, hoist.py); ctx.lineTo(packPos.x, packPos.y + PACK_H); ctx.stroke();
+    } else if (!night) {
+      ctx.beginPath(); ctx.moveTo(rope[0].x, rope[0].y);
+      for (let i = firstOn; i < N; i++) ctx.lineTo(rope[i].x, rope[i].y);
+      ctx.stroke();
+      if (firstOn > 1) { const h = hand(); ctx.lineWidth = 0.08; ctx.beginPath(); ctx.ellipse(h.x - kid.face * 0.1, h.y - 0.5, 0.35 * Math.min(1, firstOn / 20 + 0.3), 0.5, 0, 0, TAU); ctx.stroke(); }
+      ctx.fillStyle = '#86837B'; ctx.beginPath(); ctx.arc(rock.x, rock.y, 0.28, 0, TAU); ctx.fill();
+    }
+
+    if (!night) drawKid();
+    if (night && night.t > 1.8) drawBear(night.bear);
+
+    // Night overlay, flashlight, stars
+    if (night) {
+      screenT();
+      ctx.fillStyle = `rgba(12, 20, 40, ${0.72 * nightK})`;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * nightK})`;
+      for (let i = 0; i < 60; i++) { const sx = (i * 97.3) % W, sy = ((i * 53.7) % (GY * 0.45)) + 60; ctx.fillRect(sx, sy, 1.5, 1.5); }
+      if (night.flash > 0) {
+        const [tx, ty] = toScreen(TENT_X + 0.5, 1.2), [bx, by] = toScreen(night.bear.x, 2.5);
+        const a = Math.atan2(by - ty, bx - tx);
+        ctx.fillStyle = 'rgba(255, 240, 190, 0.35)';
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.arc(tx, ty, W, a - 0.18, a + 0.18); ctx.closePath(); ctx.fill();
+      }
+      if (night.t < 4) {
+        ctx.globalAlpha = clamp(Math.min(night.t - 0.6, 4 - night.t), 0, 1);
+        ctx.fillStyle = '#F1EBDD'; ctx.font = '700 28px "Zilla Slab", Georgia, serif'; ctx.textAlign = 'center';
+        ctx.fillText('2:00 a.m.', W / 2, GY * 0.4);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function drawPack(x, y) {
+    ctx.fillStyle = '#5B6B3A'; roundRect(x - PACK_W / 2, y, PACK_W, PACK_H, 0.3); ctx.fill();
+    ctx.fillStyle = '#4A5830'; roundRect(x - PACK_W / 2, y + PACK_H * 0.55, PACK_W, PACK_H * 0.45, 0.3); ctx.fill();
+    ctx.strokeStyle = '#8B6A43'; ctx.lineWidth = 0.12;
+    ctx.beginPath(); ctx.moveTo(x - 0.3, y + 0.2); ctx.lineTo(x - 0.3, y + PACK_H * 0.55); ctx.moveTo(x + 0.3, y + 0.2); ctx.lineTo(x + 0.3, y + PACK_H * 0.55); ctx.stroke();
+  }
+
+  function drawKid() {
+    const x = kid.x, f = kid.face;
+    const step = (walkDir || keys.ArrowLeft || keys.ArrowRight) && mode === 'throw' ? Math.sin(kid.phase) * 0.35 : 0;
+    ctx.strokeStyle = '#3C4A55'; ctx.lineWidth = 0.28; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, 1.6); ctx.lineTo(x + step, 0); ctx.moveTo(x, 1.6); ctx.lineTo(x - step, 0); ctx.stroke();
+    ctx.fillStyle = '#E07A2F'; roundRect(x - 0.4, 1.5, 0.8, 1.6, 0.25); ctx.fill();
+    ctx.fillStyle = '#E3BE98'; ctx.beginPath(); ctx.arc(x + f * 0.05, 3.55, 0.42, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#C0452B'; ctx.beginPath(); ctx.arc(x + f * 0.05, 3.62, 0.42, 0, Math.PI); ctx.fill();
+    // Throwing arm follows the aim
+    const h = hand();
+    let ax = h.x, ay = h.y;
+    if (aim) { const v = aimVelocity(); if (v) { const l = Math.hypot(v.vx, v.vy); ax = x - (v.vx / l) * 0.9; ay = 3 - (v.vy / l) * 0.9; } }
+    ctx.strokeStyle = '#E3BE98'; ctx.lineWidth = 0.22;
+    ctx.beginPath(); ctx.moveTo(x, 2.9); ctx.lineTo(ax, ay); ctx.stroke();
+  }
+
+  function drawBear(b) {
+    ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.dir, 1);
+    ctx.fillStyle = '#1E1A17';
+    const bob = b.pose === 'walk' ? Math.sin(b.phase) * 0.12 : 0;
+    if (b.pose === 'stand' || b.pose === 'climb') {
+      ctx.beginPath(); ctx.ellipse(0, 3.2, 1.3, 2.6, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(0.3, 6.2, 0.9, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(1.0, 6.0, 0.6, 0.35, -0.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#8A6A4A'; ctx.beginPath(); ctx.ellipse(1.35, 6.0, 0.25, 0.2, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1E1A17';
+      ctx.beginPath(); ctx.arc(-0.3, 7.0, 0.3, 0, TAU); ctx.arc(0.6, 7.0, 0.3, 0, TAU); ctx.fill();
+      ctx.lineWidth = 0.6; ctx.strokeStyle = '#1E1A17'; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(0.5, 4.8); ctx.lineTo(1.4, 6.4 + Math.sin(tNow * 6) * 0.3); ctx.stroke();
+    } else if (b.pose === 'sit') {
+      ctx.beginPath(); ctx.ellipse(0, 1.5, 1.6, 1.5, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(0.8, 3.2, 0.85, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(1.5, 3.0, 0.55, 0.32, -0.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#8A6A4A'; ctx.beginPath(); ctx.ellipse(1.85, 3.0, 0.22, 0.18, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1E1A17'; ctx.beginPath(); ctx.arc(0.4, 4.0, 0.28, 0, TAU); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.ellipse(0, 2.1 + bob, 2.4, 1.3, 0, 0, TAU); ctx.fill();
+      const nose = b.pose === 'sniff' ? -0.6 + Math.sin(tNow * 10) * 0.1 : 0;
+      ctx.beginPath(); ctx.arc(2.2, 2.4 + nose + bob, 0.85, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(2.95, 2.2 + nose + bob, 0.6, 0.35, -0.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#8A6A4A'; ctx.beginPath(); ctx.ellipse(3.3, 2.2 + nose + bob, 0.22, 0.18, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1E1A17'; ctx.beginPath(); ctx.arc(1.9, 3.25 + nose + bob, 0.28, 0, TAU); ctx.fill();
+      ctx.lineWidth = 0.55; ctx.strokeStyle = '#1E1A17'; ctx.lineCap = 'round';
+      const s = Math.sin(b.phase) * 0.4;
+      for (const [lx, o] of [[-1.5, s], [-0.9, -s], [1.1, -s], [1.6, s]]) { ctx.beginPath(); ctx.moveTo(lx, 1.6); ctx.lineTo(lx + o, 0.1); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+
+  function drawOverlay() {
+    screenT();
+    // Aim arrow and a short preview of the arc
+    if (mode === 'throw' && aim) {
+      const v = aimVelocity();
+      ctx.strokeStyle = 'rgba(241, 235, 221, 0.7)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(aim.ox, aim.oy, 8, 0, TAU); ctx.moveTo(aim.ox, aim.oy); ctx.lineTo(aim.x, aim.y); ctx.stroke();
+      if (v && P.arc > 0) {
+        const h = hand();
+        ctx.fillStyle = 'rgba(241, 235, 221, 0.9)';
+        for (let t = 0.05; t <= P.arc + 1e-6; t += 0.05) {
+          const [sx, sy] = toScreen(h.x + v.vx * t, h.y + v.vy * t - 0.5 * GRAV * t * t);
+          ctx.beginPath(); ctx.arc(sx, sy, 2.4, 0, TAU); ctx.fill();
+        }
+      }
+    }
+    // Rule lines while hoisting: 12 ft up, 6 ft out
+    if (mode === 'hoist' && hoist) {
+      const [x0] = toScreen(cam.x - W / S, 0);
+      const [, y12] = toScreen(0, RULE_UP);
+      ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(241, 235, 221, 0.7)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, y12); ctx.lineTo(W, y12); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#F1EBDD'; ctx.font = '700 12px "Atkinson Hyperlegible", sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('12 ft', 12, y12 - 6);
+      const trunk = TREES.reduce((a, t) => (Math.abs(t.x - packPos.x) < Math.abs(a.x - packPos.x) ? t : a));
+      const side = Math.sign(packPos.x - trunk.x) || 1;
+      const [ta, ty] = toScreen(trunk.x + side * trunk.r, packPos.y + PACK_H / 2), [pa] = toScreen(packPos.x - side * PACK_W / 2, 0);
+      const [six] = toScreen(trunk.x + side * (trunk.r + RULE_OUT), 0);
+      ctx.strokeStyle = 'rgba(241, 235, 221, 0.8)';
+      ctx.beginPath(); ctx.moveTo(ta, ty); ctx.lineTo(pa, ty); ctx.stroke();
+      ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(six, ty - 14); ctx.lineTo(six, ty + 14); ctx.stroke(); ctx.setLineDash([]);
+      ctx.textAlign = 'center'; ctx.fillText('6 ft', six, ty - 18);
+      void x0;
+    }
+    // Popups
+    ctx.textAlign = 'center';
+    for (const p of pops) {
+      const [sx, sy] = toScreen(p.x, p.y);
+      ctx.globalAlpha = Math.min(1, p.life * 2);
+      ctx.font = '700 16px "Zilla Slab", Georgia, serif';
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(28, 42, 46, 0.85)'; ctx.strokeText(p.text, sx, sy);
+      ctx.fillStyle = '#F1EBDD'; ctx.fillText(p.text, sx, sy);
+    }
+    ctx.globalAlpha = 1;
+
+    // Checklist panel
+    if (mode === 'night' || !$('end').hidden) return;
+    const n = hangNumbers();
+    const lifted = mode === 'hoist' && packPos.y > 0.2;
+    const rows = [
+      ['UP', `12 ft or more`, lifted ? `${n.up.toFixed(1)} ft` : '—', lifted ? n.up >= RULE_UP : null],
+      ['OUT', `6 ft from the trunk`, lifted ? `${Math.max(0, n.out).toFixed(1)} ft` : '—', lifted ? n.out >= RULE_OUT : null],
+      ['SMELLY', `stuff in the pack`, `${n.packed} of ${smelly.length}`, n.packed === smelly.length],
+    ];
+    const pw = Math.min(380, W - 32), rh = 22, ph = rows.length * rh + 16;
+    const px = (W - pw) / 2, py = H - 72 - ph;
+    roundRect(px, py, pw, ph, 12); ctx.fillStyle = 'rgba(241, 235, 221, 0.94)'; ctx.fill();
+    ctx.textBaseline = 'middle';
+    rows.forEach(([k, label, val, ok], i) => {
+      const y = py + 8 + rh * i + rh / 2;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#5B6662'; ctx.font = '700 10px "Atkinson Hyperlegible", sans-serif'; ctx.fillText(k, px + 14, y);
+      ctx.fillStyle = '#1C2A2E'; ctx.font = '400 13px "Atkinson Hyperlegible", sans-serif'; ctx.fillText(label, px + 72, y);
+      ctx.textAlign = 'right'; ctx.font = '700 13px "Atkinson Hyperlegible", sans-serif';
+      ctx.fillStyle = ok === null ? '#5B6662' : ok ? '#3E7D52' : '#B26F12';
+      ctx.fillText(val + (ok === null ? '' : ok ? '  ✓' : '  ✗'), px + pw - 14, y);
+    });
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function draw() {
+    drawScene();
+    drawOverlay();
+  }
+
+  // ---------- Tuning ----------
+  const knobs = [
+    ['tPow', 'oPow', 'power', (v) => v.toFixed(0) + ' ft/s'],
+    ['tArc', 'oArc', 'arc', (v) => (v ? v.toFixed(2) + ' s' : 'off')],
+    ['tStr', 'oStr', 'strength', (v) => '×' + v.toFixed(2)],
+    ['tHaul', 'oHaul', 'haul', (v) => '×' + v.toFixed(2)],
+  ];
+  function syncKnobs() { for (const [i, o, key, fmt] of knobs) { $(i).value = P[key]; $(o).textContent = fmt(P[key]); } }
+  for (const [i, o, key, fmt] of knobs) $(i).addEventListener('input', () => { P[key] = parseFloat($(i).value); $(o).textContent = fmt(P[key]); });
+  $('tReset').addEventListener('click', () => { Object.assign(P, DEF); syncKnobs(); });
+  $('tuneBtn').addEventListener('click', () => { const t = $('tune'); t.hidden = !t.hidden; $('tuneBtn').setAttribute('aria-expanded', String(!t.hidden)); });
+  syncKnobs();
+
+  // ---------- Boot ----------
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    GY = H - 150;
+    S = clamp(Math.min((GY - 70) / 27, W / 15), 10, 34);
+  }
+  addEventListener('resize', resize);
+  resize();
+  reset();
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.033, (now - last) / 1000);
+    last = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
