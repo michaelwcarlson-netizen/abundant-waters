@@ -1,0 +1,1169 @@
+<title>Portage Trail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@500;700&display=swap">
+<style>
+  /* Same world as the paddling prototypes. Single theme by design. */
+  :root {
+    --ink: #1C2A2E;
+    --paper: #F1EBDD;
+    --paper-2: #E2D8C2;
+    --line: #C9BC9F;
+    --pine: #223D2C;
+    --canoe: #C0452B;
+    --green: #3E7D52;
+    --amber: #C9851F;
+    --muted: #5B6662;
+    --bar: rgba(22, 34, 36, 0.8);
+    --display: "Zilla Slab", "Rockwell", "Roboto Slab", Georgia, serif;
+    --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html { height: 100%; box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--pine);
+    color: var(--paper);
+    font: 15px/1.45 var(--body);
+  }
+  #app { position: relative; height: 100%; overflow: hidden; }
+  canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    touch-action: none;
+    user-select: none; -webkit-user-select: none;
+  }
+
+  .bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    background: var(--bar);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 2;
+  }
+  .brand { display: flex; flex-direction: column; line-height: 1.1; }
+  .brand b { font: 700 19px/1.1 var(--display); letter-spacing: 0.01em; white-space: nowrap; }
+  .brand span { font-size: 12px; color: var(--line); letter-spacing: 0.06em; text-transform: uppercase; }
+  .mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .prog { position: relative; height: 8px; border-radius: 4px; background: rgba(241, 235, 221, 0.18); overflow: hidden; }
+  #progFill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--canoe); border-radius: 4px; }
+  .stats { font-size: 13px; color: var(--paper-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .btn {
+    font: 700 14px var(--body);
+    color: var(--ink);
+    background: var(--paper);
+    border: 0; border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .btn.ghost { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 1.5px rgba(241, 235, 221, 0.5); }
+  .btn.primary { background: var(--canoe); color: #FFF7EE; padding: 11px 18px; font-size: 15px; }
+  .btn:focus-visible, input:focus-visible, .item:focus-visible, .seg button:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+  .hint {
+    position: absolute; left: 50%; top: 74px;
+    transform: translate(-50%, -6px);
+    width: max-content; max-width: min(520px, calc(100% - 32px));
+    padding: 10px 14px;
+    background: var(--paper); color: var(--ink);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    font-size: 15px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s, transform 0.35s;
+    z-index: 2;
+  }
+  .hint.on { opacity: 1; transform: translate(-50%, 0); }
+  .hint kbd {
+    font: 700 12px var(--body);
+    padding: 1px 6px; border-radius: 4px;
+    background: var(--paper-2); box-shadow: inset 0 -1px 0 var(--line);
+  }
+
+  .toast {
+    position: absolute; left: 50%; top: 150px;
+    transform: translateX(-50%);
+    pointer-events: none; z-index: 5;
+  }
+  .stamp {
+    --ink-c: var(--green);
+    width: 128px; height: 128px;
+    border-radius: 50%;
+    display: grid; place-content: center; gap: 2px;
+    text-align: center;
+    color: var(--ink-c);
+    background: rgba(241, 235, 221, 0.96);
+    border: 3px double var(--ink-c);
+    box-shadow: inset 0 0 0 6px rgba(241, 235, 221, 0.96), inset 0 0 0 7.5px var(--ink-c);
+    transform: rotate(-8deg);
+    padding: 16px;
+  }
+  .stamp small { font: 700 9px var(--body); letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; }
+  .stamp b { font: 700 15px/1.1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; text-wrap: balance; }
+  .toast .stamp { animation: thunk 0.45s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @keyframes thunk {
+    from { transform: rotate(-14deg) scale(1.7); opacity: 0; }
+    to { transform: rotate(-8deg) scale(1); opacity: 1; }
+  }
+
+  /* Cards that sit over the trail: load-out, drop-off, passport */
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: center;
+    padding: 0 16px 16px;
+    z-index: 4;
+  }
+  .end { position: absolute; inset: 0; display: grid; place-items: center; padding-inline: 16px; background: rgba(18, 28, 30, 0.55); z-index: 4; }
+  .card {
+    width: min(480px, 100%);
+    max-height: calc(100vh - 110px); overflow: auto;
+    padding: 20px;
+    background: var(--paper); color: var(--ink);
+    border-radius: 8px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .card.passport { border-radius: 6px; background-image: repeating-linear-gradient(0deg, transparent 0 27px, rgba(201, 188, 159, 0.35) 27px 28px); }
+  .eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .card h2 { margin: -8px 0 0; font: 700 24px/1.1 var(--display); text-wrap: balance; }
+  .card p { margin: 0; }
+
+  .seg { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .seg button {
+    font: 700 13px var(--body);
+    border: 1.5px solid var(--line); background: transparent; color: var(--ink);
+    border-radius: 16px; padding: 5px 11px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .item {
+    display: flex; align-items: center; gap: 8px;
+    text-align: left;
+    font: 700 14px/1.2 var(--body); color: var(--ink);
+    background: #FBF7EE; border: 1.5px solid var(--line); border-radius: 8px;
+    padding: 9px 10px; cursor: pointer;
+    min-height: 48px;
+  }
+  .item .sw { flex: none; width: 14px; height: 14px; border-radius: 3px; background: var(--c); }
+  .item .nm { flex: 1; min-width: 0; }
+  .item .wt { flex: none; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .item[aria-pressed="true"] { border-color: var(--ink); background: var(--paper-2); box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .item:disabled { opacity: 0.45; cursor: default; text-decoration: line-through; }
+
+  .meter { display: flex; flex-direction: column; gap: 6px; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .loadbar { position: relative; height: 12px; border-radius: 6px; overflow: hidden;
+    background: linear-gradient(90deg, #CFE0C9 0 22%, #F0DDB0 22% 44%, #F1C7A8 44% 70%, #E7A999 70% 100%); }
+  #loadFill { position: absolute; inset: 0 auto 0 0; width: 0; background: rgba(28, 42, 46, 0.75); border-radius: 6px; transition: width 0.2s; }
+  #loadNote { font-size: 14px; color: var(--ink); min-height: 2.9em; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .actions .aside { font-size: 13px; color: var(--muted); }
+
+  .stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; justify-items: center; }
+  .stamps .stamp { width: 100%; max-width: 116px; height: auto; aspect-ratio: 1; padding: 10px; }
+  .stamps .stamp b { font-size: 12px; }
+  .stamps .stamp:nth-child(2n) { transform: rotate(6deg); }
+  .stamps .stamp.missing { color: var(--line); border: 2px dashed var(--line); box-shadow: none; background: transparent; transform: none; }
+  dl.stats-list { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-variant-numeric: tabular-nums; }
+  dl.stats-list dt { color: var(--muted); }
+  dl.stats-list dd { margin: 0; font-weight: 700; text-align: right; }
+
+  .tune {
+    position: absolute; right: 16px; top: 68px;
+    width: min(300px, calc(100% - 32px));
+    max-height: calc(100% - 150px); overflow: auto;
+    padding: 16px;
+    background: var(--paper); color: var(--ink);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 6;
+  }
+  .tune h3 { margin: 0; font: 700 17px var(--display); }
+  .tune label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; }
+  .tune output { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tune input { width: 100%; accent-color: var(--canoe); margin: 0; }
+  .tune .field { display: flex; flex-direction: column; gap: 2px; }
+  .tune .note { margin: 0; font-size: 12px; color: var(--muted); }
+  .tune .btn { align-self: flex-start; background: var(--paper-2); }
+
+  @media (max-width: 460px) {
+    .brand { display: none; }
+    .card { padding: 16px; gap: 12px; }
+    .items { gap: 6px; }
+    .item { min-height: 44px; padding: 6px 8px; gap: 6px; font-size: 13px; flex-wrap: wrap; }
+    .item .nm { flex-basis: calc(100% - 20px); }
+    .item .wt { margin-left: 20px; font-size: 12px; }
+  }
+  @media (max-width: 340px) {
+    .items { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .brand span { display: none; }
+    .bar { gap: 10px; padding-inline: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast .stamp { animation: none; }
+    .hint { transition: none; }
+    #loadFill { transition: none; }
+  }
+</style>
+
+<div id="app">
+  <canvas id="c" aria-label="Side view of a portage trail from Sawbill Lake to Smoke Lake. Hold to walk, drag to balance your load." role="img"></canvas>
+
+  <header class="bar">
+    <div class="brand"><b>Sawbill → Smoke</b><span>Portage practice</span></div>
+    <div class="mid">
+      <div class="prog" aria-hidden="true"><div id="progFill"></div></div>
+      <div class="stats" id="stats">Trip 1 · 0 of 7 across</div>
+    </div>
+    <button class="btn ghost" id="tuneBtn" aria-expanded="false" aria-controls="tune">Tune</button>
+  </header>
+
+  <div class="hint" id="hint" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <div class="sheet" id="loadSheet">
+    <div class="card" role="dialog" aria-labelledby="loadTitle">
+      <p class="eyebrow" id="loadEyebrow">Trip 1 · Sawbill landing</p>
+      <h2 id="loadTitle">What are you carrying?</h2>
+      <div class="seg" id="dinner">
+        <span>Last night's dinner:</span>
+        <button data-d="fish" aria-pressed="true">Fresh walleye</button>
+        <button data-d="oat" aria-pressed="false">Oatmeal again</button>
+      </div>
+      <div class="items" id="items"></div>
+      <div class="meter">
+        <div class="row"><span>Load <span id="loadLb">0 lb</span></span><span>Energy <span id="energyTxt">100</span></span></div>
+        <div class="loadbar"><div id="loadFill"></div></div>
+        <p id="loadNote">Tap what you'll carry this trip. Everything has to get across eventually.</p>
+      </div>
+      <div class="actions"><button class="btn primary" id="go" disabled>Start carrying</button><span class="aside" id="goAside"></span></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="dropSheet" hidden>
+    <div class="card" role="dialog" aria-labelledby="dropTitle">
+      <p class="eyebrow" id="dropEyebrow">Smoke Lake landing</p>
+      <h2 id="dropTitle">Dropped off</h2>
+      <p id="dropText"></p>
+      <div class="actions"><button class="btn primary" id="back">Walk back for the rest</button></div>
+    </div>
+  </div>
+
+  <aside class="tune" id="tune" hidden aria-label="Tune the feel">
+    <h3>Tune the feel</h3>
+    <div class="field"><label for="tWalk">Walk speed <output id="oWalk"></output></label><input type="range" id="tWalk" min="50" max="140" step="1"></div>
+    <div class="field"><label for="tTip">Tippiness <output id="oTip"></output></label><input type="range" id="tTip" min="0.5" max="6" step="0.1"></div>
+    <div class="field"><label for="tPack">Pack weight effect <output id="oPack"></output></label><input type="range" id="tPack" min="0.3" max="2" step="0.05"></div>
+    <div class="field"><label for="tCtl">Lean control <output id="oCtl"></output></label><input type="range" id="tCtl" min="2" max="10" step="0.1"></div>
+    <div class="field"><label for="tMud">Mud slipperiness <output id="oMud"></output></label><input type="range" id="tMud" min="0" max="2.5" step="0.1"></div>
+    <div class="field"><label for="tBow">Bow tilt speed <output id="oBow"></output></label><input type="range" id="tBow" min="0.3" max="2" step="0.05"></div>
+    <button class="btn" id="tReset">Reset to defaults</button>
+    <p class="note">Tippiness sets how fast a load pulls you over. Pack weight effect scales how much each pound adds to that. Light loads right themselves; heavy ones need you.</p>
+  </aside>
+
+  <div class="end" id="end" hidden>
+    <div class="card passport" role="dialog" aria-labelledby="endTitle">
+      <p class="eyebrow">Adventure Passport · Day 1</p>
+      <h2 id="endTitle">Everything's at Smoke Lake</h2>
+      <div class="stamps" id="endStamps"></div>
+      <dl class="stats-list" id="endStats"></dl>
+      <div class="actions"><button class="btn primary" id="again">Portage again</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const $ = (id) => document.getElementById(id);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = matchMedia('(pointer: fine)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // ---------- Tunable feel ----------
+  const DEF = { walk: 90, tip: 2.6, pack: 1, control: 5.5, mud: 1, bow: 1 };
+  const P = { ...DEF };
+
+  // ---------- Gear ----------
+  const ITEMS = [
+    { id: 'canoe', name: 'Canoe', w: 45, col: '#C0452B' },
+    { id: 'food', name: 'Food pack', w: 35, col: '#5B6B3A' },
+    { id: 'gear', name: 'Gear pack', w: 22, col: '#8B6A43' },
+    { id: 'clothes', name: 'Clothes pack', w: 14, col: '#2B5C8A' },
+    { id: 'paddles', name: 'Paddles & PFDs', w: 8, col: '#E07A2F' },
+    { id: 'water', name: 'Water jug', w: 8, col: '#7FB3C8' },
+    { id: 'rods', name: 'Fishing rods', w: 3, col: '#3A3F5C' },
+  ];
+  const TOTAL_W = ITEMS.reduce((s, i) => s + i.w, 0);
+  const item = (id) => ITEMS.find((i) => i.id === id);
+
+  // ---------- The trail (world y points down; ground height rises as y goes negative) ----------
+  const TL = 2400;
+  const height = (x) => {
+    if (x < 0) return Math.max(-50, x * 0.45);
+    if (x > TL) return Math.max(-50, (TL - x) * 0.45);
+    const e = clamp(Math.min(x, TL - x) / 260, 0, 1), s = e * e * (3 - 2 * e);
+    return s * (30 * Math.sin(x / 260) + 18 * Math.sin(x / 97 + 1) + 110 * Math.exp(-Math.pow((x - 1250) / 220, 2)));
+  };
+  const G = (x) => -height(x);
+  const slopeAt = (x) => (G(x + 4) - G(x - 4)) / 8; // > 0 downhill, < 0 uphill
+  const WATER_Y = 22;
+  const MUD = [[30, 200], [1560, 1700], [TL - 210, TL - 30]];
+  const inMud = (x) => MUD.some(([a, b]) => x > a && x < b);
+  const ROCKS = [360, 400, 650, 940, 980, 1400, 1880, 1920, 2120].map((x, i) => ({ x, r: 6 + (i * 37 % 7) }));
+  const ROOTS = [260, 520, 780, 1080, 1480, 1790, 2020, 2250].map((x) => ({ x }));
+  const BRANCHES = [
+    { x: 560, h: 74, w: 90 }, { x: 860, h: 70, w: 70 }, { x: 1330, h: 78, w: 100 },
+    { x: 1830, h: 72, w: 80 }, { x: 2150, h: 76, w: 90 },
+  ];
+  const START_X = 70, END_X = TL - 70;
+  const SHOULDER = 34, HALF_CANOE = 85, HULL = 13, SIB_HEAD = 40;
+
+  function rng(seed) {
+    return () => {
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const R = rng(5);
+  const farPines = [], nearTrees = [], ferns = [];
+  for (let x = -600; x < TL * 0.6 + 900; x += 26 + R() * 22) farPines.push({ x, h: 50 + R() * 70, w: 16 + R() * 10 });
+  for (let x = -500; x < TL * 0.88 + 900; x += 70 + R() * 90) nearTrees.push({ x, h: 140 + R() * 90, r: 26 + R() * 18, birch: R() < 0.2 });
+  for (let x = -400; x < TL * 1.15 + 700; x += 60 + R() * 110) ferns.push({ x, s: 0.7 + R() * 0.6 });
+
+  // ---------- State ----------
+  let W = 0, H = 0, DPR = 1, S = 1;
+  let mode, dinner, energy, across, load, trip, clock, backAnim;
+  let kid, sib, pops, parts, bubble, bird, stillT, bumpCd, stopT;
+  let stats, got, cam;
+  let tNow = 0;
+  const input = { walk: false, lean: 0, tilt: 0, ptr: null, ox: 0, oy: 0, x: 0, y: 0 };
+  const keys = {};
+
+  function reset() {
+    mode = 'load';
+    dinner = 'fish'; energy = 100;
+    across = new Set(); load = new Set();
+    trip = 1; clock = 0; backAnim = null;
+    stats = { slips: 0, clonks: 0, thwacks: 0, digs: 0, trips: 0, canoeCarried: false };
+    got = new Set();
+    pops = []; parts = []; bubble = null; bird = null; stillT = 0; bumpCd = 0; stopT = 0;
+    newTripState();
+    cam = { x: kid.x + 60, y: G(kid.x) - 20 };
+    toastQueue.length = 0; $('toast').innerHTML = '';
+    $('end').hidden = true; $('dropSheet').hidden = true;
+    renderLoad();
+    $('loadSheet').hidden = false;
+    updateStats();
+  }
+  function newTripState() {
+    kid = { x: START_X, v: 0, th: 0, thd: 0, phi: 0.08, phase: 0, fallT: 0, lastX: START_X };
+    sib = { x: START_X + 120, v: 0, stopT: 0, phase: 0, nextStop: 6 + Math.random() * 6, hitCd: 0 };
+  }
+
+  const loadW = () => [...load].reduce((s, id) => s + item(id).w, 0);
+  const packW = () => [...load].filter((id) => id !== 'canoe').reduce((s, id) => s + item(id).w, 0);
+  const hasCanoe = () => load.has('canoe');
+
+  // ---------- Hints ----------
+  const hintEl = $('hint');
+  const shownHints = new Set();
+  let hintTimer = 0;
+  function hint(id, html, ms = 7000) {
+    if (shownHints.has(id)) return;
+    shownHints.add(id);
+    hintEl.innerHTML = html;
+    hintEl.classList.add('on');
+    clearTimeout(hintTimer);
+    if (ms) hintTimer = setTimeout(() => hintEl.classList.remove('on'), ms);
+  }
+  function say(text, dur = 2.4) { bubble = { text, t: dur }; }
+
+  // ---------- Stamps ----------
+  const STAMPS = [
+    { id: 'onetrip', name: 'One-trip portage', ink: '#8A3B2A' },
+    { id: 'slip', name: 'The classic portage slip', ink: '#7A6A1F' },
+    { id: 'canoe', name: 'Carried the canoe', ink: '#2B5C8A' },
+    { id: 'noclonk', name: 'Nobody got clocked', ink: '#2F6B4F' },
+    { id: 'bird', name: 'A chickadee landed', ink: '#3A3F5C' },
+    { id: 'done', name: 'Portage done', ink: '#2F6B4F' },
+  ];
+  const toastQueue = [];
+  let toastBusy = false;
+  function award(id) {
+    if (got.has(id)) return;
+    got.add(id);
+    toastQueue.push(STAMPS.find((s) => s.id === id));
+    if (!toastBusy) nextToast();
+  }
+  function nextToast() {
+    const s = toastQueue.shift();
+    const el = $('toast');
+    if (!s) { toastBusy = false; el.innerHTML = ''; return; }
+    toastBusy = true;
+    el.innerHTML = `<div class="stamp" style="--ink-c:${s.ink}"><small>Passport stamp</small><b>${s.name}</b></div>`;
+    setTimeout(nextToast, 2300);
+  }
+
+  const fmtTime = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+  function updateStats() {
+    $('stats').textContent = `Trip ${trip} · ${across.size} of ${ITEMS.length} across · ${fmtTime(clock)}`;
+  }
+
+  // ---------- Load-out ----------
+  function loadVerdict(w) {
+    if (w === 0) return 'Tap what you’ll carry this trip. Everything has to get across eventually.';
+    if (w === TOTAL_W) return 'Everything at once. That’s the one-trip portage. Slow, wobbly, and glorious if you make it.';
+    if (w <= 30) return 'Light. Quick and steady, but it means more trips.';
+    if (w <= 60) return 'Solid. A good load, with some wobble on the rocks.';
+    if (w <= 95) return 'Heavy. Slow going, and you’ll have to lean into it.';
+    return 'Very heavy. Every root is going to try to tip you over.';
+  }
+  function renderLoad() {
+    $('loadEyebrow').textContent = `Trip ${trip} · Sawbill landing`;
+    $('dinner').hidden = trip !== 1;
+    for (const b of $('dinner').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.d === dinner));
+    $('items').innerHTML = ITEMS.map((it) => {
+      const done = across.has(it.id);
+      return `<button class="item" data-id="${it.id}" aria-pressed="${load.has(it.id)}" ${done ? 'disabled' : ''} style="--c:${it.col}">
+        <span class="sw"></span><span class="nm">${it.name}</span><span class="wt">${done ? 'across' : it.w + ' lb'}</span></button>`;
+    }).join('');
+    const w = loadW();
+    $('loadLb').textContent = `${w} lb`;
+    $('energyTxt').textContent = Math.round(energy);
+    $('loadFill').style.width = `${(100 * w) / TOTAL_W}%`;
+    $('loadNote').textContent = loadVerdict(w);
+    $('go').disabled = w === 0;
+    const left = ITEMS.filter((i) => !across.has(i.id) && !load.has(i.id)).length;
+    $('goAside').textContent = w === 0 ? '' : left ? `${left} item${left > 1 ? 's' : ''} left for later trips` : 'Nothing left behind';
+  }
+  $('items').addEventListener('click', (e) => {
+    const b = e.target.closest('.item');
+    if (!b || b.disabled) return;
+    const id = b.dataset.id;
+    load.has(id) ? load.delete(id) : load.add(id);
+    renderLoad();
+  });
+  $('dinner').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    dinner = b.dataset.d;
+    energy = dinner === 'fish' ? 100 : 65;
+    renderLoad();
+  });
+  $('go').addEventListener('click', () => {
+    if (!loadW()) return;
+    $('loadSheet').hidden = true;
+    $('go').blur(); // hand the keyboard back to the trail
+    mode = 'carry';
+    newTripState();
+    if (hasCanoe()) stats.canoeCarried = true;
+    const w = loadW();
+    const walkHintNew = !shownHints.has('walk');
+    if (w >= 90) say('That looks really heavy…');
+    else if (w <= 12) say('That’s it? Easy trip.');
+    hint('walk', 'Hold anywhere to walk. While holding, drag left or right to lean against your load. Let go to stop and steady yourself.' +
+      (finePointer ? ' Keys: hold <kbd>Space</kbd> to walk, <kbd>←</kbd><kbd>→</kbd> to lean.' : ''), 9000);
+    if (hasCanoe()) setTimeout(() => hint('bow', 'You’re under the canoe. Drag up or down to tilt the bow: under branches, over your sibling, and clear of the ground.' +
+      (finePointer ? ' Keys: <kbd>↑</kbd><kbd>↓</kbd>.' : ''), 9000), walkHintNew ? 9200 : 0);
+  });
+
+  // ---------- Drop-off and walking back ----------
+  function arrive() {
+    mode = 'drop';
+    kid.v = 0;
+    const names = [...load].map((id) => item(id).name.toLowerCase());
+    for (const id of load) across.add(id);
+    stats.trips++;
+    energy = Math.min(100, energy + 5);
+    load = new Set();
+    updateStats();
+    if (across.size === ITEMS.length) { finish(); return; }
+    const left = ITEMS.length - across.size;
+    $('dropEyebrow').textContent = `Trip ${trip} · Smoke Lake landing`;
+    $('dropText').textContent = `You dropped the ${listJoin(names)}. ${left} item${left > 1 ? 's' : ''} still back at Sawbill. Water break: +5 energy.`;
+    $('dropSheet').hidden = false;
+    $('back').focus();
+  }
+  const listJoin = (a) => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
+  $('back').addEventListener('click', () => {
+    $('dropSheet').hidden = true;
+    $('back').blur();
+    mode = 'back';
+    backAnim = { t: 0, dur: reduceMotion ? 0.3 : 2.4 };
+    clock += TL / (P.walk * 1.3);
+    energy = Math.max(0, energy - 8);
+    say('Race you back!', 1.6);
+  });
+
+  function finish() {
+    mode = 'done';
+    award('done');
+    if (stats.trips === 1) award('onetrip');
+    if (stats.canoeCarried && stats.clonks === 0) award('noclonk');
+    say('We did it!', 2.5);
+    setTimeout(() => {
+      $('endStamps').innerHTML = STAMPS.map((s) => got.has(s.id)
+        ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Smoke Lake</small><b>${s.name}</b></div>`
+        : `<div class="stamp missing"><small>Not yet</small><b>?</b></div>`).join('');
+      const rows = [
+        ['Portage time', fmtTime(clock)],
+        ['Trips', stats.trips],
+        ['Slips', stats.slips],
+        ['Sibling clonks', stats.clonks],
+        ['Branches hit', stats.thwacks],
+        ['Canoe digs', stats.digs],
+        ['Energy left', Math.round(energy)],
+        ['Last night’s dinner', dinner === 'fish' ? 'Fresh walleye' : 'Oatmeal again'],
+      ];
+      $('endStats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+      $('end').hidden = false;
+      $('again').focus();
+    }, 1600);
+  }
+  $('again').addEventListener('click', reset);
+
+  // ---------- Input: hold to walk, drag sideways to lean, drag up/down to tilt the bow ----------
+  function local(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  cv.addEventListener('pointerdown', (e) => {
+    if (mode !== 'carry' || input.ptr !== null) return;
+    e.preventDefault();
+    input.ptr = e.pointerId;
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    const [x, y] = local(e);
+    input.ox = input.x = x; input.oy = input.y = y;
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== input.ptr) return;
+    [input.x, input.y] = local(e);
+  });
+  const release = (e) => { if (e.pointerId === input.ptr) input.ptr = null; };
+  cv.addEventListener('pointerup', release);
+  cv.addEventListener('pointercancel', release);
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  const typing = (e) => e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON');
+  addEventListener('keydown', (e) => {
+    if (typing(e)) return;
+    if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
+    keys[e.code] = true;
+  });
+  addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+  function readInput() {
+    let walk = keys.Space || false, lean = 0, tilt = 0;
+    if (keys.ArrowLeft || keys.KeyA) lean -= 1;
+    if (keys.ArrowRight || keys.KeyD) lean += 1;
+    if (keys.ArrowUp || keys.KeyW) tilt += 0.8;
+    if (keys.ArrowDown || keys.KeyS) tilt -= 0.8;
+    if (input.ptr !== null) {
+      walk = true;
+      const dx = input.x - input.ox, dy = input.oy - input.y;
+      lean += clamp(Math.sign(dx) * Math.max(0, Math.abs(dx) - 6) / 64, -1, 1);
+      tilt += clamp(Math.sign(dy) * Math.max(0, Math.abs(dy) - 16) / 50, -1, 1); // dead zone so finger drift doesn't lift the bow
+    }
+    input.walk = walk; input.lean = clamp(lean, -1, 1); input.tilt = clamp(tilt, -1, 1);
+  }
+
+  // ---------- Simulation ----------
+  function update(dt) {
+    tNow += dt;
+    if (bumpCd > 0) bumpCd -= dt;
+    for (const p of pops) { p.y -= dt * 20; p.life -= dt; }
+    pops = pops.filter((p) => p.life > 0);
+    for (const q of parts) {
+      q.vy += 600 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.rot += q.spin * dt; q.life -= dt;
+      const gy = G(q.x);
+      if (q.y > gy - q.h / 2) { q.y = gy - q.h / 2; q.vy *= -0.35; q.vx *= 0.7; q.spin *= 0.6; }
+    }
+    parts = parts.filter((q) => q.life > 0);
+    if (bubble) { bubble.t -= dt; if (bubble.t <= 0) bubble = null; }
+
+    if (mode === 'back') {
+      backAnim.t += dt;
+      const k = clamp(backAnim.t / backAnim.dur, 0, 1);
+      const e = k * k * (3 - 2 * k);
+      kid.x = lerp(END_X, START_X, e);
+      kid.phase += dt * 16;
+      sib.x = kid.x - 40;
+      if (k >= 1) {
+        trip++;
+        mode = 'load';
+        newTripState();
+        energy = Math.min(100, energy + 8);
+        pops.push({ text: 'trail mix break +8', x: kid.x, y: G(kid.x) - 70, life: 1.8 });
+        renderLoad();
+        $('loadSheet').hidden = false;
+        updateStats();
+      }
+      followCam(dt);
+      return;
+    }
+    if (mode !== 'carry') { followCam(dt); return; }
+
+    readInput();
+    clock += dt;
+    if (tNow % 1 < dt) updateStats();
+
+    const pw = packW() * P.pack, lw = loadW(), canoe = hasCanoe();
+    const slope = slopeAt(kid.x), mud = inMud(kid.x);
+    const tired = energy < 25;
+
+    // --- Falling over (and getting back up) ---
+    if (kid.fallT > 0) {
+      kid.fallT -= dt;
+      kid.v = 0;
+      if (kid.fallT <= 0) { kid.th = 0; kid.thd = 0; kid.phi = 0.08; }
+      updateSib(dt);
+      followCam(dt);
+      return;
+    }
+
+    // --- Walking ---
+    let target = 0;
+    if (input.walk && stopT <= 0) {
+      target = P.walk * (1 - lw / 210) * (tired ? 0.6 : 1) * (mud ? 0.6 : 1) * clamp(1 + slope * 1.6, 0.45, 1.15);
+      target *= 1 - Math.min(0.5, Math.abs(kid.th) * 0.6); // wobbling slows you down
+    }
+    if (stopT > 0) stopT -= dt;
+    kid.v = lerp(kid.v, target, 1 - Math.exp(-dt * (target > kid.v ? 3 : 8)));
+    const accel = (target - kid.v);
+    let nx = kid.x + kid.v * dt;
+    const blockAt = sib.x - 22;
+    if (sib.x < TL - 40 && nx > blockAt) { nx = Math.max(kid.x, blockAt); kid.v = Math.min(kid.v, 5); }
+    const moved = nx - kid.x;
+    kid.lastX = kid.x;
+    kid.x = nx;
+    kid.phase += moved * 0.14;
+    energy = Math.max(0, energy - moved * (0.004 + lw * 0.00018));
+    if (energy < 25) hint('tired', 'You’re running low on energy, so you’re slower and wobblier. Lighter loads help, and so does a better dinner.');
+
+    // --- Balance: you vs. your pack ---
+    const walking = kid.v > 8;
+    const m = 0.35 + pw / 35;
+    let acc = 0;
+    // Net stiffness: light packs right themselves, around 70 lb it goes neutral, heavier tips you over.
+    // Standing still is always stable.
+    const stiff = walking ? P.tip * (1.25 - 0.55 * m) * (tired ? 0.75 : 1) : 5 + P.tip;
+    acc -= stiff * Math.sin(kid.th);
+    acc -= 2.4 * kid.thd;
+    acc += slope * 3.2 * m * (walking ? 1 : 0.3);                 // downhill pitches you forward, uphill back
+    acc -= accel * 0.02 * m;
+    acc += input.lean * P.control;
+    if (mud && walking) {
+      acc += (Math.sin(tNow * 7.3) + Math.sin(tNow * 11.1 + 1)) * 1.4 * m * P.mud;
+      if (Math.random() < dt * 0.35 * m * P.mud) { kid.thd += (Math.random() < 0.5 ? -1 : 1) * 1.6; pops.push({ text: 'squelch', x: kid.x, y: G(kid.x) - 20, life: 0.9 }); }
+      hint('mud', 'Mud. It’s slippery. Slow down and stay centered.');
+    }
+    for (const r of ROCKS) if (kid.lastX < r.x && kid.x >= r.x) kid.thd += (Math.random() < 0.5 ? -1 : 1) * (0.7 + 0.5 * m);
+    for (const r of ROOTS) if (kid.lastX < r.x && kid.x >= r.x) kid.thd += (Math.random() < 0.5 ? -1 : 1) * (0.45 + 0.35 * m);
+    kid.thd += acc * dt;
+    kid.th += kid.thd * dt;
+    if (Math.abs(kid.th) > 0.45) hint('tip', 'You’re tipping! Drag the other way to lean against it, or let go to stop and steady yourself.');
+    if (Math.abs(kid.th) > 0.8) slip(mud);
+
+    // --- The canoe: bow tilt ---
+    if (canoe) {
+      kid.phi += (input.tilt * 1.1 * P.bow - 0.05) * dt;
+      if (walking) kid.phi += Math.sin(kid.phase * 2) * 0.05 * dt * 6 * (mud ? 1.8 : 1);
+      kid.phi = clamp(kid.phi, -0.6, 0.7);
+      canoeChecks();
+    }
+
+    // --- Sit still, and a chickadee comes ---
+    if (!walking && kid.fallT <= 0) stillT += dt; else stillT = 0;
+    if (stillT > 4 && !bird) { bird = { t: 0 }; award('bird'); pops.push({ text: 'chick-a-dee-dee-dee', x: kid.x, y: G(kid.x) - 80, life: 2.2 }); say('Don’t move! There’s a bird on you.', 2.4); }
+    if (bird) { bird.t += dt; if (walking) { bird = null; } }
+
+    updateSib(dt);
+    followCam(dt);
+    $('progFill').style.width = (100 * clamp((kid.x - START_X) / (END_X - START_X), 0, 1)).toFixed(1) + '%';
+    if (kid.x >= END_X) arrive();
+  }
+
+  function shoulder() {
+    const fx = kid.x, fy = G(kid.x);
+    return [fx + Math.sin(kid.th) * SHOULDER, fy - Math.cos(kid.th) * SHOULDER];
+  }
+  const canoeLineY = (x) => { const [sx, sy] = shoulder(); return sy - (x - sx) * Math.tan(kid.phi); };
+
+  function canoeChecks() {
+    const [sx, sy] = shoulder();
+    const c = Math.cos(kid.phi), s = Math.sin(kid.phi);
+    const bowX = sx + c * HALF_CANOE, bowY = sy - s * HALF_CANOE;
+    const sternX = sx - c * HALF_CANOE, sternY = sy + s * HALF_CANOE;
+    if (bumpCd > 0) return;
+    // Ground
+    if (bowY > G(bowX) - 2) { bump('thunk', bowX, G(bowX) - 10, 0.12); stats.digs++; hint('dig', 'The bow hit the ground. Tilt it up on uphill stretches.'); return; }
+    if (sternY > G(sternX) - 2) { bump('scrape', sternX, G(sternX) - 10, -0.12); stats.digs++; return; }
+    // Branches
+    for (const b of BRANCHES) {
+      if (b.x + b.w / 2 < sternX || b.x - b.w / 2 > bowX) continue;
+      const by = G(b.x) - b.h;
+      const x = clamp(b.x - b.w / 2, sternX, bowX), x2 = clamp(b.x + b.w / 2, sternX, bowX);
+      const top = Math.min(canoeLineY(x), canoeLineY(x2)) - HULL;
+      if (top < by + 2) {
+        stats.thwacks++;
+        bump('thwack', b.x, by, -0.18);
+        for (let i = 0; i < 10; i++) parts.push({ x: b.x + (Math.random() - 0.5) * b.w, y: by, vx: (Math.random() - 0.5) * 60, vy: -20 - Math.random() * 40, rot: 0, spin: 4, w: 5, h: 3, col: '#4E7A3A', life: 1.4, leaf: true });
+        if (Math.random() < 0.5) say('Ha! The canoe ate a tree.', 1.8);
+        return;
+      }
+    }
+    // Your sibling
+    if (sib.hitCd <= 0 && sib.x > sx + 12 && sib.x < bowX + 6) {
+      const yl = canoeLineY(sib.x), head = G(sib.x) - SIB_HEAD;
+      if (yl > head - 2 && yl < G(sib.x)) {
+        stats.clonks++;
+        sib.hitCd = 1.2; sib.stopT = 1.2; sib.x += 14;
+        bump('clonk!', sib.x, head - 8, 0.15);
+        say(['OW!', 'HEY!', 'Watch the bow!'][Math.floor(Math.random() * 3)], 1.6);
+      }
+    }
+  }
+  function bump(text, x, y, dphi) {
+    bumpCd = 0.6;
+    stopT = 0.35;
+    kid.v = 0;
+    kid.phi = clamp(kid.phi + dphi, -0.6, 0.7);
+    kid.thd += (Math.random() - 0.5) * 1.2;
+    pops.push({ text, x, y, life: 1.1 });
+  }
+
+  function slip(mud) {
+    stats.slips++;
+    award('slip');
+    kid.fallT = 2.2;
+    const dir = Math.sign(kid.th) || 1;
+    kid.th = dir * 1.45;
+    kid.thd = 0;
+    pops.push({ text: mud ? 'SPLORCH' : 'whoops!', x: kid.x, y: G(kid.x) - 60, life: 1.4 });
+    say(Math.random() < 0.5 ? 'Are you okay?! (laughing)' : 'Classic.', 2);
+    const fx = kid.x, fy = G(kid.x);
+    for (const id of load) {
+      const it = item(id);
+      if (id === 'canoe') {
+        parts.push({ x: fx + dir * 30, y: fy - 40, vx: dir * 50, vy: -80, rot: 0, spin: dir * 1.5, w: 150, h: 16, col: it.col, life: 2.1, canoe: true });
+      } else {
+        const s = 8 + it.w * 0.45;
+        parts.push({ x: fx, y: fy - 30, vx: (Math.random() - 0.3 * dir) * 120 * dir, vy: -120 - Math.random() * 120, rot: 0, spin: (Math.random() - 0.5) * 12, w: s * 0.9, h: s, col: it.col, life: 2.1 });
+      }
+    }
+    if (mud) for (let i = 0; i < 12; i++) parts.push({ x: fx, y: fy - 4, vx: (Math.random() - 0.5) * 200, vy: -80 - Math.random() * 160, rot: 0, spin: 0, w: 4, h: 4, col: '#4A3524', life: 1 });
+  }
+
+  function updateSib(dt) {
+    if (sib.hitCd > 0) sib.hitCd -= dt;
+    if (sib.stopT > 0) { sib.stopT -= dt; sib.v = 0; return; }
+    const gap = sib.x - kid.x;
+    let v = 0;
+    if (sib.x < TL - 30 && gap < 230) v = 78 * (inMud(sib.x) ? 0.6 : 1) * clamp(1 + slopeAt(sib.x) * 1.4, 0.5, 1.1);
+    sib.v = lerp(sib.v, v, 1 - Math.exp(-dt * 4));
+    sib.x += sib.v * dt;
+    sib.phase += sib.v * dt * 0.16;
+    if (sib.v > 10) {
+      sib.nextStop -= dt;
+      if (sib.nextStop <= 0) {
+        sib.nextStop = 7 + Math.random() * 8;
+        sib.stopT = 1.8 + Math.random() * 1.4;
+        say(['Hold on, my shoe’s untied.', 'Look, a mushroom!', 'Is that a moose track?', 'Wait, I dropped my snack.'][Math.floor(Math.random() * 4)], 2);
+        if (hasCanoe()) hint('sib', 'Your sibling stopped. Tilt the bow up to clear their head, or slow down and give them room.', 7000);
+      }
+    }
+  }
+
+  function followCam(dt) {
+    const k = 1 - Math.exp(-dt * 4);
+    cam.x = lerp(cam.x, kid.x + 70, k);
+    cam.y = lerp(cam.y, G(kid.x) - 30, 1 - Math.exp(-dt * 2.5));
+  }
+
+  // ---------- Drawing ----------
+  let OX = 0, OY = 0;
+  function worldT(f = 1) {
+    // Parallax layers slide at a fraction f of the camera
+    ctx.setTransform(DPR * S, 0, 0, DPR * S, DPR * (OX - cam.x * f * S), DPR * (OY - cam.y * S * (0.3 + 0.7 * f)));
+  }
+
+  function drawBackground() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#A9CAD6'); g.addColorStop(0.55, '#DCE3D6'); g.addColorStop(1, '#C9C7AE');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    // Far ridge
+    worldT(0.3);
+    ctx.fillStyle = '#7E9A93';
+    ctx.beginPath();
+    const x0 = cam.x * 0.3 - OX / S - 40, x1 = x0 + W / S + 80;
+    ctx.moveTo(x0, 400);
+    for (let x = x0; x <= x1; x += 20) ctx.lineTo(x, -130 + 18 * Math.sin(x / 140) + 10 * Math.sin(x / 53));
+    ctx.lineTo(x1, 400); ctx.closePath(); ctx.fill();
+
+    // Mid pines
+    worldT(0.6);
+    ctx.fillStyle = '#48675A';
+    const m0 = cam.x * 0.6 - OX / S - 60, m1 = m0 + W / S + 120;
+    for (const p of farPines) {
+      if (p.x < m0 || p.x > m1) continue;
+      const base = -40;
+      ctx.beginPath(); ctx.moveTo(p.x, base - p.h); ctx.lineTo(p.x + p.w, base); ctx.lineTo(p.x - p.w, base); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillRect(m0, -42, m1 - m0, 500);
+
+    // Near trees behind the trail
+    worldT(0.88);
+    const n0 = cam.x * 0.88 - OX / S - 80, n1 = n0 + W / S + 160;
+    for (const t of nearTrees) {
+      if (t.x < n0 || t.x > n1) continue;
+      const base = G(t.x / 0.88) + 30;
+      ctx.fillStyle = t.birch ? '#DAD5C8' : '#4A3A2C';
+      ctx.fillRect(t.x - 5, base - t.h, 10, t.h);
+      ctx.fillStyle = t.birch ? '#6D8F4E' : '#2E4D36';
+      ctx.beginPath(); ctx.arc(t.x, base - t.h, t.r, 0, TAU); ctx.arc(t.x - t.r * 0.7, base - t.h + t.r * 0.6, t.r * 0.8, 0, TAU); ctx.arc(t.x + t.r * 0.7, base - t.h + t.r * 0.5, t.r * 0.8, 0, TAU); ctx.fill();
+    }
+  }
+
+  function drawTrail() {
+    worldT(1);
+    const x0 = cam.x - OX / S - 40, x1 = cam.x + (W - OX) / S + 40;
+
+    // Water at both landings
+    ctx.fillStyle = '#2D6A80';
+    if (x0 < 20) ctx.fillRect(x0 - 10, WATER_Y, 30 - x0, 400);
+    if (x1 > TL - 20) ctx.fillRect(TL - 20, WATER_Y, x1 - TL + 40, 400);
+
+    // Ground
+    ctx.beginPath();
+    ctx.moveTo(x0, 600);
+    for (let x = x0; x <= x1; x += 6) ctx.lineTo(x, G(x));
+    ctx.lineTo(x1, 600); ctx.closePath();
+    ctx.fillStyle = '#5A4632'; ctx.fill();
+    ctx.lineWidth = 6; ctx.strokeStyle = '#6D7F3F';
+    ctx.beginPath();
+    for (let x = x0; x <= x1; x += 6) (x === x0 ? ctx.moveTo(x, G(x) + 2) : ctx.lineTo(x, G(x) + 2));
+    ctx.stroke();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#8A6D4B';
+    ctx.beginPath();
+    for (let x = x0; x <= x1; x += 6) (x === x0 ? ctx.moveTo(x, G(x) + 1) : ctx.lineTo(x, G(x) + 1));
+    ctx.stroke();
+    // Water over the ground at the ends
+    ctx.fillStyle = 'rgba(45, 106, 128, 0.92)';
+    if (x0 < 20) ctx.fillRect(x0 - 10, WATER_Y, 30 - x0, 400);
+    if (x1 > TL - 20) ctx.fillRect(TL - 20, WATER_Y, x1 - TL + 40, 400);
+    ctx.strokeStyle = 'rgba(236, 244, 240, 0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0 - 10, WATER_Y); ctx.lineTo(Math.min(20, x1), WATER_Y); ctx.moveTo(Math.max(TL - 20, x0), WATER_Y); ctx.lineTo(x1 + 30, WATER_Y); ctx.stroke();
+
+    // Mud
+    for (const [a, b] of MUD) {
+      if (b < x0 || a > x1) continue;
+      ctx.beginPath();
+      ctx.moveTo(a, G(a));
+      for (let x = a; x <= b; x += 6) ctx.lineTo(x, G(x) - 2 - 2 * Math.sin((x - a) / 18));
+      for (let x = b; x >= a; x -= 6) ctx.lineTo(x, G(x) + 6);
+      ctx.closePath();
+      ctx.fillStyle = '#3E2C1E'; ctx.fill();
+      ctx.fillStyle = 'rgba(200, 220, 225, 0.35)';
+      for (let x = a + 14; x < b - 10; x += 34) { ctx.beginPath(); ctx.ellipse(x, G(x) - 1, 7, 1.6, 0, 0, TAU); ctx.fill(); }
+    }
+    // Roots and rocks
+    ctx.strokeStyle = '#6B4B2E'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+    for (const r of ROOTS) {
+      if (r.x < x0 || r.x > x1) continue;
+      ctx.beginPath(); ctx.moveTo(r.x - 14, G(r.x - 14) + 2); ctx.quadraticCurveTo(r.x, G(r.x) - 9, r.x + 14, G(r.x + 14) + 2); ctx.stroke();
+    }
+    for (const r of ROCKS) {
+      if (r.x < x0 || r.x > x1) continue;
+      ctx.fillStyle = '#86837B'; ctx.beginPath(); ctx.ellipse(r.x, G(r.x) - r.r * 0.35, r.r * 1.3, r.r, 0, Math.PI, TAU); ctx.fill();
+      ctx.fillStyle = '#A9A59B'; ctx.beginPath(); ctx.ellipse(r.x - r.r * 0.3, G(r.x) - r.r * 0.8, r.r * 0.5, r.r * 0.3, 0, 0, TAU); ctx.fill();
+    }
+
+    // Overhanging branches
+    for (const b of BRANCHES) {
+      if (b.x + b.w < x0 || b.x - b.w > x1) continue;
+      const by = G(b.x) - b.h, tx = b.x - b.w / 2 - 26;
+      ctx.fillStyle = '#4A3A2C'; ctx.fillRect(tx - 7, by - 200, 14, G(tx) - by + 200);
+      ctx.strokeStyle = '#4A3A2C'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(tx, by - 16); ctx.quadraticCurveTo(b.x, by - 6, b.x + b.w / 2 + 6, by - 4); ctx.stroke();
+      ctx.fillStyle = '#2E5A38';
+      for (let x = b.x - b.w / 2; x <= b.x + b.w / 2; x += 12) { ctx.beginPath(); ctx.ellipse(x, by - 4, 9, 6, 0, 0, TAU); ctx.fill(); }
+    }
+
+    // Signs and gear piles
+    sign(40, 'SAWBILL', 'portage start');
+    sign(TL - 40, 'SMOKE LAKE', 'portage end');
+    let px = 64;
+    for (const it of ITEMS) {
+      if (across.has(it.id) || load.has(it.id) || it.id === 'canoe') continue;
+      const s = 7 + it.w * 0.35; ctx.fillStyle = it.col; roundRect(px, G(px) - s, s * 0.9, s, 2); ctx.fill(); px += s + 4;
+    }
+    if (!across.has('canoe') && !load.has('canoe')) drawCanoeShape(12, G(12) - 6, 0, 0.5);
+    let qx = TL - 150;
+    for (const it of ITEMS) {
+      if (!across.has(it.id) || it.id === 'canoe') continue;
+      const s = 7 + it.w * 0.35; ctx.fillStyle = it.col; roundRect(qx, G(qx) - s, s * 0.9, s, 2); ctx.fill(); qx += s + 4;
+    }
+    if (across.has('canoe')) drawCanoeShape(TL - 12, G(TL - 12) - 6, 0, 0.5);
+  }
+
+  function sign(x, a, b) {
+    const y = G(x);
+    ctx.fillStyle = '#5A4128'; ctx.fillRect(x - 2, y - 40, 4, 40);
+    ctx.fillStyle = '#8B6A43'; ctx.fillRect(x - 40, y - 66, 80, 30);
+    ctx.strokeStyle = '#5A4128'; ctx.lineWidth = 2; ctx.strokeRect(x - 40, y - 66, 80, 30);
+    ctx.fillStyle = '#F1EBDD'; ctx.textAlign = 'center';
+    ctx.font = '700 11px "Zilla Slab", Georgia, serif'; ctx.fillText(a, x, y - 53);
+    ctx.font = '400 9px "Atkinson Hyperlegible", sans-serif'; ctx.fillText(b, x, y - 42);
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  // Upside-down canoe centered at (x, y) along angle phi (bow up = positive)
+  function drawCanoeShape(x, y, phi, scale = 1, warn = false) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-phi); ctx.scale(scale, scale);
+    ctx.beginPath();
+    ctx.moveTo(-HALF_CANOE, -6);
+    ctx.quadraticCurveTo(-HALF_CANOE + 20, 1, 0, 0);
+    ctx.quadraticCurveTo(HALF_CANOE - 20, 1, HALF_CANOE, -6);
+    ctx.quadraticCurveTo(HALF_CANOE - 14, -HULL - 4, 0, -HULL - 3);
+    ctx.quadraticCurveTo(-HALF_CANOE + 14, -HULL - 4, -HALF_CANOE, -6);
+    ctx.closePath();
+    ctx.fillStyle = '#C0452B'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = warn ? '#F1EBDD' : '#7E2A19'; ctx.stroke();
+    ctx.strokeStyle = '#7E2A19'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-HALF_CANOE + 12, -2); ctx.quadraticCurveTo(0, 2, HALF_CANOE - 12, -2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawKidBody(x, y, th, phase, o) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(th);
+    const sw = Math.sin(phase) * 7;
+    ctx.strokeStyle = '#3C4A55'; ctx.lineWidth = 4.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(sw, 0); ctx.moveTo(0, -15); ctx.lineTo(-sw, 0); ctx.stroke();
+    // Packs on your back, heaviest at the bottom
+    if (o.packs) {
+      let py = -16;
+      for (const it of o.packs) {
+        const h = 6 + it.w * 0.32, w = 8 + it.w * 0.12;
+        ctx.fillStyle = it.col; roundRect(-4 - w, py - h, w, h, 3); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1; ctx.stroke();
+        py -= h - 1;
+      }
+      if (o.rods) { ctx.strokeStyle = '#3A3F5C'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-8, -18); ctx.lineTo(-18, py - 26); ctx.moveTo(-6, -18); ctx.lineTo(-13, py - 30); ctx.stroke(); }
+    }
+    ctx.fillStyle = o.vest; roundRect(-6, -34 * o.s, 12, 20 * o.s, 4); ctx.fill();
+    ctx.fillStyle = '#E3BE98'; ctx.beginPath(); ctx.arc(1, -40 * o.s, 6, 0, TAU); ctx.fill();
+    ctx.fillStyle = o.hat; ctx.beginPath(); ctx.arc(1, -41.5 * o.s, 6, Math.PI, TAU); ctx.fill(); ctx.fillRect(1, -42 * o.s, 9, 2);
+    ctx.strokeStyle = '#E3BE98'; ctx.lineWidth = 3.5;
+    if (o.canoe) { ctx.beginPath(); ctx.moveTo(-3, -30); ctx.lineTo(-10, -37); ctx.moveTo(3, -30); ctx.lineTo(10, -37); ctx.stroke(); }
+    else {
+      ctx.beginPath(); ctx.moveTo(2, -30); ctx.lineTo(9 + sw * 0.3, -20); ctx.stroke();
+      if (o.paddles) { ctx.strokeStyle = '#D8B27A'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-4, -44); ctx.lineTo(18, -6); ctx.stroke(); ctx.fillStyle = '#C99A5B'; ctx.beginPath(); ctx.ellipse(18, -6, 3, 8, -0.5, 0, TAU); ctx.fill(); }
+      if (o.water) { ctx.fillStyle = '#7FB3C8'; roundRect(6 + sw * 0.3, -20, 8, 11, 2); ctx.fill(); }
+    }
+    ctx.restore();
+  }
+
+  function drawActors() {
+    worldT(1);
+    // Sibling up ahead, a little shorter
+    const sy = G(sib.x);
+    const warn = mode === 'carry' && hasCanoe() && kid.fallT <= 0 && sib.x > kid.x + 12 && sib.x < kid.x + HALF_CANOE + 6 && canoeLineY(sib.x) > sy - SIB_HEAD - 6;
+    if (warn) { ctx.fillStyle = 'rgba(192, 69, 43, 0.35)'; ctx.beginPath(); ctx.arc(sib.x + 1, sy - SIB_HEAD * 0.95, 11, 0, TAU); ctx.fill(); }
+    drawKidBody(sib.x, sy, 0, sib.phase, { vest: '#E5B53A', hat: '#2B5C8A', s: 0.92, packs: [{ w: 12, col: '#6D5A8A' }] });
+
+    // You
+    const carrying = mode === 'carry' || mode === 'drop';
+    const fallen = kid.fallT > 0;
+    const packs = carrying && !fallen ? [...load].filter((id) => ['food', 'gear', 'clothes'].includes(id)).map(item).sort((a, b) => b.w - a.w) : [];
+    drawKidBody(kid.x, G(kid.x), kid.th, kid.phase, {
+      vest: '#E07A2F', hat: '#C0452B', s: 1, packs,
+      rods: carrying && !fallen && load.has('rods'),
+      paddles: carrying && !fallen && load.has('paddles') && !load.has('canoe'),
+      water: carrying && !fallen && load.has('water') && !load.has('canoe'),
+      canoe: carrying && !fallen && load.has('canoe'),
+    });
+    if (carrying && !fallen && hasCanoe()) {
+      const [sx, syy] = shoulder();
+      drawCanoeShape(sx, syy, kid.phi, 1, false);
+    }
+    if (bird) {
+      const [bx, by] = hasCanoe() ? [shoulder()[0] - 10, canoeLineY(shoulder()[0] - 10) - HULL - 4] : [kid.x - 10, G(kid.x) - 58];
+      ctx.fillStyle = '#8E918C'; ctx.beginPath(); ctx.ellipse(bx, by, 5, 4, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1B1D1C'; ctx.beginPath(); ctx.arc(bx + 4, by - 3, 3, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#F4F2EC'; ctx.beginPath(); ctx.arc(bx + 4.5, by - 2, 1.6, 0, TAU); ctx.fill();
+    }
+
+    // Tumbling gear, leaves, mud
+    for (const q of parts) {
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.rot);
+      ctx.globalAlpha = Math.min(1, q.life * 2);
+      if (q.canoe) { ctx.restore(); ctx.save(); ctx.globalAlpha = Math.min(1, q.life * 2); drawCanoeShape(q.x, q.y, -q.rot, 1); }
+      else if (q.leaf) { ctx.fillStyle = q.col; ctx.beginPath(); ctx.ellipse(0, 0, q.w, q.h, 0, 0, TAU); ctx.fill(); }
+      else { ctx.fillStyle = q.col; roundRect(-q.w / 2, -q.h / 2, q.w, q.h, 2); ctx.fill(); }
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.textAlign = 'center';
+    for (const p of pops) {
+      ctx.globalAlpha = Math.min(1, p.life * 2);
+      ctx.font = '700 15px "Zilla Slab", Georgia, serif';
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(28, 42, 46, 0.8)'; ctx.strokeText(p.text, p.x, p.y);
+      ctx.fillStyle = '#F1EBDD'; ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawForeground() {
+    worldT(1.15);
+    const f0 = cam.x * 1.15 - OX / S - 60, f1 = f0 + W / S + 120;
+    for (const f of ferns) {
+      if (f.x < f0 || f.x > f1) continue;
+      const base = G(f.x / 1.15) + 70;
+      ctx.strokeStyle = '#2A4E30'; ctx.lineWidth = 3;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath(); ctx.moveTo(f.x, base); ctx.quadraticCurveTo(f.x + i * 10 * f.s, base - 30 * f.s, f.x + i * 20 * f.s, base - 22 * f.s); ctx.stroke();
+      }
+    }
+  }
+
+  function drawHUD() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    // Sibling's speech bubble
+    if (bubble) {
+      const [bx0, by0] = [OX + (sib.x - cam.x) * S, OY + (G(sib.x) - SIB_HEAD - 14 - cam.y) * S];
+      ctx.font = '700 14px "Atkinson Hyperlegible", sans-serif';
+      const w = ctx.measureText(bubble.text).width + 20, h = 30;
+      const bx = clamp(bx0 - w / 2, 16, W - 16 - w), by = Math.max(70, by0 - h - 14);
+      ctx.globalAlpha = Math.min(1, bubble.t * 3);
+      roundRect(bx, by, w, h, 10); ctx.fillStyle = '#F1EBDD'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(clamp(bx0 - 6, bx + 8, bx + w - 16), by + h); ctx.lineTo(clamp(bx0 + 6, bx + 16, bx + w - 8), by + h); ctx.lineTo(bx0, by + h + 10); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#1C2A2E'; ctx.textAlign = 'left'; ctx.fillText(bubble.text, bx + 10, by + 20);
+      ctx.globalAlpha = 1;
+    }
+
+    if (mode !== 'carry') return;
+
+    // Touch stick: where you pressed, and where your finger is now
+    if (input.ptr !== null) {
+      const dx = clamp(input.x - input.ox, -70, 70), dy = clamp(input.y - input.oy, -60, 60);
+      ctx.strokeStyle = 'rgba(241, 235, 221, 0.6)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(input.ox, input.oy, 44, 0, TAU); ctx.stroke();
+      ctx.fillStyle = 'rgba(241, 235, 221, 0.75)';
+      ctx.beginPath(); ctx.arc(input.ox + dx * 0.6, input.oy + (hasCanoe() ? dy * 0.6 : 0), 14, 0, TAU); ctx.fill();
+    }
+
+    // Bottom panel: balance, bow tilt, energy
+    const pw = Math.min(380, W - 32), ph = hasCanoe() ? 104 : 80;
+    const px = (W - pw) / 2, py = H - ph - 16;
+    roundRect(px, py, pw, ph, 14); ctx.fillStyle = 'rgba(241, 235, 221, 0.94)'; ctx.fill();
+    ctx.font = '700 10px "Atkinson Hyperlegible", sans-serif'; ctx.textBaseline = 'middle';
+
+    // Balance: a level bubble
+    const bx0 = px + 70, bx1 = px + pw - 16, bw = bx1 - bx0, by = py + 22;
+    const mx = (v) => bx0 + bw / 2 + clamp(v / 0.8, -1, 1) * (bw / 2);
+    const seg = (a, b, col) => { ctx.fillStyle = col; ctx.fillRect(mx(a), by - 6, mx(b) - mx(a), 12); };
+    seg(-0.8, -0.55, '#C0452B'); seg(-0.55, -0.25, '#D9962B'); seg(-0.25, 0.25, '#3E7D52'); seg(0.25, 0.55, '#D9962B'); seg(0.55, 0.8, '#C0452B');
+    ctx.fillStyle = '#1C2A2E'; ctx.beginPath(); ctx.arc(mx(kid.th), by, 8, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#F1EBDD'; ctx.beginPath(); ctx.arc(mx(kid.th) - 2, by - 2, 2.5, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#5B6662'; ctx.textAlign = 'left'; ctx.fillText('BALANCE', px + 14, by);
+    ctx.textAlign = 'center'; ctx.fillText('BACK', bx0 + 16, by + 16); ctx.fillText('FORWARD', bx1 - 26, by + 16);
+
+    let row = by + 34;
+    if (hasCanoe()) {
+      ctx.textAlign = 'left'; ctx.fillStyle = '#5B6662'; ctx.fillText('BOW', px + 14, row);
+      const cx = bx0 + 34;
+      drawMiniCanoe(cx, row + 3, kid.phi);
+      const label = kid.phi > 0.3 ? 'BOW HIGH (branches!)' : kid.phi < -0.12 ? 'BOW LOW (ground!)' : 'LEVEL';
+      ctx.fillStyle = kid.phi > 0.3 || kid.phi < -0.12 ? '#B26F12' : '#1C2A2E';
+      ctx.textAlign = 'left'; ctx.font = '700 11px "Atkinson Hyperlegible", sans-serif';
+      ctx.fillText(label, cx + 40, row);
+      ctx.font = '700 10px "Atkinson Hyperlegible", sans-serif';
+      row += 24;
+    }
+    // Energy
+    ctx.textAlign = 'left'; ctx.fillStyle = '#5B6662'; ctx.fillText('ENERGY', px + 14, row);
+    ctx.fillStyle = '#E2D8C2'; roundRect(bx0, row - 5, bw, 10, 5); ctx.fill();
+    ctx.fillStyle = energy < 25 ? '#C0452B' : '#3E7D52'; roundRect(bx0, row - 5, Math.max(10, (bw * energy) / 100), 10, 5); ctx.fill();
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawMiniCanoe(x, y, phi) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-phi);
+    ctx.fillStyle = '#C0452B';
+    ctx.beginPath(); ctx.moveTo(-28, -2); ctx.quadraticCurveTo(0, 1, 28, -2); ctx.quadraticCurveTo(0, -12, -28, -2); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = '#C9BC9F'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x - 32, y); ctx.lineTo(x + 32, y); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function draw() {
+    OX = W * 0.4; OY = H * 0.56;
+    drawBackground();
+    drawTrail();
+    drawActors();
+    drawForeground();
+    drawHUD();
+  }
+
+  // ---------- Tuning ----------
+  const knobs = [
+    ['tWalk', 'oWalk', 'walk', (v) => v.toFixed(0)],
+    ['tTip', 'oTip', 'tip', (v) => v.toFixed(1)],
+    ['tPack', 'oPack', 'pack', (v) => '×' + v.toFixed(2)],
+    ['tCtl', 'oCtl', 'control', (v) => v.toFixed(1)],
+    ['tMud', 'oMud', 'mud', (v) => v.toFixed(1)],
+    ['tBow', 'oBow', 'bow', (v) => '×' + v.toFixed(2)],
+  ];
+  function syncKnobs() { for (const [i, o, key, fmt] of knobs) { $(i).value = P[key]; $(o).textContent = fmt(P[key]); } }
+  for (const [i, o, key, fmt] of knobs) $(i).addEventListener('input', () => { P[key] = parseFloat($(i).value); $(o).textContent = fmt(P[key]); });
+  $('tReset').addEventListener('click', () => { Object.assign(P, DEF); syncKnobs(); });
+  $('tuneBtn').addEventListener('click', () => {
+    const t = $('tune'); t.hidden = !t.hidden;
+    $('tuneBtn').setAttribute('aria-expanded', String(!t.hidden));
+  });
+  syncKnobs();
+
+  // ---------- Boot ----------
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    S = clamp(Math.min(W, H * 0.9) / 480, 0.8, 1.7);
+  }
+  addEventListener('resize', resize);
+  resize();
+  reset();
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.033, (now - last) / 1000);
+    last = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
