@@ -5,3 +5,4 @@
 - [Design notes (v3)](docs/design.md)
 - [J-stroke wobble meter prototype](prototypes/j-stroke/index.html): paddle Sawbill Lake north to the portage ([play it](https://claude.ai/artifact/URx1GLySNc7zShbjRqmnim))
 - [Bow & stern partnership prototype](prototypes/bow-stern/index.html): paddle in rhythm with the bow, call Hut! and Draw! through a rock garden, or play two-player ([play it](https://claude.ai/artifact/BTtJrFVShRSDhMmwC9ENtt))
+- [Portage prototype](prototypes/portage/index.html): choose your load, then balance packs and tilt the canoe from Sawbill to Smoke ([play it](https://claude.ai/artifact/68tMZjVatSB8xAbWd9ANBi))
