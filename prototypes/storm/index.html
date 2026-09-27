@@ -92,6 +92,7 @@
   <section class="panel" id="wait-step" hidden aria-live="polite">
     <h2>Rain on the tarp</h2>
     <p class="lead">You’re off the water, the canoe is tied high, and everyone is dry. The storm passes while the family rests.</p>
+    <p class="note" id="tent-payoff" hidden></p>
     <p><strong>What story do you tell?</strong></p>
     <div class="story-choices">
       <button data-story="fish">The one about the fish that got away</button>
@@ -114,6 +115,14 @@
   const finish=document.getElementById("finish"),canoe=document.getElementById("canoe");
   const gear=document.getElementById("gear"),pitch=document.getElementById("pitch");
   let canoeSafe=false,gearStashed=false,storyChosen=false;
+  const tentChoice=new URLSearchParams(location.search).get("tent");
+  const tentPayoff=document.getElementById("tent-payoff");
+  if(tentChoice==="moved" || tentChoice==="level"){
+    tentPayoff.hidden=false;
+    tentPayoff.textContent=tentChoice==="moved"
+      ?"Rain gathers in the hollow you passed over. Your tent stays dry on the bare patch."
+      :"Rain gathers in the hollow below camp. The tent stays dry on the bare patch you chose.";
+  }
   function updateCamp(){
     canoe.classList.toggle("done",canoeSafe);canoe.textContent=canoeSafe?"Canoe secured high on shore ✓":"Secure the canoe high on shore";
     gear.classList.toggle("done",gearStashed);gear.textContent=gearStashed?"Loose gear stashed ✓":"Stash loose gear and food";
