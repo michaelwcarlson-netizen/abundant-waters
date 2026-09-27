@@ -34,6 +34,10 @@
   .progress div { height:100%; width:var(--progress,0%); background:#e8c68e; }
   .reel { width:min(360px,100%); min-height:62px; padding:10px 20px; border:2px solid #eed6a6; border-radius:7px; background:#ba5c38; color:#fff8ed; font-weight:850; letter-spacing:.02em; box-shadow:0 5px 0 #623829,0 7px 15px #0b242a99; }
   .reel:active,.reel.active { transform:translateY(4px); box-shadow:0 1px 0 #623829,0 3px 8px #0b242a99; }
+  .fight-actions { display:flex; justify-content:center; gap:9px; width:min(470px,100%); }
+  .fight-actions .reel { flex:1; width:auto; }
+  .give { min-width:116px; min-height:62px; padding:8px 13px; border:2px solid #e3d8bd; border-radius:7px; background:#e8dfc9; color:#253e34; font-weight:800; box-shadow:0 5px 0 #8d8a77,0 7px 15px #0b242a99; }
+  .give:active,.give.active { transform:translateY(4px); box-shadow:0 1px 0 #8d8a77,0 3px 8px #0b242a99; }
   .guide { font-size:12px; color:#f1e7d3; text-align:center; }
   .result { position:absolute; z-index:4; top:50%; left:50%; width:min(440px,calc(100% - 28px)); transform:translate(-50%,-50%); padding:25px; border:1px solid #d5c39e; background:#f4eedf; color:var(--ink); box-shadow:0 20px 55px #10242dbb; }
   .result p { margin:6px 0 18px; }
@@ -54,7 +58,7 @@
   @media(max-height:520px) and (orientation:landscape) {
     .hud { max-width:220px; }
     .bottom { right:0; left:auto; width:min(320px,45%); background:#152c2ee8; }
-    .reel { min-height:48px; }
+    .reel,.give { min-height:48px; }
     .guide { display:none; }
   }
 </style>
@@ -76,7 +80,10 @@
       <div class="progress"><div id="progressFill"></div></div>
       <div class="tension-head"><span>Fish toward shore</span><span id="distanceLabel">0%</span></div>
     </div>
-    <button class="reel" type="button" id="reel" hidden>Hold to reel · release on a hard pull</button>
+    <div class="fight-actions" id="actions" hidden>
+      <button class="reel" type="button" id="reel">Reel the lure</button>
+      <button class="give" type="button" id="give" hidden>Give line</button>
+    </div>
     <span class="guide" id="guide">Tap or drag on the lake to cast · arrow keys and Enter also work</span>
   </div>
   <div class="result" id="result" hidden aria-live="polite">
@@ -87,13 +94,13 @@
 (() => {
   const canvas=document.getElementById("water"),ctx=canvas.getContext("2d");
   const status=document.getElementById("feedback"),hudTitle=document.getElementById("hudTitle"),hudText=document.getElementById("hudText");
-  const reel=document.getElementById("reel"),reset=document.getElementById("reset"),guide=document.getElementById("guide");
+  const reel=document.getElementById("reel"),give=document.getElementById("give"),actions=document.getElementById("actions"),reset=document.getElementById("reset"),guide=document.getElementById("guide");
   const tensionUI=document.getElementById("tension"),meter=document.getElementById("meter"),needle=document.getElementById("needle");
   const progressFill=document.getElementById("progressFill"),distanceLabel=document.getElementById("distanceLabel"),tensionLabel=document.getElementById("tensionLabel");
   const result=document.getElementById("result");
   const source={x:.17,y:.78},bass={x:.54,y:.47},pike={x:.81,y:.52};
   let w=0,h=0,dpr=1,clock=0,last=0,paused=false,phase="aim",aim={x:.57,y:.53},lure={...aim};
-  let landing={...aim},targetFish=null,retrieve=0,castFlight=0,pressing=false,pressStart=0,burst=0;
+  let landing={...aim},targetFish=null,retrieve=0,castFlight=0,pressing=false,giving=false,pressStart=0,burst=0;
   let tension=.42,progress=0,surge=0,slackTime=0,catches=0,failedAt=0,castNumber=0,dragging=false;
   const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
   function resize(){
@@ -109,7 +116,7 @@
   }
   function ui(){
     const hasLine=phase==="retrieve"||phase==="fight";
-    reel.hidden=!hasLine;tensionUI.hidden=phase!=="fight";
+    actions.hidden=!hasLine;give.hidden=phase!=="fight";tensionUI.hidden=phase!=="fight";
     guide.hidden=hasLine||phase==="caught";
     reset.hidden=phase==="caught";
     needle.style.setProperty("--tension",Math.round(tension*100));
@@ -117,11 +124,12 @@
     progressFill.style.setProperty("--progress",Math.round(progress*100)+"%");
     distanceLabel.textContent=Math.round(progress*100)+"%";
     tensionLabel.textContent=tension<.24?"Slack — reel":tension>.77?"Hard pull — release":"Steady";
-    reel.textContent=phase==="fight"?"Reel · release on a hard pull":"Reel the lure";
+    reel.textContent=phase==="fight"?"Reel in":"Reel the lure";
   }
   function stopReel(){pressing=false;reel.classList.remove("active");}
+  function stopGive(){giving=false;give.classList.remove("active");}
   function ready(text="Touch the lake to cast. Aim beside the granite or reeds."){
-    stopReel();phase="aim";targetFish=null;retrieve=0;progress=0;tension=.42;slackTime=0;burst=0;
+    stopReel();stopGive();phase="aim";targetFish=null;retrieve=0;progress=0;tension=.42;slackTime=0;burst=0;
     result.hidden=true;message(text,"Read the water","A dark seam runs past the granite. Reeds stir along the other shore.");ui();
   }
   function castAt(x,y){
@@ -141,15 +149,15 @@
   }
   function hook(){
     phase="fight";tension=.42;progress=0;slackTime=0;surge=0;
-    message("Fish on! Reel in short pulls. Let it run when the line draws tight.","Fish on","Feel the pull through the rod; keep the line from going slack.");
+    message("Fish on! Reel in short pulls. Give line when it surges.","Fish on","Feel the pull through the rod; keep the line from going slack.");
     ui();
   }
   function lost(kind){
-    phase="lost";failedAt=clock;stopReel();ui();
+    phase="lost";failedAt=clock;stopReel();stopGive();ui();
     message(kind==="snap"?"The line pulled too tight and the fish slipped away. Ease off when it surges.":"The line went slack and the fish shook free. Keep a gentle pull.","One got away","There is time for another cast.");
   }
   function landed(){
-    phase="caught";stopReel();catches++;
+    phase="caught";stopReel();stopGive();catches++;
     const name=targetFish==="pike"?"Northern pike":"Smallmouth bass";
     document.getElementById("count").textContent="Fish log · "+catches;
     document.getElementById("resultTitle").textContent=name+"!";
@@ -208,19 +216,34 @@
       ui();
     }
   });
+  give.addEventListener("pointerdown",e=>{
+    if(phase!=="fight")return;
+    give.setPointerCapture(e.pointerId);giving=true;stopReel();give.classList.add("active");
+  });
+  give.addEventListener("pointerup",stopGive);
+  give.addEventListener("pointercancel",stopGive);
+  give.addEventListener("lostpointercapture",stopGive);
+  give.addEventListener("click",()=>{
+    if(phase!=="fight")return;
+    tension=Math.max(.16,tension-.16);
+    progress=Math.max(0,progress-.012);
+    status.textContent="You let the fish run. Take up line when the pull softens.";
+    ui();
+  });
   window.addEventListener("keydown",e=>{
     if((e.key===" "||e.key.toLowerCase()==="r")&&(phase==="retrieve"||phase==="fight")){
       e.preventDefault();pressing=true;reel.classList.add("active");
     }
+    if(e.key.toLowerCase()==="g"&&phase==="fight"){e.preventDefault();giving=true;stopReel();give.classList.add("active");}
   });
-  window.addEventListener("keyup",e=>{if(e.key===" "||e.key.toLowerCase()==="r")stopReel();});
+  window.addEventListener("keyup",e=>{if(e.key===" "||e.key.toLowerCase()==="r")stopReel();if(e.key.toLowerCase()==="g")stopGive();});
   reset.addEventListener("click",()=>ready("Another cast. Put the lure beside the granite drop or the reeds."));
   document.getElementById("again").addEventListener("click",()=>ready("The water is quiet again. Pick another place for the lure."));
-  function pause(value){paused=value;if(value)stopReel();last=performance.now();}
+  function pause(value){paused=value;if(value){stopReel();stopGive();}last=performance.now();}
   window.addEventListener("abundant-waters:pause",()=>pause(true));
   window.addEventListener("abundant-waters:resume",()=>pause(false));
   document.addEventListener("visibilitychange",()=>pause(document.hidden));
-  window.addEventListener("blur",()=>stopReel());
+  window.addEventListener("blur",()=>{stopReel();stopGive();});
   function update(dt){
     clock+=dt;
     if(phase==="flight"){
@@ -248,13 +271,14 @@
       const active=pressing||burst>0;
       if(burst>0)burst=Math.max(0,burst-dt);
       surge=Math.max(0,Math.sin(clock*2.6+castNumber*2.1)-.55)*.36;
-      tension=Math.max(0,Math.min(1,tension+dt*(active?.29:-.18)+dt*surge));
+      tension=Math.max(0,Math.min(1,tension+dt*(giving?-.43:active?.29:-.18)+dt*surge));
+      if(giving)progress=Math.max(0,progress-dt*.018);
       if(active && tension>.18 && tension<.88)progress=Math.min(1,progress+dt*.22);
       if(!active&&tension<.14)slackTime+=dt;else slackTime=0;
       if(tension>.97){lost("snap");return;}
       if(slackTime>1.25){lost("slack");return;}
       if(progress>=1){landed();return;}
-      if(tension>.77)status.textContent="Hard pull! Release the reel and let it run.";
+      if(tension>.77)status.textContent="Hard pull! Give line before it snaps.";
       else if(tension<.24)status.textContent="The line is going slack. Reel gently.";
       else status.textContent=active?"You gain a little line. Keep it steady.":"It runs a little. Take up line when the pull softens.";
       ui();
