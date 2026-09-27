@@ -157,7 +157,7 @@
   continueButton.addEventListener("click", () => {
     if (complete) { continueButton.disabled = true; continueButton.textContent = "Navigation complete"; return; }
     index++;
-    if (index >= checkpoints.length) complete = true;
+    if (index >= checkpoints.length) { complete = true; window.AbundantWaters.complete(); }
     render();
   });
   render();
