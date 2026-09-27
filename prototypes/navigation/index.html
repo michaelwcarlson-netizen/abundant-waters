@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Map and Navigation — Abundant Waters</title>
+  <style>
+    :root { --ink:#1c2a2e; --paper:#f1ebdd; --paper2:#e2d8c2; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --canoe:#c0452b; --muted:#5b6662; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#faf7ef; color:var(--ink); font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+    main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+    .eyebrow { margin:0 0 5px; color:var(--canoe); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    h1,h2 { margin:0; font-family:Georgia,serif; }
+    h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+    h2 { font-size:1.2rem; }
+    .lead { margin:8px 0 16px; color:#465556; }
+    .map-frame { overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#e9e2cc; }
+    svg { display:block; width:100%; height:auto; }
+    .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
+    .clue { min-height:60px; margin:8px 0 14px; color:#39494a; }
+    .choices { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    button { min-height:54px; padding:10px 12px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; }
+    button:hover { background:#e8eee8; }
+    button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
+    button.primary { background:var(--pine); color:white; }
+    button:disabled { opacity:.6; cursor:default; }
+    .status { min-height:52px; margin-top:13px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
+    .actions { display:flex; justify-content:flex-end; margin-top:12px; }
+    .key { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0 0; color:var(--muted); font-size:.82rem; }
+    .key span { display:flex; align-items:center; gap:6px; }
+    .swatch { width:13px; height:13px; display:inline-block; border:1px solid #456; border-radius:50%; background:#f6f0df; }
+    .swatch.player { border-color:#fff; background:var(--canoe); }
+    .swatch.water { border-radius:3px; background:var(--lake); }
+    .swatch.trail { border-radius:2px; background:repeating-linear-gradient(90deg,#945e37 0 3px,transparent 3px 5px); }
+    @media(max-width:650px) { .choices { grid-template-columns:1fr; } button { min-height:48px; } }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Sawbill → Smoke · Map reading</p>
+  <h1>Read the shoreline</h1>
+  <p class="lead">The paper map and the shore tell the same story. Match the shape you see from the canoe, and follow the lake toward the portage.</p>
+  <div class="map-frame">
+    <svg viewBox="0 0 900 360" role="img" aria-labelledby="map-title map-desc">
+      <title id="map-title">A paper map of the route from Sawbill to Smoke Lake</title>
+      <desc id="map-desc">A winding lake, wooded shore, a sheltered bay, a narrow channel, and a portage trail connecting two lakes.</desc>
+      <rect width="900" height="360" fill="#e9e2cc"/>
+      <g fill="none" stroke="#c8bea4" stroke-width="2" opacity=".65">
+        <path d="M-20 40 Q90 2 190 40 T400 40 T620 30 T920 40"/>
+        <path d="M-30 62 Q90 24 190 62 T400 62 T620 52 T930 62"/>
+        <path d="M-20 310 Q90 272 190 310 T400 310 T620 300 T920 310"/>
+        <path d="M-30 332 Q90 294 190 332 T400 332 T620 322 T930 332"/>
+        <path d="M155 20 Q130 95 168 150 T160 275 Q145 315 174 360"/>
+        <path d="M750 5 Q720 76 760 135 T752 250 Q738 305 768 355"/>
+      </g>
+      <path d="M42 192 C92 149 143 132 203 145 C250 155 274 185 322 184 C370 183 392 145 440 151 C471 155 484 178 510 180 C538 182 550 154 575 146 C624 129 681 143 723 160 C770 179 790 200 856 177 L866 236 C802 258 769 240 721 223 C679 209 630 198 591 211 C561 221 547 250 512 251 C472 253 453 222 425 216 C392 209 367 246 323 251 C271 257 236 224 199 218 C142 208 96 229 51 248Z" fill="#6a97a4" stroke="#2f6575" stroke-width="5"/>
+      <path d="M249 226 C280 209 302 200 332 199 C365 197 387 177 415 174 C440 172 465 190 489 193 C517 196 540 178 561 164" fill="none" stroke="#f1ebdd" stroke-width="3" stroke-dasharray="8 9"/>
+      <path d="M576 145 Q605 111 626 83 Q644 61 667 72 Q687 81 710 104" fill="none" stroke="#98633c" stroke-width="6" stroke-linecap="round" stroke-dasharray="3 8"/>
+      <g fill="#31543d">
+        <path d="M86 143l18-38 18 38z"/><path d="M120 151l16-34 16 34z"/><path d="M186 135l18-39 18 39z"/>
+        <path d="M302 174l14-31 14 31z"/><path d="M380 144l17-36 17 36z"/><path d="M469 147l17-36 17 36z"/>
+        <path d="M635 132l18-38 18 38z"/><path d="M730 154l16-34 16 34z"/><path d="M818 170l18-38 18 38z"/>
+      </g>
+      <g fill="#345e72" font-family="system-ui,sans-serif" font-size="17" font-weight="700">
+        <text x="82" y="283">SAWBILL</text><text x="752" y="286">SMOKE</text>
+      </g>
+      <g fill="#7a4b2b" font-family="system-ui,sans-serif" font-size="14" font-weight="700">
+        <text x="590" y="62">PORTAGE TRAIL</text>
+      </g>
+      <g fill="none" stroke="#fff" stroke-width="3">
+        <circle id="marker0" cx="105" cy="190" r="13"/><circle id="marker1" cx="321" cy="218" r="13"/>
+        <circle id="marker2" cx="512" cy="215" r="13"/><circle id="marker3" cx="584" cy="159" r="13"/>
+      </g>
+      <circle id="player" cx="105" cy="190" r="9" fill="#c0452b" stroke="white" stroke-width="3"/>
+      <g transform="translate(835 38)" stroke="#223d2c" stroke-width="3" fill="none">
+        <path d="M0 27V0M-9 10 0 0 9 10"/><text x="-6" y="44" fill="#223d2c" stroke="none" font-family="system-ui" font-size="13" font-weight="700">N</text>
+      </g>
+      <text x="26" y="30" fill="#5b6662" font-family="system-ui" font-size="13">Boundary Waters field map · north ↑</text>
+    </svg>
+  </div>
+  <div class="key" aria-label="Map key">
+    <span><i class="swatch water"></i>Lake</span>
+    <span><i class="swatch trail"></i>Portage trail</span>
+    <span><i class="swatch player"></i>Your canoe</span>
+  </div>
+  <section class="panel" aria-live="polite">
+    <p class="eyebrow" id="checkpoint">Checkpoint 1 of 3</p>
+    <h2 id="question">Look for the sheltered bay</h2>
+    <p class="clue" id="clue">From the canoe, the shore curves away and wraps around a quiet pocket of water. Which map shape matches it?</p>
+    <div class="choices" id="choices">
+      <button data-answer="bay">A wide curve that cups into shore</button>
+      <button data-answer="narrows">Two points drawing close together</button>
+      <button data-answer="portage">A dotted trail reaching the water</button>
+    </div>
+    <div class="status" id="status" role="status">Use the shoreline shape, not a marker. There’s no penalty for a wrong turn.</div>
+    <div class="actions"><button class="primary" id="continue" hidden>Continue along the shore</button></div>
+  </section>
+</main>
+<script>
+(() => {
+  const checkpoints = [
+    { name:"Find the bay", feature:"bay", question:"Look for the sheltered bay", clue:"From the canoe, the shore curves away and wraps around a quiet pocket of water. Which map shape matches it?", hint:"A bay makes a broad inward curve. Look for the shoreline that cups the water.", found:"You found the sheltered bay. A loon slips away from the reeds as you paddle on." },
+    { name:"Find the narrows", feature:"narrows", question:"Find where the lake pinches in", clue:"The channel ahead gets tighter. On the map, the east and west shores almost meet before opening out again. What are you looking for?", hint:"Look for two points facing each other across the narrowest part of the water.", found:"That’s the narrows. The water carries you through to the far side." },
+    { name:"Find the portage", feature:"portage", question:"Spot the landing to Smoke Lake", clue:"The shoreline ends at a small landing. On the paper map, a dotted trail leaves the water and crosses the wooded strip. Which feature marks your landing?", hint:"Portage trails are drawn from one shoreline to another. Find the dotted path touching the lake.", found:"You found the portage landing to Smoke Lake. No compass arrow needed—just a careful look at the shore." }
+  ];
+  let index = 0, wrongTurns = 0, complete = false;
+  const question = document.getElementById("question");
+  const clue = document.getElementById("clue");
+  const status = document.getElementById("status");
+  const choices = document.getElementById("choices");
+  const continueButton = document.getElementById("continue");
+  const checkpoint = document.getElementById("checkpoint");
+  const player = document.getElementById("player");
+  const positions = [[105,190],[321,218],[512,215],[584,159]];
+  const markers = [0,1,2,3].map(i => document.getElementById("marker"+i));
+
+  function drawProgress() {
+    const point = positions[index];
+    player.setAttribute("cx",point[0]); player.setAttribute("cy",point[1]);
+    markers.forEach((marker,i) => marker.setAttribute("fill",i < index ? "#3e7d52" : i === index ? "#c0452b" : "#6a97a4"));
+  }
+  function render() {
+    if (complete) {
+      checkpoint.textContent = "Route complete";
+      question.textContent = "You found your way to Smoke Lake";
+      clue.textContent = "You matched the sheltered bay, read the narrows, and spotted the portage trail. A wrong turn would only have led to another little discovery.";
+      choices.hidden = true; continueButton.hidden = false; continueButton.textContent = "Finish navigation";
+      status.textContent = "The portage landing is just ahead. Your family is ready to carry across.";
+      drawProgress(); return;
+    }
+    const step = checkpoints[index];
+    checkpoint.textContent = "Checkpoint " + (index + 1) + " of " + checkpoints.length;
+    question.textContent = step.question;
+    clue.textContent = step.clue;
+    choices.hidden = false; continueButton.hidden = true;
+    choices.querySelectorAll("button").forEach(button => button.disabled = false);
+    drawProgress();
+  }
+  choices.addEventListener("click", event => {
+    const button = event.target.closest("button[data-answer]");
+    if (!button || complete) return;
+    const step = checkpoints[index];
+    if (button.dataset.answer === step.feature) {
+      choices.querySelectorAll("button").forEach(choice => choice.disabled = true);
+      status.textContent = step.found;
+      continueButton.hidden = false;
+      continueButton.textContent = index === checkpoints.length - 1 ? "Reach the landing" : "Continue along the shore";
+      wrongTurns = 0;
+    } else {
+      wrongTurns++;
+      status.textContent = wrongTurns > 1
+        ? "You found a beaver lodge in a little side bay. Nice detour. " + step.hint
+        : "Not quite. Take another look at the shoreline. " + step.hint;
+    }
+  });
+  continueButton.addEventListener("click", () => {
+    if (complete) { continueButton.disabled = true; continueButton.textContent = "Navigation complete"; return; }
+    index++;
+    if (index >= checkpoints.length) complete = true;
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
