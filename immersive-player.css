@@ -55,3 +55,9 @@ body.player-open { overflow: hidden; }
   .level-toolbar strong { max-width: 32vw; }
   .level-tools .button { font-size: 12px; padding-inline: 8px; }
 }
+
+@media (max-width: 390px) {
+  .level-toolbar strong { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .level-tools { width: 100%; }
+  .level-tools .button { flex: 1 1 auto; }
+}
