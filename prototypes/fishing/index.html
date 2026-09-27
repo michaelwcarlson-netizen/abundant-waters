@@ -191,7 +191,8 @@
   reel.addEventListener("pointercancel",stopReel);
   reel.addEventListener("lostpointercapture",stopReel);
   reel.addEventListener("click",e=>{
-    if(e.detail===0 && (phase==="retrieve"||phase==="fight"))burst=Math.max(burst,.5);
+    if((phase==="retrieve"||phase==="fight") && (e.detail===0 || performance.now()-pressStart<900))
+      burst=Math.max(burst,.8);
   });
   window.addEventListener("keydown",e=>{
     if((e.key===" "||e.key.toLowerCase()==="r")&&(phase==="retrieve"||phase==="fight")){
