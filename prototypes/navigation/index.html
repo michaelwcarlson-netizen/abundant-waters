@@ -26,6 +26,8 @@
     button:disabled { opacity:.6; cursor:default; }
     .status { min-height:52px; margin-top:13px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
     .actions { display:flex; justify-content:flex-end; margin-top:12px; }
+    .map-hit { fill:transparent; cursor:pointer; }
+    .map-hit:hover, .map-hit:focus-visible { stroke:#c0452b; stroke-width:5; outline:none; }
     .key { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0 0; color:var(--muted); font-size:.82rem; }
     .key span { display:flex; align-items:center; gap:6px; }
     .swatch { width:13px; height:13px; display:inline-block; border:1px solid #456; border-radius:50%; background:#f6f0df; }
@@ -72,6 +74,9 @@
         <circle id="marker0" cx="105" cy="190" r="13"/><circle id="marker1" cx="321" cy="218" r="13"/>
         <circle id="marker2" cx="512" cy="215" r="13"/><circle id="marker3" cx="584" cy="159" r="13"/>
       </g>
+      <circle class="map-hit" role="button" tabindex="0" aria-label="Sheltered bay on map" data-map-answer="bay" cx="321" cy="218" r="46"/>
+      <circle class="map-hit" role="button" tabindex="0" aria-label="Narrows on map" data-map-answer="narrows" cx="512" cy="215" r="46"/>
+      <circle class="map-hit" role="button" tabindex="0" aria-label="Portage landing on map" data-map-answer="portage" cx="584" cy="159" r="46"/>
       <circle id="player" cx="105" cy="190" r="9" fill="#c0452b" stroke="white" stroke-width="3"/>
       <g transform="translate(835 38)" stroke="#223d2c" stroke-width="3" fill="none">
         <path d="M0 27V0M-9 10 0 0 9 10"/><text x="-6" y="44" fill="#223d2c" stroke="none" font-family="system-ui" font-size="13" font-weight="700">N</text>
@@ -93,7 +98,7 @@
       <button data-answer="narrows">Two points drawing close together</button>
       <button data-answer="portage">A dotted trail reaching the water</button>
     </div>
-    <div class="status" id="status" role="status">Use the shoreline shape, not a marker. There’s no penalty for a wrong turn.</div>
+    <div class="status" id="status" role="status">Tap the matching place on the sketch, or choose below. Wrong turns are fine.</div>
     <div class="actions"><button class="primary" id="continue" hidden>Continue along the shore</button></div>
   </section>
 </main>
@@ -137,11 +142,10 @@
     choices.querySelectorAll("button").forEach(button => button.disabled = false);
     drawProgress();
   }
-  choices.addEventListener("click", event => {
-    const button = event.target.closest("button[data-answer]");
-    if (!button || complete) return;
+  function choose(answer) {
+    if (complete || !continueButton.hidden) return;
     const step = checkpoints[index];
-    if (button.dataset.answer === step.feature) {
+    if (answer === step.feature) {
       choices.querySelectorAll("button").forEach(choice => choice.disabled = true);
       status.textContent = step.found;
       continueButton.hidden = false;
@@ -153,6 +157,16 @@
         ? "You found a beaver lodge in a little side bay. Nice detour. " + step.hint
         : "Not quite. Take another look at the shoreline. " + step.hint;
     }
+  }
+  choices.addEventListener("click", event => {
+    const button = event.target.closest("button[data-answer]");
+    if (button) choose(button.dataset.answer);
+  });
+  document.querySelectorAll("[data-map-answer]").forEach(target => {
+    target.addEventListener("click", () => choose(target.dataset.mapAnswer));
+    target.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(target.dataset.mapAnswer); }
+    });
   });
   continueButton.addEventListener("click", () => {
     if (complete) return;
