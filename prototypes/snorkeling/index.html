@@ -75,6 +75,7 @@
   main>.lead,main>.legend { display:none; }
   .scene { position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:0; }
   .scene svg { width:100%; height:100%; }
+  .scene svg text { display:none; }
   .panel { position:static; margin:0; padding:0; border:0; background:transparent; }
   .panel .safety { position:absolute; z-index:3; top:calc(max(10px,env(safe-area-inset-top)) + 58px); left:max(14px,env(safe-area-inset-left)); max-width:330px; padding:7px 10px; border-left:3px solid #e2c99c; background:#f1ebdded; font-size:.84rem; }
   .cold { position:absolute; z-index:3; top:calc(max(10px,env(safe-area-inset-top)) + 58px); right:max(14px,env(safe-area-inset-right)); width:min(240px,36%); margin:0; padding:7px 10px; background:#f1ebdded; color:#223d2c; }
@@ -188,6 +189,7 @@
   };
   const points={rocks:[192,247],log:[469,232],sand:[738,269]};
   const scene=document.querySelector(".scene svg"),swimmer=document.getElementById("swimmer"),buddy=document.getElementById("buddy");
+  document.querySelectorAll(".discovery").forEach(item=>scene.append(item));
   const status=document.getElementById("status"),action=document.getElementById("dive");
   const controls=document.querySelector(".swim-controls"),count=document.getElementById("find-count");
   const meter=document.querySelector('[role="meter"]'),fill=document.getElementById("cold-fill"),label=document.getElementById("cold-label");
