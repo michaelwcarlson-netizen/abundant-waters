@@ -11,9 +11,15 @@ Source material: "BWCA Sawbill Family Trip Itinerary — Carlson Family, August 
 > happens in a day. Food now has a job, and "abide" is built into how the game
 > plays instead of sitting on the to-explore list. v2 is in git history.
 
-## Tone & style
+## Creative direction
 
-Sneaky Sasquatch style: open world, low stress, goofy physics, no fail states that punish. You learn by doing, not by tutorial. Chase memories, not miles.
+Emotional target: “I remember going into the Boundary Waters with Dad.” Build scenes around shared work, small sounds, and the quiet after a full day, rather than announcing a lesson or reward.
+
+A modern Northwoods field guide meets a thoughtful indie adventure. Warm, earthy, understated, and contemporary. Favor pine, moss, stone, warm cream, clay, and deep lake blue; restrained paper, wood, or topographic details; clean type; generous space; simple shapes; subtle motion. Extend the established game language across every activity.
+
+Write with warmth, intelligence, and a little observation. Keep it concise and slightly playful; treat kids like capable young adventurers. Teach real camp and paddling skills through actions and consequences. Avoid neon, loud gradients, generic app cards, excessive rounding, emoji clutter, cartoon art, forced enthusiasm, and tutorial lectures.
+
+Play stays open and low stress. There are no punishing fail states. Small choices reveal details of the place and the family; a wrong turn is another part of the trip.
 
 ## Premise
 
