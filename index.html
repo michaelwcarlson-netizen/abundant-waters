@@ -76,10 +76,10 @@
   <main>
     <p class="eyebrow">Sawbill → Smoke · Day one</p>
     <h1 id="title">A day on the water</h1>
-    <p class="intro" id="intro">Break camp, paddle north, cross the portage, and settle in before evening. Take your time; this is a trip, not a race.</p>
+    <p class="intro" id="intro">Break camp, paddle north, cross the portage, find a campsite, and settle in before evening. Take your time; this is a trip, not a race.</p>
     <div class="progress-wrap" aria-label="Trip progress">
       <div class="progress-label"><span id="phase">Morning at camp</span><span id="count">Ready when you are</span></div>
-      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><div class="fill" id="fill"></div></div>
     </div>
     <section class="card" id="panel" aria-live="polite"></section>
     <div class="actions">
@@ -100,6 +100,7 @@
         bowstern: { name: "Bow & Stern", path: "prototypes/bow-stern/index.html", description: "Paddle in rhythm with your partner through the rock garden." },
         navigation: { name: "Map & Navigation", path: "prototypes/navigation/index.html", description: "Read the shoreline to find the bay, narrows, and portage landing." },
         portage: { name: "Portage Trail", path: "prototypes/portage/index.html", description: "Choose your load, balance the canoe, and make the trail to Smoke." },
+        arrival: { name: "Arriving at Smoke Lake", path: "prototypes/arrival/index.html", description: "Paddle to an open campsite, then find existing bare ground for the tent." },
         tarp: { name: "Storm Tarp", path: "prototypes/tarp/index.html", description: "Pitch the tarp and tie it down before the weather moves in." },
         fishing: { name: "Fishing at Smoke Lake", path: "prototypes/fishing/index.html", description: "Read the shoreline, choose a spot, and try for smallmouth, pike, or walleye." },
         campfire: { name: "Campfire & Dinner", path: "prototypes/campfire/index.html", description: "Find dry wood, build a small fire, and make supper by the lake." },
@@ -113,6 +114,7 @@
         { phase: "On the water", title: "Paddle Sawbill", description: "Choose a paddling activity. When you’re ready to move on, return here and continue the trip.", activity: "jstroke" },
         { phase: "Read the map", title: "Find your way to the landing", description: activities.navigation.description, activity: "navigation" },
         { phase: "The portage", title: "Cross to Smoke", description: activities.portage.description, activity: "portage" },
+        { phase: "Smoke Lake", title: "Find a campsite", description: activities.arrival.description, activity: "arrival" },
         { phase: "Make camp", title: "Get the tarp ready", description: activities.tarp.description, activity: "tarp" },
         { phase: "Free time", title: "Fish the shoreline", description: activities.fishing.description, activity: "fishing" },
         { phase: "Explore the water", title: "Snorkel with your buddy", description: activities.snorkeling.description, activity: "snorkeling" },
@@ -125,6 +127,7 @@
       let stepIndex = 0;
       let paddleChoice = "jstroke";
       let dinnerFish = null;
+      let tentPlacement = null;
       const panel = document.getElementById("panel");
       const next = document.getElementById("next");
       const back = document.getElementById("back");
@@ -135,10 +138,11 @@
         if (start) start.textContent = "Resume Level";
       });
       window.addEventListener("message", (event) => {
-        if (event.origin !== location.origin || steps[stepIndex].activity !== "fishing" ||
-            event.source !== player.iframe?.contentWindow ||
-            event.data?.type !== "abundant-waters:fish-landed") return;
-        if (["Smallmouth bass", "Northern pike", "Walleye"].includes(event.data.fish)) dinnerFish = event.data.fish;
+        if (event.origin !== location.origin || event.source !== player.iframe?.contentWindow) return;
+        if (steps[stepIndex].activity === "fishing" && event.data?.type === "abundant-waters:fish-landed" &&
+            ["Smallmouth bass", "Northern pike", "Walleye"].includes(event.data.fish)) dinnerFish = event.data.fish;
+        if (steps[stepIndex].activity === "arrival" && event.data?.type === "abundant-waters:tent-placed" &&
+            ["moved", "level"].includes(event.data.placement)) tentPlacement = event.data.placement;
       });
 
       function button(label, value, selected) {
@@ -151,7 +155,7 @@
         document.getElementById("phase").textContent = step.phase;
         document.getElementById("count").textContent = stepIndex === 0 ? "Ready when you are" : "Part " + stepIndex + " of " + (steps.length - 1);
         document.getElementById("intro").textContent = stepIndex === 0
-          ? "Break camp, paddle north, read the shoreline, cross the portage, and settle in before evening. Watch the sky after the bear hang; the storm comes next morning. Take your time."
+          ? "Break camp, paddle north, read the shoreline, cross the portage, find a campsite, and settle in before evening. Watch the sky after the bear hang; the storm comes next morning. Take your time."
           : "The day unfolds at your pace. Finish an activity when you’re ready, then continue the trip.";
         fill.style.width = (stepIndex / (steps.length - 1) * 100) + "%";
         progress.setAttribute("aria-valuenow", String(stepIndex));
@@ -170,7 +174,8 @@
               button("J-Stroke", "jstroke", paddleChoice === "jstroke") +
               button("Bow & Stern", "bowstern", paddleChoice === "bowstern") + '</div>';
           }
-          const activityUrl = activity.path + (activityKey === "campfire" && dinnerFish ? "?fish=" + encodeURIComponent(dinnerFish) : "");
+          const activityUrl = activity.path + (activityKey === "campfire" && dinnerFish ? "?fish=" + encodeURIComponent(dinnerFish) :
+            activityKey === "storm" && tentPlacement ? "?tent=" + encodeURIComponent(tentPlacement) : "");
           panel.innerHTML = '<div class="activity-heading"><div><p class="eyebrow">Trip activity</p><h2>' + activity.name + '</h2><p>' + activity.description + '</p></div><button class="button secondary fullscreen-open" type="button">Full Screen</button></div>' + choices +
             '<div class="activity-launch"><button class="button start-level" type="button">' + (player.isCurrent(activityKey) ? "Resume Level" : "Start Level") + '</button></div>';
           const launch = () => player.open({ key: activityKey, name: activity.name, url: activityUrl });
@@ -188,7 +193,7 @@
 
       next.addEventListener("click", () => {
         player.dispose();
-        if (stepIndex === steps.length - 1) { stepIndex = 0; dinnerFish = null; }
+        if (stepIndex === steps.length - 1) { stepIndex = 0; dinnerFish = null; tentPlacement = null; }
         else stepIndex = Math.min(stepIndex + 1, steps.length - 1);
         render();
         window.scrollTo({ top: 0, behavior: "smooth" });
