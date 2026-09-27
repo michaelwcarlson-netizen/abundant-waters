@@ -24,7 +24,7 @@
   .scene-target .hit { fill:transparent; }
   .scene-target .pin { fill:#f1ebdd; stroke:#223d2c; stroke-width:5; }
   .scene-target:hover .pin, .scene-target:focus-visible .pin { fill:#c0452b; stroke:#f1ebdd; }
-  .scene-target:focus-visible { outline:none; }
+  .scene-target:focus { outline:none; }
   .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:12px; background:white; }
   .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0; }
   .tent-choices { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -169,6 +169,7 @@
     }
     tent.hidden=true;finish.hidden=false;
     document.getElementById("tent").setAttribute("opacity","1");
+    document.querySelectorAll("#camp-scene .scene-target").forEach(target=>target.hidden=true);
     document.getElementById("finish-status").textContent=moved
       ?"You moved off the low ground. Tomorrow’s rain will have somewhere else to go."
       :"The tent is on level ground. The fishing rocks can wait until camp is ready.";
