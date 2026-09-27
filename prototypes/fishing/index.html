@@ -1,208 +1,350 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fishing at Smoke Lake</title>
-  <style>
-    :root { --ink:#1c2a2e; --paper:#f1ebdd; --paper2:#e2d8c2; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --canoe:#c0452b; --muted:#5b6662; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
-    main { width:min(900px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
-    .eyebrow { margin:0 0 5px; color:var(--canoe); font-size:.77rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
-    h1,h2 { margin:0; font-family:Georgia,serif; }
-    h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
-    h2 { font-size:1.25rem; }
-    .lead { margin:8px 0 18px; color:#465556; }
-    .lake { overflow:hidden; border:1px solid #9eaeaa; border-radius:14px; background:#c9d9d1; }
-    svg { display:block; width:100%; height:auto; }
-    .panel { margin-top:16px; padding:18px; border:1px solid var(--line); border-radius:14px; background:white; }
-    .spots { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
-    button { min-height:46px; padding:10px 13px; border:1px solid var(--pine); border-radius:9px; background:var(--pine); color:white; font:inherit; font-weight:750; cursor:pointer; }
-    button:hover { filter:brightness(1.08); }
-    button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
-    button.secondary { background:transparent; color:var(--pine); }
-    .spot { min-height:100px; text-align:left; background:#f7f4eb; color:var(--ink); border-color:var(--line); }
-    .spot[aria-pressed="true"] { border:2px solid var(--lake); box-shadow:0 0 0 2px #2d6a8030; }
-    .spot strong,.spot small { display:block; }
-    .spot small { margin-top:5px; color:var(--muted); font-weight:500; }
-    .status { min-height:52px; margin:10px 0; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
-    .controls { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
-    .meter-wrap { margin:10px 0 14px; }
-    .meter-label { display:flex; justify-content:space-between; color:var(--muted); font-size:.88rem; }
-    .meter { height:18px; margin-top:5px; overflow:hidden; border-radius:99px; background:linear-gradient(90deg,#d5e6d3 0 30%,#74a96c 30% 75%,#e5d18f 75% 88%,#d99580 88%); }
-    .meter-fill { width:44%; height:100%; border-right:3px solid #18392e; transition:width .3s ease; }
-    .progress-track { height:9px; margin-top:5px; border-radius:99px; background:#e8e4d9; overflow:hidden; }
-    .progress-fill { width:0; height:100%; background:var(--lake); transition:width .25s ease; }
-    .catch { padding:10px 13px; border-left:4px solid var(--canoe); background:#f7f4eb; }
-    .quiet { color:var(--muted); font-size:.88rem; }
-    @media(max-width:620px) { .spots { grid-template-columns:1fr; } .spot { min-height:72px; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#223d2c">
+<title>Fishing at Smoke Lake — Abundant Waters</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --paper2:#e2d8c2; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; --amber:#c9851f; font-family:"Atkinson Hyperlegible",system-ui,sans-serif; }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  html,body { width:100%; height:100%; margin:0; overflow:hidden; }
+  body { background:var(--pine); color:var(--paper); }
+  button { font:inherit; cursor:pointer; touch-action:manipulation; }
+  button:focus-visible,canvas:focus-visible { outline:3px solid #edb35d; outline-offset:3px; }
+  #app { position:relative; width:100%; height:100%; height:100dvh; min-height:300px; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+  .top { position:absolute; top:0; left:0; right:0; z-index:2; display:flex; align-items:center; gap:12px; min-height:61px; padding:max(9px,env(safe-area-inset-top)) max(15px,env(safe-area-inset-right)) 9px max(15px,env(safe-area-inset-left)); background:#1a3029d9; backdrop-filter:blur(5px); }
+  .title { font:700 clamp(18px,2vw,23px)/1.1 Georgia,serif; white-space:nowrap; }
+  .title small { display:block; margin-top:3px; color:#dccaaa; font:700 10px/1.2 "Atkinson Hyperlegible",system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+  .right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .count { color:#eadcc3; font-size:13px; white-space:nowrap; }
+  .quiet-btn { min-height:42px; padding:6px 12px; border:1px solid #e8ddc399; border-radius:5px; background:#233f32; color:var(--paper); font-weight:700; }
+  .hud { position:absolute; z-index:2; left:max(12px,env(safe-area-inset-left)); top:calc(max(9px,env(safe-area-inset-top)) + 68px); max-width:min(390px,calc(100% - 24px)); padding:9px 12px; background:#f1ebdde8; color:#243c34; border-left:3px solid #b6603e; box-shadow:0 3px 12px #102b2b33; font-size:14px; }
+  .hud b { display:block; font:700 17px Georgia,serif; }
+  .hud span { display:block; margin-top:2px; }
+  .bottom { position:absolute; z-index:3; bottom:0; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); background:linear-gradient(transparent,#152c2ee8 17%,#152c2ef5); }
+  .feedback { width:min(640px,100%); min-height:32px; text-align:center; font-size:15px; font-weight:650; text-shadow:0 1px 3px #0c1d24; }
+  .tension { width:min(440px,100%); }
+  .tension-head { display:flex; justify-content:space-between; gap:10px; font-size:12px; font-weight:750; }
+  .track { height:13px; margin:4px 0; border:1px solid #dccfb4; border-radius:2px; background:linear-gradient(90deg,#c39970 0 21%,#7b9e7c 21% 74%,#ca885f 74%); }
+  .needle { position:relative; left:calc(var(--tension,42) * 1%); width:3px; height:19px; margin-top:-4px; background:#fff8e7; box-shadow:0 1px 3px #102a2b; transition:left .08s linear; }
+  .progress { height:5px; margin-top:6px; background:#ebe2c64d; }
+  .progress div { height:100%; width:var(--progress,0%); background:#e8c68e; }
+  .reel { width:min(360px,100%); min-height:62px; padding:10px 20px; border:2px solid #eed6a6; border-radius:7px; background:#ba5c38; color:#fff8ed; font-weight:850; letter-spacing:.02em; box-shadow:0 5px 0 #623829,0 7px 15px #0b242a99; }
+  .reel:active,.reel.active { transform:translateY(4px); box-shadow:0 1px 0 #623829,0 3px 8px #0b242a99; }
+  .guide { font-size:12px; color:#f1e7d3; text-align:center; }
+  .result { position:absolute; z-index:4; top:50%; left:50%; width:min(440px,calc(100% - 28px)); transform:translate(-50%,-50%); padding:25px; border:1px solid #d5c39e; background:#f4eedf; color:var(--ink); box-shadow:0 20px 55px #10242dbb; }
+  .result p { margin:6px 0 18px; }
+  .result h2 { margin:0; font:700 clamp(24px,5vw,34px) Georgia,serif; }
+  .result button { min-height:50px; padding:9px 16px; border:0; background:#223d2c; color:#fff7e8; font-weight:750; }
+  @media(max-width:600px) {
+    .top { min-height:53px; padding-top:max(7px,env(safe-area-inset-top)); padding-bottom:6px; }
+    .title { font-size:18px; }
+    .title small { font-size:9px; }
+    .right { gap:7px; }
+    .count { font-size:11px; }
+    .quiet-btn { min-height:42px; padding:5px 8px; font-size:12px; }
+    .hud { top:calc(max(7px,env(safe-area-inset-top)) + 56px); max-width:min(260px,calc(100% - 24px)); font-size:12px; padding:7px 9px; }
+    .hud b { font-size:15px; }
+    .feedback { font-size:14px; }
+    .reel { min-height:62px; }
+  }
+  @media(max-height:520px) and (orientation:landscape) {
+    .hud { max-width:220px; }
+    .bottom { right:0; left:auto; width:min(320px,45%); background:#152c2ee8; }
+    .reel { min-height:48px; }
+    .guide { display:none; }
+  }
+</style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
 <body>
-<main>
-  <p class="eyebrow">Smoke Lake · Free time</p>
-  <h1>Read the water. Try a cast.</h1>
-  <p class="lead">Fish are easier to find when you notice what the shoreline is telling you. Pick a spot, cast, and see what’s biting.</p>
-  <div class="lake">
-    <svg viewBox="0 0 900 300" role="img" aria-labelledby="scene-title scene-desc">
-      <title id="scene-title">Shoreline and fishing water at Smoke Lake</title>
-      <desc id="scene-desc">A calm lake with a rocky point, a weed bed, and deeper water beyond the drop-off.</desc>
-      <defs>
-        <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#c9ddd6"/><stop offset="1" stop-color="#e5e3ce"/></linearGradient>
-        <linearGradient id="water" x2="0" y2="1"><stop stop-color="#6793a0"/><stop offset="1" stop-color="#244e61"/></linearGradient>
-      </defs>
-      <rect width="900" height="115" fill="url(#sky)"/>
-      <path d="M0 110 L48 40 92 110 138 28 186 112 234 50 279 112 325 36 365 112 410 58 456 113 520 45 565 112 620 33 668 114 720 52 770 112 820 30 872 111 900 75 900 140 0 140Z" fill="#345744"/>
-      <path d="M0 120 Q90 105 170 131 T350 122 T535 132 T720 121 T900 129 L900 300 0 300Z" fill="url(#water)"/>
-      <path d="M0 120 Q120 112 215 145 Q272 166 320 205 Q370 241 415 225 Q445 216 470 170 L500 132 Q557 110 640 126 Q740 145 900 124 L900 160 Q755 176 640 151 Q559 134 518 151 L490 188 Q458 240 416 248 Q358 260 301 217 Q251 180 203 159 Q116 127 0 142Z" fill="#758568"/>
-      <path d="M0 120 Q120 112 215 145 Q272 166 320 205 Q370 241 415 225 Q445 216 470 170 L500 132 Q557 110 640 126 Q740 145 900 124 L900 300 0 300Z" fill="none" stroke="#d9cba3" stroke-width="5"/>
-      <g fill="#b9aa82">
-        <ellipse cx="358" cy="235" rx="22" ry="9"/><ellipse cx="396" cy="245" rx="20" ry="8"/><ellipse cx="435" cy="224" rx="18" ry="7"/>
-      </g>
-      <g stroke="#adc19b" stroke-width="4" stroke-linecap="round">
-        <path d="M92 162q-7-35-3-50m9 50q7-30 16-43m-9 46q-1-31 0-54"/>
-        <path d="M128 169q-4-27-1-45m8 44q8-27 18-38m-9 40q-1-24 2-43"/>
-        <path d="M790 157q-4-29-2-49m10 50q7-24 14-39m-9 41q0-29 2-46"/>
-      </g>
-      <path d="M255 280 Q335 270 390 240" fill="none" stroke="#f4e4b7" stroke-width="2" stroke-dasharray="7 7"/>
-      <text x="35" y="278" fill="white" font-size="17" font-family="system-ui">Shallow edge</text>
-      <text x="610" y="276" fill="white" font-size="17" font-family="system-ui">Deeper water</text>
-      <text x="332" y="196" fill="white" font-size="16" font-family="system-ui">rock point</text>
-      <circle id="bobber" cx="255" cy="280" r="8" fill="#c0452b" stroke="white" stroke-width="3" opacity="0"/>
-    </svg>
+<div id="app">
+  <canvas id="water" tabindex="0" aria-label="Smoke Lake fishing water. Tap or drag to place a cast near the granite drop or weed edge. Arrow keys move the aim; Enter casts."></canvas>
+  <div class="top">
+    <div class="title">Smoke Lake<small>A quiet cast · free time</small></div>
+    <div class="right"><span class="count" id="count">Fish log · 0</span><button class="quiet-btn" type="button" id="reset">New cast</button></div>
   </div>
-  <section class="panel" aria-live="polite">
-    <div id="choose">
-      <h2>Where will you fish?</h2>
-      <div class="spots">
-        <button class="spot" data-spot="rocks" aria-pressed="true"><strong>Rock point</strong><small>Smallmouth bass · look by the drop-off</small></button>
-        <button class="spot" data-spot="weeds" aria-pressed="false"><strong>Weed edge</strong><small>Northern pike · cast beside the reeds</small></button>
-        <button class="spot" data-spot="deep" aria-pressed="false"><strong>Deep water at dusk</strong><small>Walleye · try the darker water</small></button>
-      </div>
-      <p class="quiet">Tip: points and weed edges are good places to start. You can try every spot.</p>
+  <div class="hud"><b id="hudTitle">Read the water</b><span id="hudText">A dark seam runs past the granite. Reeds stir along the other shore.</span></div>
+  <div class="bottom">
+    <div class="feedback" id="feedback" role="status" aria-live="polite">Touch the water to cast. Aim beside cover, not onto it.</div>
+    <div class="tension" id="tension" hidden role="group" aria-label="Line tension and fish distance">
+      <div class="tension-head"><span>Line tension</span><span id="tensionLabel">Steady</span></div>
+      <div class="track" role="meter" id="meter" aria-label="Line tension" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42"><div class="needle" id="needle"></div></div>
+      <div class="progress"><div id="progressFill"></div></div>
+      <div class="tension-head"><span>Fish toward shore</span><span id="distanceLabel">0%</span></div>
     </div>
-    <div class="status" id="status" role="status">You picked the rocky point. A good cast lands just beyond the drop-off.</div>
-    <div id="controls" class="controls"><button id="cast">Cast here</button></div>
-    <div id="meterArea" hidden>
-      <div class="meter-wrap">
-        <div class="meter-label"><span>Line tension</span><span id="tensionText">Steady</span></div>
-        <div class="meter" role="meter" aria-label="Line tension" aria-valuemin="0" aria-valuemax="100" aria-valuenow="44"><div class="meter-fill" id="tensionFill"></div></div>
-      </div>
-      <div class="meter-label"><span>Bring it in</span><span id="catchPct">0%</span></div>
-      <div class="progress-track"><div class="progress-fill" id="catchFill"></div></div>
-    </div>
-    <div id="result" hidden></div>
-  </section>
-</main>
+    <button class="reel" type="button" id="reel" hidden>Hold to reel · release on a hard pull</button>
+    <span class="guide" id="guide">Tap or drag on the lake to cast · arrow keys and Enter also work</span>
+  </div>
+  <div class="result" id="result" hidden aria-live="polite">
+    <h2 id="resultTitle"></h2><p id="resultText"></p><button id="again" type="button">Try another cast</button>
+  </div>
+</div>
 <script>
 (() => {
-  const labels = { rocks:"rocky point", weeds:"weed edge", deep:"deeper water" };
-  const fishNames = { rocks:"Smallmouth bass", weeds:"Northern pike", deep:"Walleye" };
-  let spot = "rocks", phase = "choose", tension = 44, progress = 0, tick = null, biteTimer = null, catches = 0;
-  let paused = false, biteRemaining = 0, biteStarted = 0;
-  const status = document.getElementById("status");
-  const controls = document.getElementById("controls");
-  const meterArea = document.getElementById("meterArea");
-  const result = document.getElementById("result");
-  const bobber = document.getElementById("bobber");
-  const tensionFill = document.getElementById("tensionFill");
-  const tensionText = document.getElementById("tensionText");
-  const catchFill = document.getElementById("catchFill");
-  const catchPct = document.getElementById("catchPct");
-
-  function setSpot(value) {
-    spot = value; result.hidden = true;
-    document.querySelectorAll("[data-spot]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.spot === spot)));
-    status.textContent = "You picked the " + labels[spot] + ". " + (spot === "rocks" ? "A good cast lands just beyond the drop-off." : spot === "weeds" ? "Set it down beside the weeds and keep an eye on the line." : "Walleye tend to move in as the light gets low.");
-    bobber.setAttribute("opacity","0");
+  const canvas=document.getElementById("water"),ctx=canvas.getContext("2d");
+  const status=document.getElementById("feedback"),hudTitle=document.getElementById("hudTitle"),hudText=document.getElementById("hudText");
+  const reel=document.getElementById("reel"),reset=document.getElementById("reset"),guide=document.getElementById("guide");
+  const tensionUI=document.getElementById("tension"),meter=document.getElementById("meter"),needle=document.getElementById("needle");
+  const progressFill=document.getElementById("progressFill"),distanceLabel=document.getElementById("distanceLabel"),tensionLabel=document.getElementById("tensionLabel");
+  const result=document.getElementById("result");
+  const source={x:.17,y:.78},bass={x:.54,y:.47},pike={x:.81,y:.52};
+  let w=0,h=0,dpr=1,clock=0,last=0,paused=false,phase="aim",aim={x:.57,y:.53},lure={...aim};
+  let landing={...aim},targetFish=null,retrieve=0,castFlight=0,pressing=false,pressStart=0,burst=0;
+  let tension=.42,progress=0,surge=0,slackTime=0,catches=0,failedAt=0,castNumber=0,dragging=false;
+  const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function resize(){
+    const r=canvas.getBoundingClientRect();w=r.width;h=r.height;dpr=Math.min(2,devicePixelRatio||1);
+    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  function cleanup() { clearInterval(tick); clearTimeout(biteTimer); tick = null; biteTimer = null; }
-  function bite() {
-    if (paused) return;
-    phase = "bite";
-    status.textContent = "The bobber dips! Set the hook now.";
-    controls.innerHTML = '<button id="hook">Set the hook</button>';
-    document.getElementById("hook").addEventListener("click", hook);
-    bobber.setAttribute("cy","290");
+  new ResizeObserver(resize).observe(canvas);resize();
+  function message(text,title,detail){
+    status.textContent=text;
+    if(title)hudTitle.textContent=title;
+    if(detail)hudText.textContent=detail;
   }
-  function scheduleBite(ms) { biteRemaining = ms; biteStarted = performance.now(); biteTimer = setTimeout(bite, ms); }
-  function setPaused(value) {
-    if (paused === value) return;
-    paused = value;
-    if (value && phase === "waiting") {
-      biteRemaining = Math.max(0, biteRemaining - (performance.now() - biteStarted));
-      clearTimeout(biteTimer);
-    } else if (!value && phase === "waiting") scheduleBite(biteRemaining);
+  function ui(){
+    const hasLine=phase==="retrieve"||phase==="fight";
+    reel.hidden=!hasLine;tensionUI.hidden=phase!=="fight";
+    guide.hidden=hasLine||phase==="caught";
+    reset.hidden=phase==="caught";
+    needle.style.setProperty("--tension",Math.round(tension*100));
+    meter.setAttribute("aria-valuenow",String(Math.round(tension*100)));
+    progressFill.style.setProperty("--progress",Math.round(progress*100)+"%");
+    distanceLabel.textContent=Math.round(progress*100)+"%";
+    tensionLabel.textContent=tension<.24?"Slack — reel":tension>.77?"Hard pull — release":"Steady";
+    reel.textContent=phase==="fight"?"Hold to reel · release on a hard pull":"Hold to work the lure";
   }
-  window.addEventListener("abundant-waters:pause", () => setPaused(true));
-  window.addEventListener("abundant-waters:resume", () => setPaused(false));
-  document.addEventListener("visibilitychange", () => setPaused(document.hidden));
-  function showCast() {
-    cleanup(); phase = "ready"; meterArea.hidden = true; result.hidden = true; bobber.setAttribute("opacity","0");
-    status.textContent = "You picked the " + labels[spot] + ". Cast when you’re ready.";
-    controls.innerHTML = '<button id="cast">Cast here</button>';
-    document.getElementById("cast").addEventListener("click", cast);
+  function stopReel(){pressing=false;reel.classList.remove("active");}
+  function ready(text="Touch the lake to cast. Aim beside the granite or reeds."){
+    stopReel();phase="aim";targetFish=null;retrieve=0;progress=0;tension=.42;slackTime=0;burst=0;
+    result.hidden=true;message(text,"Read the water","A dark seam runs past the granite. Reeds stir along the other shore.");ui();
   }
-  function cast() {
-    cleanup(); phase = "waiting"; result.hidden = true; meterArea.hidden = true;
-    status.textContent = "The line settles. Watch the bobber for a bite…";
-    bobber.setAttribute("opacity","1");
-    const castButton = document.getElementById("cast");
-    if (castButton) castButton.disabled = true;
-    scheduleBite(1900 + Math.random()*1400);
+  function castAt(x,y){
+    if(phase!=="aim")return;
+    aim={x,y};
+    if(y<.22 || y>.75 || x<.24 || x>.96){
+      message("Try the water beyond the rod tip, beside the shoreline cover.");return;
+    }
+    if((x>.3&&x<.55&&y<.37)||(x>.7&&y<.34)){
+      message("That lands in the rocks or reeds. Set it down beside them.");return;
+    }
+    landing={x,y};lure={...source};castFlight=0;retrieve=0;castNumber++;phase="flight";
+    const near=(point)=>Math.hypot((x-point.x)*1.0,(y-point.y)*1.35)<.18;
+    targetFish=near(bass)?"bass":near(pike)?"pike":null;
+    message("The lure sails over Smoke Lake…","A good cast","Watch where it touches down, then bring it past the edge.");
+    ui();
   }
-  function hook() {
-    phase = "reel"; tension = 44; progress = 0; meterArea.hidden = false;
-    controls.innerHTML = '<button id="reel">Reel in</button> <button class="secondary" id="ease">Ease the line</button>';
-    document.getElementById("reel").addEventListener("click", reel);
-    document.getElementById("ease").addEventListener("click", ease);
-    status.textContent = "Fish on! Reel in short pulls. Keep the line steady and give when it tugs.";
-    tick = setInterval(() => {
-      if (paused) return;
-      tension = Math.max(12, Math.min(96, tension + (Math.random() > .52 ? 7 : -5)));
-      paintMeter();
-    }, 700);
+  function hook(){
+    phase="fight";tension=.42;progress=0;slackTime=0;surge=0;
+    message("Fish on! Reel in short pulls. Let it run when the line draws tight.","Fish on","Feel the pull through the rod; keep the line from going slack.");
+    ui();
   }
-  function paintMeter() {
-    tensionFill.style.width = tension + "%";
-    document.querySelector('[role="meter"]').setAttribute("aria-valuenow",String(Math.round(tension)));
-    tensionText.textContent = tension < 25 ? "Line going slack" : tension > 78 ? "Too much pull — ease up" : "Steady";
-    catchFill.style.width = progress + "%";
-    catchPct.textContent = progress + "%";
+  function lost(kind){
+    phase="lost";failedAt=clock;stopReel();ui();
+    message(kind==="snap"?"The line pulled too tight and the fish slipped away. Ease off when it surges.":"The line went slack and the fish shook free. Keep a gentle pull.","One got away","There is time for another cast.");
   }
-  function reel() {
-    if (phase !== "reel") return;
-    if (tension > 78) { status.textContent = "That’s a strong tug. Ease up for a moment, then reel again."; return; }
-    tension = Math.min(95, tension + 15);
-    progress = Math.min(100, progress + 25);
-    paintMeter();
-    if (progress >= 100) landFish();
-    else status.textContent = tension < 30 ? "Keep a little tension on the line as you reel." : "Nice pull. The fish is coming closer.";
-  }
-  function ease() {
-    if (phase !== "reel") return;
-    tension = Math.max(18, tension - 20); paintMeter();
-    status.textContent = "Good—let the fish tire a little, then reel again.";
-  }
-  function landFish() {
-    cleanup(); phase = "landed"; catches++; meterArea.hidden = true; bobber.setAttribute("opacity","0");
-    status.textContent = "You brought it in!";
-    window.parent.postMessage({type:"abundant-waters:fish-landed",fish:fishNames[spot]},location.origin);
+  function landed(){
+    phase="caught";stopReel();catches++;
+    const name=targetFish==="pike"?"Northern pike":"Smallmouth bass";
+    document.getElementById("count").textContent="Fish log · "+catches;
+    document.getElementById("resultTitle").textContent=name+"!";
+    document.getElementById("resultText").textContent=targetFish==="pike"?
+      "It came out of the weeds like a green arrow. Dad steadies the fish while you ease out the hook.":
+      "It darted along the granite edge and gave one last jump. Dad grins as you bring it alongside.";
+    result.hidden=false;
+    message("You brought it in.","A fish for the trip log","The water settles around the canoe.");
+    window.parent.postMessage({type:"abundant-waters:fish-landed",fish:name},location.origin);
     window.AbundantWaters.complete();
-    result.hidden = false;
-    result.innerHTML = '<p class="catch"><strong>' + fishNames[spot] + '!</strong> A great catch for the family fish log. This trip’s log: ' + catches + (catches === 1 ? " fish." : " fish.") + '</p>';
-    controls.innerHTML = '<button id="again">Try another cast</button>';
-    document.getElementById("again").addEventListener("click", showCast);
+    ui();
   }
-  document.querySelectorAll("[data-spot]").forEach(button => button.addEventListener("click", () => {
-    if (phase !== "choose" && phase !== "ready" && phase !== "landed") return;
-    setSpot(button.dataset.spot); phase = "ready";
-    controls.innerHTML = '<button id="cast">Cast here</button>';
-    document.getElementById("cast").addEventListener("click", cast);
-  }));
-  document.getElementById("cast").addEventListener("click", cast);
+  function point(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:Math.max(.02,Math.min(.98,(e.clientX-r.left)/r.width)),y:Math.max(.12,Math.min(.9,(e.clientY-r.top)/r.height))};
+  }
+  canvas.addEventListener("pointerdown",e=>{
+    if(phase!=="aim")return;dragging=true;canvas.setPointerCapture(e.pointerId);aim=point(e);
+  });
+  canvas.addEventListener("pointermove",e=>{if(dragging&&phase==="aim")aim=point(e);});
+  canvas.addEventListener("pointerup",e=>{if(!dragging)return;dragging=false;castAt(point(e).x,point(e).y);});
+  canvas.addEventListener("pointercancel",()=>{dragging=false;});
+  canvas.addEventListener("keydown",e=>{
+    if(phase!=="aim")return;
+    const step=e.shiftKey?.045:.025;
+    if(e.key==="ArrowLeft")aim.x=Math.max(.24,aim.x-step);
+    else if(e.key==="ArrowRight")aim.x=Math.min(.96,aim.x+step);
+    else if(e.key==="ArrowUp")aim.y=Math.max(.22,aim.y-step);
+    else if(e.key==="ArrowDown")aim.y=Math.min(.75,aim.y+step);
+    else if(e.key==="Enter"||e.key===" "){e.preventDefault();castAt(aim.x,aim.y);return;}
+    else return;
+    e.preventDefault();
+  });
+  reel.addEventListener("pointerdown",e=>{
+    if(phase!=="retrieve"&&phase!=="fight")return;
+    reel.setPointerCapture(e.pointerId);pressStart=performance.now();pressing=true;reel.classList.add("active");
+  });
+  reel.addEventListener("pointerup",()=>{if(pressing&&performance.now()-pressStart<190)burst=.4;stopReel();});
+  reel.addEventListener("pointercancel",stopReel);
+  reel.addEventListener("lostpointercapture",stopReel);
+  reel.addEventListener("click",e=>{
+    if(e.detail===0 && (phase==="retrieve"||phase==="fight"))burst=Math.max(burst,.5);
+  });
+  window.addEventListener("keydown",e=>{
+    if((e.key===" "||e.key.toLowerCase()==="r")&&(phase==="retrieve"||phase==="fight")){
+      e.preventDefault();pressing=true;reel.classList.add("active");
+    }
+  });
+  window.addEventListener("keyup",e=>{if(e.key===" "||e.key.toLowerCase()==="r")stopReel();});
+  reset.addEventListener("click",()=>ready("Another cast. Put the lure beside the granite drop or the reeds."));
+  document.getElementById("again").addEventListener("click",()=>ready("The water is quiet again. Pick another place for the lure."));
+  function pause(value){paused=value;if(value)stopReel();last=performance.now();}
+  window.addEventListener("abundant-waters:pause",()=>pause(true));
+  window.addEventListener("abundant-waters:resume",()=>pause(false));
+  document.addEventListener("visibilitychange",()=>pause(document.hidden));
+  window.addEventListener("blur",()=>stopReel());
+  function update(dt){
+    clock+=dt;
+    if(phase==="flight"){
+      castFlight=Math.min(1,castFlight+dt*2.15);
+      const arc=1-Math.pow(1-castFlight,2);
+      lure.x=source.x+(landing.x-source.x)*arc;
+      lure.y=source.y+(landing.y-source.y)*arc-Math.sin(castFlight*Math.PI)*.18;
+      if(castFlight>=1){
+        phase="retrieve";lure={...landing};
+        message("It lands with a small ring. Work it slowly past the edge.","Watch the lure","Hold Reel. A fish may follow when the lure moves near cover.");ui();
+      }
+    }
+    if(phase==="retrieve"){
+      const active=pressing||burst>0;
+      if(burst>0)burst=Math.max(0,burst-dt);
+      if(active){
+        retrieve=Math.min(1,retrieve+dt*.15);
+        lure.x=landing.x+(source.x-landing.x)*retrieve;
+        lure.y=landing.y+(source.y-landing.y)*retrieve;
+        if(targetFish && retrieve>.16 && retrieve<.57){hook();return;}
+        if(retrieve>=.96){ready("The lure comes back without a strike. Try along the rocky drop or weed edge.");return;}
+      }
+    }
+    if(phase==="fight"){
+      const active=pressing||burst>0;
+      if(burst>0)burst=Math.max(0,burst-dt);
+      surge=Math.max(0,Math.sin(clock*2.6+castNumber*2.1)-.55)*.36;
+      tension=Math.max(0,Math.min(1,tension+dt*(active?.29:-.18)+dt*surge));
+      if(active && tension>.18 && tension<.88)progress=Math.min(1,progress+dt*.22);
+      if(!active&&tension<.14)slackTime+=dt;else slackTime=0;
+      if(tension>.97){lost("snap");return;}
+      if(slackTime>1.25){lost("slack");return;}
+      if(progress>=1){landed();return;}
+      if(tension>.77)status.textContent="Hard pull! Release the reel and let it run.";
+      else if(tension<.24)status.textContent="The line is going slack. Reel gently.";
+      else status.textContent=active?"You gain a little line. Keep it steady.":"It runs a little. Take up line when the pull softens.";
+      ui();
+    }
+    if(phase==="lost" && clock-failedAt>1.8)ready("The lake is still here. Aim a fresh cast beside the cover.");
+  }
+  function path(points,fill,stroke,width=1){
+    ctx.beginPath();ctx.moveTo(points[0][0]*w,points[0][1]*h);
+    for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0]*w,points[i][1]*h);
+    if(fill){ctx.closePath();ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke();}
+  }
+  function ellipse(x,y,rx,ry,color){
+    ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x*w,y*h,rx*w,ry*h,0,0,Math.PI*2);ctx.fill();
+  }
+  function ripple(x,y,r,alpha){
+    ctx.strokeStyle="rgba(229,238,221,"+alpha+")";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(x*w,y*h,r*w,r*h*.48,0,0,Math.PI*2);ctx.stroke();
+  }
+  function pine(x,y,size){
+    ctx.strokeStyle="#243f34";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x*w,y*h);ctx.lineTo(x*w,(y+size*.2)*h);ctx.stroke();
+    path([[x,y-size*.4],[x-size*.055,y+size*.09],[x+size*.055,y+size*.09]],"#254537");
+    path([[x,y-size*.28],[x-size*.07,y+size*.18],[x+size*.07,y+size*.18]],"#315345");
+  }
+  function fish(x,y,kind,alpha=.45){
+    ctx.save();ctx.translate(x*w,y*h);ctx.rotate(Math.sin(clock*2)*.08);
+    const scale=Math.max(18,Math.min(w*.06,42));
+    ctx.fillStyle="rgba(23,64,67,"+alpha+")";
+    ctx.beginPath();ctx.ellipse(0,0,scale,scale*.32,-.25,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(-scale*.83,0);ctx.lineTo(-scale*1.35,-scale*.48);ctx.lineTo(-scale*1.27,scale*.36);ctx.fill();
+    ctx.restore();
+  }
+  function label(x,y,text){
+    ctx.font="700 "+(w<420?11:13)+"px system-ui";
+    const tw=ctx.measureText(text).width;
+    ctx.fillStyle="#1b3a37ce";ctx.fillRect(x*w-5,y*h-15,tw+10,21);
+    ctx.fillStyle="#f4ead2";ctx.fillText(text,x*w,y*h);
+  }
+  function draw(){
+    if(!w||!h)return;
+    const sky=ctx.createLinearGradient(0,0,0,h*.4);sky.addColorStop(0,"#b8c8b9");sky.addColorStop(1,"#d8d9bc");
+    ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+    path([[0,.29],[.13,.21],[.22,.26],[.33,.2],[.42,.24],[.57,.18],[.68,.23],[.79,.18],[.9,.24],[1,.2],[1,.52],[0,.52]],"#4d6857");
+    for(let i=0;i<15;i++)pine(i/14,.33,.12+(i%3)*.02);
+    const water=ctx.createLinearGradient(0,h*.28,0,h);water.addColorStop(0,"#77a1a0");water.addColorStop(.6,"#427b87");water.addColorStop(1,"#245268");
+    ctx.fillStyle=water;ctx.fillRect(0,h*.32,w,h*.68);
+    path([[0,.34],[.09,.35],[.18,.34],[.29,.32],[.37,.31],[.45,.34],[.49,.38],[.47,.41],[.35,.41],[.28,.37],[.16,.38],[0,.4]],"#718577");
+    path([[0,.37],[.18,.37],[.3,.34],[.39,.33],[.46,.37],[.49,.41],[.46,.47],[.37,.46],[.29,.42],[.16,.43],[0,.46]],"#a8a493","#d7c8a8",2);
+    path([[0,.37],[.18,.37],[.3,.34],[.39,.33],[.46,.37],[.49,.41],[.46,.47],[.37,.46],[.29,.42],[.16,.43],[0,.46]],null,"#c5c0a9",1);
+    for(let i=0;i<6;i++)ellipse(.24+i*.044,.38+(i%2)*.027,.022,.008,"#c8bea5");
+    path([[1,.3],[.91,.32],[.85,.35],[.79,.34],[.74,.37],[.7,.42],[.75,.42],[.84,.4],[.91,.38],[1,.39]],"#6d866c");
+    for(let i=0;i<20;i++){
+      const x=.7+i*.015,y=.41+Math.sin(i*2)*.016;
+      ctx.strokeStyle=i%3?"#547861":"#9aae7a";ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(x*w,(y+.045)*h);ctx.quadraticCurveTo((x-.012)*w,y*h,(x+(i%2?.009:-.008))*w,(y-.045)*h);ctx.stroke();
+    }
+    for(let i=0;i<18;i++){
+      const y=.39+i*.035,off=Math.sin(i*2.3+clock*.3)*.014;
+      ctx.strokeStyle="rgba(215,226,207,"+(.09+(i%4)*.018)+")";ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo((.23+off)*w,y*h);ctx.quadraticCurveTo(.41*w,(y-.014)*h,.61*w,y*h);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(.68*w,(y+.018)*h);ctx.lineTo(.93*w,(y+.012)*h);ctx.stroke();
+    }
+    path([[0,.67],[.08,.65],[.18,.68],[.22,.72],[.26,.82],[.2,1],[0,1]],"#767c70");
+    path([[0,.7],[.08,.68],[.18,.71],[.22,.77],[.24,.84],[.17,1],[0,1]],"#a59e88","#d5c3a5",3);
+    for(let i=0;i<7;i++)ellipse(.02+i*.03,.75+(i%3)*.04,.022,.007,"#c1b69d");
+    // A shallow canoe moored behind the player.
+    path([[.01,.9],[.13,.9],[.18,.94],[.16,.97],[.025,.97]],"#9f4c32","#e7ae74",3);
+    ctx.strokeStyle="#a69370";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(source.x*w,source.y*h);ctx.lineTo(.21*w,.48*h);ctx.stroke();
+    ctx.strokeStyle="#443c31";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.lineTo(.23*w,.46*h);ctx.stroke();
+    fish(bass.x+Math.sin(clock*.5)*.025,bass.y+Math.cos(clock*.7)*.01,"bass",.23);
+    fish(pike.x+Math.sin(clock*.35)*.025,pike.y+Math.cos(clock*.6)*.012,"pike",.2);
+    ripple(.53,.48,.035+((clock*.12)%1)*.035,.25);
+    ripple(.81,.52,.023+((clock*.1)%1)*.035,.2);
+    if(phase==="aim"){
+      const x=aim.x*w,y=aim.y*h;
+      ctx.strokeStyle="#efe8c999";ctx.setLineDash([4,6]);ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);
+      ctx.strokeStyle="#f3deb1";ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,14,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-22,y);ctx.lineTo(x-12,y);ctx.moveTo(x+12,y);ctx.lineTo(x+22,y);ctx.moveTo(x,y-22);ctx.lineTo(x,y-12);ctx.moveTo(x,y+12);ctx.lineTo(x,y+22);ctx.stroke();
+      label(.3,.295,"granite drop");
+      label(w<460?.63:.73,.3,"weed edge");
+    }
+    if(phase==="flight"||phase==="retrieve"||phase==="fight"||phase==="lost"){
+      let lx=lure.x,ly=lure.y;
+      if(phase==="fight"){
+        lx=landing.x+(source.x-landing.x)*progress*.85+Math.sin(clock*5)*.014;
+        ly=landing.y+(source.y-landing.y)*progress*.85+Math.cos(clock*5)*.012;
+        fish(lx+.018,ly+.01,targetFish,.66);
+        ripple(lx,ly,.02+Math.abs(Math.sin(clock*6))*.03,.45);
+      }
+      ctx.strokeStyle=phase==="lost"?"#e8d6a18a":"#f4e7c6";ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.quadraticCurveTo((lx+.17)*w,(ly-.19)*h,lx*w,ly*h);ctx.stroke();
+      ellipse(lx,ly,.006,.006,phase==="fight"?"#f7d891":"#c45838");
+      if(phase==="retrieve")ripple(lx,ly,.014+Math.sin(clock*9)*.005,.65);
+    }
+    if(phase==="caught"){
+      ripple(.21,.7,.08,.6);
+    }
+  }
+  function frame(now){
+    const dt=Math.min(.04,Math.max(0,(now-(last||now))/1000));last=now;
+    if(!paused)update(dt);
+    draw();requestAnimationFrame(frame);
+  }
+  ui();requestAnimationFrame(frame);
 })();
 </script>
 <script src="../immersive-bridge.js"></script>
