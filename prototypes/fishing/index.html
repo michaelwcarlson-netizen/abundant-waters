@@ -187,7 +187,7 @@
     if(phase!=="retrieve"&&phase!=="fight")return;
     reel.setPointerCapture(e.pointerId);pressStart=performance.now();pressing=true;reel.classList.add("active");
   });
-  reel.addEventListener("pointerup",()=>{if(pressing&&performance.now()-pressStart<190)burst=.4;stopReel();});
+  reel.addEventListener("pointerup",()=>{if(pressing&&performance.now()-pressStart<600)burst=.55;stopReel();});
   reel.addEventListener("pointercancel",stopReel);
   reel.addEventListener("lostpointercapture",stopReel);
   reel.addEventListener("click",e=>{
@@ -331,7 +331,7 @@
         ripple(lx,ly,.02+Math.abs(Math.sin(clock*6))*.03,.45);
       }
       ctx.strokeStyle=phase==="lost"?"#e8d6a18a":"#f4e7c6";ctx.lineWidth=1.4;
-      ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.quadraticCurveTo((lx+.17)*w,(ly-.19)*h,lx*w,ly*h);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.quadraticCurveTo((.21+lx)*.5*w,(Math.min(.48,ly)-.045)*h,lx*w,ly*h);ctx.stroke();
       ellipse(lx,ly,.006,.006,phase==="fight"?"#f7d891":"#c45838");
       if(phase==="retrieve")ripple(lx,ly,.014+Math.sin(clock*9)*.005,.65);
     }
