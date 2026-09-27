@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Storm Tarp</title>
+<title>Tarp & Rain — Abundant Waters</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@500;700&display=swap">
@@ -160,13 +160,13 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="c" aria-label="Looking along a tarp ridgeline at camp as a storm approaches from the left. Drag the ridgeline and tarp edges to pitch the tarp." role="img"></canvas>
+  <canvas id="c" aria-label="Looking along a tarp ridgeline at camp as afternoon rain approaches from the left. Drag the ridgeline and tarp edges to pitch the tarp." role="img"></canvas>
 
   <header class="bar">
-    <div class="brand"><b>Storm day</b><span>Tarp practice</span></div>
+    <div class="brand"><b>Afternoon rain</b><span>At Smoke Lake</span></div>
     <div class="mid">
       <div class="prog" aria-hidden="true"><div id="progFill"></div></div>
-      <div class="stats" id="stats">Storm coming</div>
+      <div class="stats" id="stats">Rain coming</div>
     </div>
     <button class="btn ghost" id="tuneBtn" aria-expanded="false" aria-controls="tune">Tune</button>
   </header>
@@ -184,7 +184,7 @@
   </div>
 
   <div class="tools">
-    <button class="btn primary" id="readyBtn" disabled>Ready for the storm</button>
+    <button class="btn primary" id="readyBtn" disabled>Ready for rain</button>
     <button class="btn" id="tightL" hidden>Tighten left</button>
     <button class="btn" id="tightR" hidden>Tighten ridge</button>
     <button class="btn" id="tightE" hidden>Tighten right</button>
@@ -192,17 +192,17 @@
 
   <aside class="tune" id="tune" hidden aria-label="Tune the feel">
     <h3>Tune the feel</h3>
-    <div class="field"><label for="tPrep">Time before the storm <output id="oPrep"></output></label><input type="range" id="tPrep" min="30" max="180" step="5"></div>
+    <div class="field"><label for="tPrep">Time before the rain <output id="oPrep"></output></label><input type="range" id="tPrep" min="30" max="180" step="5"></div>
     <div class="field"><label for="tRain">Rain <output id="oRain"></output></label><input type="range" id="tRain" min="0.3" max="2" step="0.05"></div>
     <div class="field"><label for="tWind">Wind <output id="oWind"></output></label><input type="range" id="tWind" min="0" max="2" step="0.05"></div>
     <div class="field"><label for="tStretch">Fabric stretch <output id="oStretch"></output></label><input type="range" id="tStretch" min="0" max="2" step="0.05"></div>
     <button class="btn" id="tReset">Reset to defaults</button>
-    <p class="note">Fabric stretch is how much pooled water sags the tarp. Higher makes flat pitches fail faster. Time before the storm applies the next time you start.</p>
+    <p class="note">Fabric stretch is how much pooled water sags the tarp. Higher makes flat pitches fail faster. Time before the rain applies the next time you start.</p>
   </aside>
 
   <div class="end" id="end" hidden>
     <div class="card" role="dialog" aria-labelledby="endTitle">
-      <p class="eyebrow">Adventure Passport · Storm day</p>
+      <p class="eyebrow">Smoke Lake · Afternoon rain</p>
       <h2 id="endTitle"></h2>
       <p id="endText"></p>
       <div class="stamps" id="endStamps"></div>
@@ -270,7 +270,7 @@
     $('picker').hidden = true; $('end').hidden = true;
     toastQueue.length = 0; $('toast').innerHTML = '';
     setTools();
-    hint('start', 'A storm is rolling in from the west, on the left. Get the tarp up before it hits. Drag the <b>ridgeline knot</b> up or down on the tree, then drag each <b>tarp edge</b> out and tie it off. Drag the firewood and packs under too.', 14000, true);
+    hint('start', 'Rain is moving in from the west, on the left. Get the tarp up before it hits. Drag the <b>ridgeline knot</b> up or down on the tree, then drag each <b>tarp edge</b> out and tie it off. Drag the firewood and packs under too.', 14000, true);
   }
 
   // ---------- Hints, bubbles, stamps ----------
@@ -316,11 +316,11 @@
   const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.max(0, Math.floor(t % 60))).padStart(2, '0')}`;
   function updateHeader() {
     if (mode === 'prep') {
-      $('stats').textContent = `Storm in ${fmt(P.prep - tMode)}`;
+      $('stats').textContent = `Rain in ${fmt(P.prep - tMode)}`;
       $('progFill').style.width = `${(100 * tMode) / P.prep}%`;
     } else if (mode === 'storm') {
       const dry = people.filter((p) => p.wet < 12).length;
-      $('stats').textContent = `Storm · ${fmt(STORM_LEN - tMode)} left · ${dry} of 6 dry`;
+      $('stats').textContent = `Rain · ${fmt(STORM_LEN - tMode)} left · ${dry} of 6 dry`;
       $('progFill').style.width = `${100 - (100 * tMode) / STORM_LEN}%`;
     }
   }
@@ -600,14 +600,14 @@
     const dryPeople = people.filter((p) => p.wet < 12).length;
     const wood = gear.find((g) => g.id === 'wood'), packs = gear.find((g) => g.id === 'packs');
     let title, text;
-    if (dryPeople === 6 && !stats.dumps) { title = 'Dry as a bone'; text = 'The storm blew through and nobody got wet. Cards, snacks, and a story under the tarp.'; }
-    else if (stats.dumps) { title = 'Sploosh'; text = `A flat spot filled up and dumped ${stats.dumps > 1 ? stats.dumps + ' times' : ''} on someone. The storm passed anyway, and it’s already a family story.`; }
+    if (dryPeople === 6 && !stats.dumps) { title = 'Dry as a bone'; text = 'The rain blew through and nobody got wet. Cards, snacks, and a story under the tarp.'; }
+    else if (stats.dumps) { title = 'Sploosh'; text = `A flat spot filled up and dumped ${stats.dumps > 1 ? stats.dumps + ' times' : ''} on someone. The rain passed anyway, and it’s already a family story.`; }
     else if (stats.knotFails.length) { title = 'A knot let go'; text = `The ${listJoin(stats.knotFails)} slipped in the wind. Everyone waited it out, a little soggier than planned.`; }
     else { title = 'Soggy, but together'; text = `${dryPeople} of 6 stayed dry. Rain blows in under a high edge on the windy side.`; }
     $('endTitle').textContent = title;
     $('endText').textContent = text;
     $('endStamps').innerHTML = STAMPS.map((s) => got.has(s.id)
-      ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Storm day</small><b>${s.name}</b></div>`
+      ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Smoke Lake</small><b>${s.name}</b></div>`
       : `<div class="stamp missing"><small>Not yet</small><b>?</b></div>`).join('');
     const pl = pitchDeg(edges[0]), pr = pitchDeg(edges[1]);
     const rows = [
@@ -701,7 +701,7 @@
     $('picker').hidden = true;
     b.blur();
     setTools();
-    if (allTied()) hint('ready', 'All tied. Tap <b>Ready for the storm</b>, or keep adjusting until it looks right.', 6000);
+    if (allTied()) hint('ready', 'All tied. Tap <b>Ready for rain</b>, or keep adjusting until it looks right.', 6000);
   });
 
   // ---------- Simulation ----------
