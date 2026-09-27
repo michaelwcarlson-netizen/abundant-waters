@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#182d36">
+<title>Night Sky at Smoke Lake — Abundant Waters</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; --muted:#5b6662; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+  .eyebrow { margin:0 0 5px; color:var(--clay); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { margin:0; font-family:Georgia,serif; }
+  h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+  h2 { font-size:1.2rem; }
+  .lead { margin:8px 0 16px; color:#465556; }
+  .scene { position:relative; aspect-ratio:800/460; min-height:320px; overflow:hidden; border:1px solid #536568; border-radius:14px; background:radial-gradient(ellipse at 64% 58%,#2b4350 0%,#1a303d 62%,#142731 100%); }
+  .sky, .lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .sky { opacity:.95; }
+  .lines { overflow:visible; }
+  .shore { position:absolute; right:0; bottom:0; left:0; height:15%; background:#152923; clip-path:polygon(0 45%,8% 20%,13% 53%,23% 29%,29% 58%,39% 26%,46% 61%,54% 36%,63% 63%,72% 30%,82% 56%,91% 24%,100% 48%,100% 100%,0 100%); }
+  .water { position:absolute; right:0; bottom:0; left:0; height:5%; background:#254752; opacity:.65; }
+  .star { position:absolute; z-index:1; display:grid; place-items:center; width:44px; height:44px; padding:0; transform:translate(-50%,-50%); border:0; border-radius:50%; background:transparent; color:#f3e9c8; cursor:pointer; }
+  .star::before { content:""; width:8px; height:8px; border-radius:50%; background:currentColor; box-shadow:0 0 0 3px #f3e9c829,0 0 12px #f3e9c8a8; transition:box-shadow .2s,transform .2s; }
+  .star:hover::before, .star:focus-visible::before { transform:scale(1.5); box-shadow:0 0 0 8px #f3e9c839,0 0 18px #f3e9c8; }
+  .star:focus-visible { outline:2px solid #f3e9c8; outline-offset:1px; }
+  .star.found::before { width:10px; height:10px; background:#fff9df; box-shadow:0 0 0 6px #fff9df35,0 0 20px #fff9df; }
+  .star.next::after { content:""; position:absolute; inset:4px; border:1px solid #e9dfb789; border-radius:50%; }
+  .star.polaris { color:#e3d4ac; }
+  .star.polaris::before { width:10px; height:10px; }
+  .star.polaris[hidden] { display:none; }
+  .caption { margin:8px 0 0; color:var(--muted); font-size:.86rem; }
+  .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
+  .status { min-height:55px; margin:12px 0; padding:12px 14px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
+  .note { color:var(--muted); }
+  .field-note { margin:14px 0 0; padding:14px 16px; border:1px solid var(--line); background:#f7f4eb; }
+  .field-note p { margin:.5em 0 0; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  button.action { min-height:48px; padding:10px 15px; border:1px solid var(--pine); border-radius:9px; background:var(--pine); color:white; font:inherit; font-weight:750; cursor:pointer; }
+  button.action.secondary { background:#f7f4eb; color:var(--pine); }
+  button.action:focus-visible { outline:3px solid var(--clay); outline-offset:2px; }
+  [hidden] { display:none !important; }
+  @media(max-width:500px) { .scene { aspect-ratio:auto; height:360px; } .star { width:40px; height:40px; } }
+  @media(prefers-reduced-motion:reduce) { .star::before { transition:none; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Smoke Lake · First night</p>
+  <h1>Look up for a while</h1>
+  <p class="lead">The food pack is hung. The fire burns low. Above the pines, a few stars are bright enough to follow.</p>
+  <div class="scene" id="scene" role="group" aria-label="Night sky with seven Big Dipper stars and the North Star">
+    <svg class="sky" viewBox="0 0 800 460" preserveAspectRatio="none" aria-hidden="true">
+      <g fill="#dfdbcb" opacity=".52">
+        <circle cx="50" cy="57" r="1.2"/><circle cx="91" cy="137" r="1"/><circle cx="150" cy="39" r="1.5"/>
+        <circle cx="216" cy="137" r="1"/><circle cx="279" cy="77" r="1.1"/><circle cx="346" cy="161" r="1.1"/>
+        <circle cx="411" cy="48" r="1"/><circle cx="472" cy="126" r="1.3"/><circle cx="544" cy="59" r="1"/>
+        <circle cx="636" cy="138" r="1"/><circle cx="756" cy="157" r="1.3"/><circle cx="714" cy="257" r="1"/>
+        <circle cx="616" cy="289" r="1"/><circle cx="390" cy="321" r="1.2"/><circle cx="205" cy="295" r="1"/>
+        <circle cx="72" cy="296" r="1.1"/><circle cx="493" cy="251" r="1"/><circle cx="312" cy="249" r="1.2"/>
+      </g>
+    </svg>
+    <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <polyline id="dipper-line" fill="none" stroke="#e9dfb7" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>
+      <line id="bowl-close" x1="51" y1="52" x2="53" y2="21" stroke="#e9dfb7" stroke-width=".3" opacity="0"/>
+      <line id="north-line" x1="75" y1="22" x2="84" y2="9" stroke="#e9dfb7" stroke-width=".25" stroke-dasharray="1 1" opacity="0"/>
+    </svg>
+    <div class="shore"></div><div class="water"></div>
+    <button type="button" class="star" data-star="0" style="left:8%;top:34%" aria-label="First star, end of the handle"></button>
+    <button type="button" class="star" data-star="1" style="left:23%;top:19%" aria-label="Second star, bend in the handle"></button>
+    <button type="button" class="star" data-star="2" style="left:38%;top:29%" aria-label="Third star, near the bowl"></button>
+    <button type="button" class="star" data-star="3" style="left:53%;top:21%" aria-label="Fourth star, top of the bowl"></button>
+    <button type="button" class="star" data-star="4" style="left:75%;top:22%" aria-label="Fifth star, outer top of the bowl"></button>
+    <button type="button" class="star" data-star="5" style="left:73%;top:51%" aria-label="Sixth star, outer bottom of the bowl"></button>
+    <button type="button" class="star" data-star="6" style="left:51%;top:52%" aria-label="Seventh star, bottom of the bowl"></button>
+    <button type="button" class="star polaris" id="polaris" style="left:84%;top:9%" aria-label="Bright star above the bowl, Polaris" hidden></button>
+  </div>
+  <p class="caption">An illustrated sky to explore, not a scale star chart. Tap or tab to the stars.</p>
+  <section class="panel" aria-live="polite">
+    <h2 id="heading">Trace the dipper</h2>
+    <p class="lead" id="instruction">Start at the left end of the handle. Follow its bend toward the four stars that make the bowl.</p>
+    <p class="status" id="status" role="status">Take your time. The stars will wait.</p>
+    <div class="field-note" id="note" hidden>
+      <h2>Field note · Finding north</h2>
+      <p>The two stars on the outer side of the Big Dipper’s bowl point toward Polaris. It sits almost above Earth’s north axis, so it can help you find north on a clear night.</p>
+    </div>
+    <p class="note" id="quiet" hidden>The lake has gone still. Somewhere across the water, a loon calls once.</p>
+    <div class="actions">
+      <button class="action" id="pause" type="button" hidden>Stay a moment</button>
+      <button class="action secondary" id="again" type="button" hidden>Trace it again</button>
+    </div>
+  </section>
+</main>
+<script>
+(() => {
+  const points=[[8,34],[23,19],[38,29],[53,21],[75,22],[73,51],[51,52]];
+  const stars=[...document.querySelectorAll("[data-star]")];
+  const status=document.getElementById("status");
+  const polaris=document.getElementById("polaris");
+  const line=document.getElementById("dipper-line");
+  const heading=document.getElementById("heading");
+  const instruction=document.getElementById("instruction");
+  let count=0,complete=false;
+  function reset(){
+    count=0;complete=false;line.setAttribute("points","");
+    document.getElementById("bowl-close").setAttribute("opacity","0");
+    document.getElementById("north-line").setAttribute("opacity","0");
+    document.getElementById("note").hidden=true;
+    document.getElementById("quiet").hidden=true;
+    document.getElementById("pause").hidden=true;
+    document.getElementById("again").hidden=true;
+    polaris.hidden=true;polaris.classList.remove("found");
+    stars.forEach((star,i)=>{star.classList.toggle("next",i===0);star.classList.remove("found");});
+    heading.textContent="Trace the dipper";
+    instruction.textContent="Start at the left end of the handle. Follow its bend toward the four stars that make the bowl.";
+    status.textContent="Take your time. The stars will wait.";
+  }
+  stars.forEach((star,i)=>star.addEventListener("click",()=>{
+    if(complete)return;
+    if(i!==count){
+      status.textContent=count===0?"Start with the star at the left end of the handle.":"Look for the softly circled star to continue the shape.";
+      return;
+    }
+    star.classList.remove("next");star.classList.add("found");count++;
+    line.setAttribute("points",points.slice(0,count).map(point=>point.join(",")).join(" "));
+    if(count<stars.length){
+      stars[count].classList.add("next");
+      status.textContent=count<3?"Follow the handle toward the bowl.":"Now trace around the bowl.";
+    }else{
+      document.getElementById("bowl-close").setAttribute("opacity","1");
+      polaris.hidden=false;polaris.classList.add("next");
+      heading.textContent="Find the North Star";
+      instruction.textContent="The two stars on the bowl’s outer edge point past the rim. Follow that line to the bright star above.";
+      status.textContent="One more star. Follow the outer edge of the bowl.";
+    }
+  }));
+  polaris.addEventListener("click",()=>{
+    if(count!==stars.length||complete)return;
+    complete=true;polaris.classList.remove("next");polaris.classList.add("found");
+    document.getElementById("north-line").setAttribute("opacity","1");
+    document.getElementById("note").hidden=false;
+    document.getElementById("pause").hidden=false;
+    document.getElementById("again").hidden=false;
+    heading.textContent="North, over the pines";
+    instruction.textContent="You found Polaris. The lake is quiet enough to hear the shore.";
+    status.textContent="The Big Dipper gave you a direction to carry into tomorrow.";
+  });
+  document.getElementById("pause").addEventListener("click",()=>{
+    document.getElementById("quiet").hidden=false;
+    document.getElementById("pause").hidden=true;
+  });
+  document.getElementById("again").addEventListener("click",reset);
+  reset();
+})();
+</script>
+</body>
+</html>
