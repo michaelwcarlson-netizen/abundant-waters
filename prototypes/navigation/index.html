@@ -26,6 +26,8 @@
     button:disabled { opacity:.6; cursor:default; }
     .status { min-height:52px; margin-top:13px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
     .actions { display:flex; justify-content:flex-end; margin-top:12px; }
+    .map-hit { fill:transparent; cursor:pointer; }
+    .map-hit:hover, .map-hit:focus-visible { stroke:#c0452b; stroke-width:5; outline:none; }
     .key { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0 0; color:var(--muted); font-size:.82rem; }
     .key span { display:flex; align-items:center; gap:6px; }
     .swatch { width:13px; height:13px; display:inline-block; border:1px solid #456; border-radius:50%; background:#f6f0df; }
@@ -43,7 +45,7 @@
   <p class="lead">The paper map and the shore tell the same story. Match the shape you see from the canoe, and follow the lake toward the portage.</p>
   <div class="map-frame">
     <svg viewBox="0 0 900 360" role="img" aria-labelledby="map-title map-desc">
-      <title id="map-title">A paper map of the route from Sawbill to Smoke Lake</title>
+      <title id="map-title">An illustrated route sketch from Sawbill toward Smoke Lake</title>
       <desc id="map-desc">A winding lake, wooded shore, a sheltered bay, a narrow channel, and a portage trail connecting two lakes.</desc>
       <rect width="900" height="360" fill="#e9e2cc"/>
       <g fill="none" stroke="#c8bea4" stroke-width="2" opacity=".65">
@@ -72,11 +74,14 @@
         <circle id="marker0" cx="105" cy="190" r="13"/><circle id="marker1" cx="321" cy="218" r="13"/>
         <circle id="marker2" cx="512" cy="215" r="13"/><circle id="marker3" cx="584" cy="159" r="13"/>
       </g>
+      <circle class="map-hit" role="button" tabindex="0" aria-label="Sheltered bay on map" data-map-answer="bay" cx="321" cy="218" r="46"/>
+      <circle class="map-hit" role="button" tabindex="0" aria-label="Narrows on map" data-map-answer="narrows" cx="512" cy="215" r="46"/>
+      <circle class="map-hit" role="button" tabindex="0" aria-label="Portage landing on map" data-map-answer="portage" cx="584" cy="159" r="46"/>
       <circle id="player" cx="105" cy="190" r="9" fill="#c0452b" stroke="white" stroke-width="3"/>
       <g transform="translate(835 38)" stroke="#223d2c" stroke-width="3" fill="none">
         <path d="M0 27V0M-9 10 0 0 9 10"/><text x="-6" y="44" fill="#223d2c" stroke="none" font-family="system-ui" font-size="13" font-weight="700">N</text>
       </g>
-      <text x="26" y="30" fill="#5b6662" font-family="system-ui" font-size="13">Boundary Waters field map · north ↑</text>
+      <text x="26" y="30" fill="#5b6662" font-family="system-ui" font-size="13">Illustrated route sketch · north ↑</text>
     </svg>
   </div>
   <div class="key" aria-label="Map key">
@@ -93,7 +98,7 @@
       <button data-answer="narrows">Two points drawing close together</button>
       <button data-answer="portage">A dotted trail reaching the water</button>
     </div>
-    <div class="status" id="status" role="status">Use the shoreline shape, not a marker. There’s no penalty for a wrong turn.</div>
+    <div class="status" id="status" role="status">Tap the matching place on the sketch, or choose below. Wrong turns are fine.</div>
     <div class="actions"><button class="primary" id="continue" hidden>Continue along the shore</button></div>
   </section>
 </main>
@@ -123,9 +128,9 @@
   function render() {
     if (complete) {
       checkpoint.textContent = "Route complete";
-      question.textContent = "You found your way to Smoke Lake";
+      question.textContent = "You found the portage landing";
       clue.textContent = "You matched the sheltered bay, read the narrows, and spotted the portage trail. A wrong turn would only have led to another little discovery.";
-      choices.hidden = true; continueButton.hidden = false; continueButton.textContent = "Finish navigation";
+      choices.hidden = true; continueButton.hidden = true;
       status.textContent = "The portage landing is just ahead. Your family is ready to carry across.";
       drawProgress(); return;
     }
@@ -137,11 +142,10 @@
     choices.querySelectorAll("button").forEach(button => button.disabled = false);
     drawProgress();
   }
-  choices.addEventListener("click", event => {
-    const button = event.target.closest("button[data-answer]");
-    if (!button || complete) return;
+  function choose(answer) {
+    if (complete || !continueButton.hidden) return;
     const step = checkpoints[index];
-    if (button.dataset.answer === step.feature) {
+    if (answer === step.feature) {
       choices.querySelectorAll("button").forEach(choice => choice.disabled = true);
       status.textContent = step.found;
       continueButton.hidden = false;
@@ -153,11 +157,21 @@
         ? "You found a beaver lodge in a little side bay. Nice detour. " + step.hint
         : "Not quite. Take another look at the shoreline. " + step.hint;
     }
+  }
+  choices.addEventListener("click", event => {
+    const button = event.target.closest("button[data-answer]");
+    if (button) choose(button.dataset.answer);
+  });
+  document.querySelectorAll("[data-map-answer]").forEach(target => {
+    target.addEventListener("click", () => choose(target.dataset.mapAnswer));
+    target.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(target.dataset.mapAnswer); }
+    });
   });
   continueButton.addEventListener("click", () => {
-    if (complete) { continueButton.disabled = true; continueButton.textContent = "Navigation complete"; return; }
+    if (complete) return;
     index++;
-    if (index >= checkpoints.length) complete = true;
+    if (index >= checkpoints.length) { complete = true; window.AbundantWaters.complete(); }
     render();
   });
   render();

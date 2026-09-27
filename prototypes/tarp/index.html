@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Storm Tarp</title>
+<title>Tarp & Rain — Abundant Waters</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@500;700&display=swap">
@@ -160,13 +160,13 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="c" aria-label="Looking along a tarp ridgeline at camp as a storm approaches from the left. Drag the ridgeline and tarp edges to pitch the tarp." role="img"></canvas>
+  <canvas id="c" aria-label="Looking along a tarp ridgeline at camp as afternoon rain approaches from the left. Drag the ridgeline and tarp edges to pitch the tarp." role="img"></canvas>
 
   <header class="bar">
-    <div class="brand"><b>Storm day</b><span>Tarp practice</span></div>
+    <div class="brand"><b>Afternoon rain</b><span>At Smoke Lake</span></div>
     <div class="mid">
       <div class="prog" aria-hidden="true"><div id="progFill"></div></div>
-      <div class="stats" id="stats">Storm coming</div>
+      <div class="stats" id="stats">Rain coming</div>
     </div>
     <button class="btn ghost" id="tuneBtn" aria-expanded="false" aria-controls="tune">Tune</button>
   </header>
@@ -184,7 +184,7 @@
   </div>
 
   <div class="tools">
-    <button class="btn primary" id="readyBtn" disabled>Ready for the storm</button>
+    <button class="btn primary" id="readyBtn" disabled>Ready for rain</button>
     <button class="btn" id="tightL" hidden>Tighten left</button>
     <button class="btn" id="tightR" hidden>Tighten ridge</button>
     <button class="btn" id="tightE" hidden>Tighten right</button>
@@ -192,17 +192,17 @@
 
   <aside class="tune" id="tune" hidden aria-label="Tune the feel">
     <h3>Tune the feel</h3>
-    <div class="field"><label for="tPrep">Time before the storm <output id="oPrep"></output></label><input type="range" id="tPrep" min="30" max="180" step="5"></div>
+    <div class="field"><label for="tPrep">Time before the rain <output id="oPrep"></output></label><input type="range" id="tPrep" min="30" max="180" step="5"></div>
     <div class="field"><label for="tRain">Rain <output id="oRain"></output></label><input type="range" id="tRain" min="0.3" max="2" step="0.05"></div>
     <div class="field"><label for="tWind">Wind <output id="oWind"></output></label><input type="range" id="tWind" min="0" max="2" step="0.05"></div>
     <div class="field"><label for="tStretch">Fabric stretch <output id="oStretch"></output></label><input type="range" id="tStretch" min="0" max="2" step="0.05"></div>
     <button class="btn" id="tReset">Reset to defaults</button>
-    <p class="note">Fabric stretch is how much pooled water sags the tarp. Higher makes flat pitches fail faster. Time before the storm applies the next time you start.</p>
+    <p class="note">Fabric stretch is how much pooled water sags the tarp. Higher makes flat pitches fail faster. Time before the rain applies the next time you start.</p>
   </aside>
 
   <div class="end" id="end" hidden>
     <div class="card" role="dialog" aria-labelledby="endTitle">
-      <p class="eyebrow">Adventure Passport · Storm day</p>
+      <p class="eyebrow">Smoke Lake · Afternoon rain</p>
       <h2 id="endTitle"></h2>
       <p id="endText"></p>
       <div class="stamps" id="endStamps"></div>
@@ -241,7 +241,7 @@
 
   // ---------- State ----------
   let W = 0, H = 0, DPR = 1, S = 18, GY = 0;
-  let mode, tMode, cloth, ridge, edges, drops, splashes, pops, people, gear, stats, got, lightning, bubble, lastInput, storyDone, stormK, picking, acc, windNow;
+  let mode, tMode, cloth, ridge, edges, drops, splashes, pops, people, gear, stats, got, bubble, lastInput, storyDone, stormK, picking, acc, windNow;
   let tNow = 0;
 
   function reset() {
@@ -265,12 +265,11 @@
     ];
     stats = { dumps: 0, knotFails: [], early: false };
     got = new Set();
-    lightning = { next: 6, flash: 0, boomAt: -1, count: 0, n: 0 };
     bubble = null; lastInput = 0; storyDone = false; picking = null;
     $('picker').hidden = true; $('end').hidden = true;
     toastQueue.length = 0; $('toast').innerHTML = '';
     setTools();
-    hint('start', 'A storm is rolling in from the west, on the left. Get the tarp up before it hits. Drag the <b>ridgeline knot</b> up or down on the tree, then drag each <b>tarp edge</b> out and tie it off. Drag the firewood and packs under too.', 14000, true);
+    hint('start', 'Rain is moving in from the west, on the left. Get the tarp up before it hits. Drag the <b>ridgeline knot</b> up or down on the tree, then drag each <b>tarp edge</b> out and tie it off. Drag the firewood and packs under too.', 14000, true);
   }
 
   // ---------- Hints, bubbles, stamps ----------
@@ -316,11 +315,11 @@
   const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.max(0, Math.floor(t % 60))).padStart(2, '0')}`;
   function updateHeader() {
     if (mode === 'prep') {
-      $('stats').textContent = `Storm in ${fmt(P.prep - tMode)}`;
+      $('stats').textContent = `Rain in ${fmt(P.prep - tMode)}`;
       $('progFill').style.width = `${(100 * tMode) / P.prep}%`;
     } else if (mode === 'storm') {
       const dry = people.filter((p) => p.wet < 12).length;
-      $('stats').textContent = `Storm · ${fmt(STORM_LEN - tMode)} left · ${dry} of 6 dry`;
+      $('stats').textContent = `Rain · ${fmt(STORM_LEN - tMode)} left · ${dry} of 6 dry`;
       $('progFill').style.width = `${100 - (100 * tMode) / STORM_LEN}%`;
     }
   }
@@ -594,20 +593,19 @@
     if (!stats.knotFails.length) award('knots');
     if (wood.wet < 10) award('wood');
     say('Parent', 'Look, a rainbow.');
-    setTimeout(showEnd, 3200);
   }
   function showEnd() {
     const dryPeople = people.filter((p) => p.wet < 12).length;
     const wood = gear.find((g) => g.id === 'wood'), packs = gear.find((g) => g.id === 'packs');
     let title, text;
-    if (dryPeople === 6 && !stats.dumps) { title = 'Dry as a bone'; text = 'The storm blew through and nobody got wet. Cards, snacks, and a story under the tarp.'; }
-    else if (stats.dumps) { title = 'Sploosh'; text = `A flat spot filled up and dumped ${stats.dumps > 1 ? stats.dumps + ' times' : ''} on someone. The storm passed anyway, and it’s already a family story.`; }
+    if (dryPeople === 6 && !stats.dumps) { title = 'Dry as a bone'; text = 'The rain blew through and nobody got wet. Cards, snacks, and a story under the tarp.'; }
+    else if (stats.dumps) { title = 'Sploosh'; text = `A flat spot filled up and dumped ${stats.dumps > 1 ? stats.dumps + ' times' : ''} on someone. The rain passed anyway, and it’s already a family story.`; }
     else if (stats.knotFails.length) { title = 'A knot let go'; text = `The ${listJoin(stats.knotFails)} slipped in the wind. Everyone waited it out, a little soggier than planned.`; }
     else { title = 'Soggy, but together'; text = `${dryPeople} of 6 stayed dry. Rain blows in under a high edge on the windy side.`; }
     $('endTitle').textContent = title;
     $('endText').textContent = text;
     $('endStamps').innerHTML = STAMPS.map((s) => got.has(s.id)
-      ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Storm day</small><b>${s.name}</b></div>`
+      ? `<div class="stamp" style="--ink-c:${s.ink}"><small>Smoke Lake</small><b>${s.name}</b></div>`
       : `<div class="stamp missing"><small>Not yet</small><b>?</b></div>`).join('');
     const pl = pitchDeg(edges[0]), pr = pitchDeg(edges[1]);
     const rows = [
@@ -624,6 +622,7 @@
     mode = 'done';
     toastQueue.length = 0; $('toast').innerHTML = '';
     $('end').hidden = false;
+    window.AbundantWaters.complete({ dryPeople, knotFailures: stats.knotFails.length, dumps: stats.dumps });
     $('again').focus();
   }
   const listJoin = (a) => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
@@ -700,7 +699,7 @@
     $('picker').hidden = true;
     b.blur();
     setTools();
-    if (allTied()) hint('ready', 'All tied. Tap <b>Ready for the storm</b>, or keep adjusting until it looks right.', 6000);
+    if (allTied()) hint('ready', 'All tied. Tap <b>Ready for rain</b>, or keep adjusting until it looks right.', 6000);
   });
 
   // ---------- Simulation ----------
@@ -720,22 +719,6 @@
       const gust = 0.6 + 0.4 * Math.sin(tNow * 0.9) + 0.35 * Math.max(0, Math.sin(tNow * 2.3 + 1));
       windNow = P.wind * stormK * gust;
       knotStep(dt);
-      // Lightning: count the seconds to the thunder
-      if (tMode > lightning.next && lightning.boomAt < 0) {
-        lightning.flash = 0.25;
-        lightning.n = 2 + Math.floor(Math.random() * 6);
-        lightning.boomAt = tMode + lightning.n; lightning.count = 0;
-      }
-      if (lightning.boomAt > 0) {
-        const c = Math.floor(tMode - (lightning.boomAt - lightning.n));
-        if (c > lightning.count && c < lightning.n) { lightning.count = c; pop(`${c}…`, -6 + c * 1.2, 11, 0.9); }
-        if (tMode >= lightning.boomAt) {
-          pop('BOOM', 3, 11, 1.2);
-          const miles = (lightning.n / 5).toFixed(1);
-          say('Sibling', `${lightning.n} seconds. That’s about ${miles} miles away.`, 3);
-          lightning.boomAt = -1; lightning.next = tMode + 7 + Math.random() * 5;
-        }
-      }
       // The quiet moment: stop fussing and a story starts
       if (!storyDone && tMode > 8 && tNow - lastInput > 8) {
         storyDone = true;
@@ -747,9 +730,10 @@
       setTools();
     } else if (mode === 'after') {
       stormK = 0; windNow *= 0.95;
+      if (tMode >= 3.2) showEnd();
     }
     if (mode === 'prep') updateHeader();
-    if (lightning.flash > 0) lightning.flash -= dt;
+
 
     // People walk to their spots
     for (const p of people) if (p.tx !== null) p.x = lerp(p.x, p.tx, 1 - Math.exp(-dt * 2.5));
@@ -779,7 +763,7 @@
     const g = ctx.createLinearGradient(0, 0, 0, GY);
     g.addColorStop(0, mix('8FB8CC', '3C4650', dark)); g.addColorStop(1, mix('DCE3D6', '6C7478', dark));
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    if (lightning.flash > 0) { ctx.fillStyle = `rgba(255, 255, 255, ${lightning.flash * 2.4})`; ctx.fillRect(0, 0, W, H); }
+
 
     // Clouds rolling in from the west
     const ck = mode === 'prep' ? tMode / P.prep : mode === 'storm' ? 1 : Math.max(0, 1 - tMode * 0.4);
@@ -965,10 +949,14 @@
   reset();
 
   let last = performance.now();
+  let paused = false;
+  window.addEventListener('abundant-waters:pause', () => { paused = true; });
+  window.addEventListener('abundant-waters:resume', () => { paused = false; last = performance.now(); });
+  document.addEventListener('visibilitychange', () => { paused = document.hidden; last = performance.now(); });
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000);
     last = now;
-    update(dt);
+    if (!paused) update(dt);
     draw();
     requestAnimationFrame(frame);
   }

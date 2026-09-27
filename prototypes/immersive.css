@@ -42,3 +42,15 @@ button { touch-action: manipulation; }
 @media (max-width: 700px) and (max-height: 650px) {
   body > main > .lead { display: none; }
 }
+
+/* At phone widths keep the illustration and choices in view before the long copy. */
+@media (max-width: 480px) {
+  body > main { padding: 8px max(10px, env(safe-area-inset-right)) 18px max(10px, env(safe-area-inset-left)); }
+  body > main h1 { font-size: clamp(1.5rem, 7vw, 1.9rem); }
+  body > main > .lead { display: none; }
+  body > main .panel { padding: 10px; border-radius: 8px; }
+  body > main .status { padding: 9px 10px; font-size: .94rem; }
+  body > main .clue { min-height: 0; }
+  body > main .map-frame svg { width: 140%; max-width: none; margin-left: -15%; }
+  #app .bar #tuneBtn { display: none; }
+}

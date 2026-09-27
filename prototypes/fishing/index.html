@@ -101,6 +101,7 @@
   const labels = { rocks:"rocky point", weeds:"weed edge", deep:"deeper water" };
   const fishNames = { rocks:"Smallmouth bass", weeds:"Northern pike", deep:"Walleye" };
   let spot = "rocks", phase = "choose", tension = 44, progress = 0, tick = null, biteTimer = null, catches = 0;
+  let paused = false, biteRemaining = 0, biteStarted = 0;
   const status = document.getElementById("status");
   const controls = document.getElementById("controls");
   const meterArea = document.getElementById("meterArea");
@@ -118,6 +119,26 @@
     bobber.setAttribute("opacity","0");
   }
   function cleanup() { clearInterval(tick); clearTimeout(biteTimer); tick = null; biteTimer = null; }
+  function bite() {
+    if (paused) return;
+    phase = "bite";
+    status.textContent = "The bobber dips! Set the hook now.";
+    controls.innerHTML = '<button id="hook">Set the hook</button>';
+    document.getElementById("hook").addEventListener("click", hook);
+    bobber.setAttribute("cy","290");
+  }
+  function scheduleBite(ms) { biteRemaining = ms; biteStarted = performance.now(); biteTimer = setTimeout(bite, ms); }
+  function setPaused(value) {
+    if (paused === value) return;
+    paused = value;
+    if (value && phase === "waiting") {
+      biteRemaining = Math.max(0, biteRemaining - (performance.now() - biteStarted));
+      clearTimeout(biteTimer);
+    } else if (!value && phase === "waiting") scheduleBite(biteRemaining);
+  }
+  window.addEventListener("abundant-waters:pause", () => setPaused(true));
+  window.addEventListener("abundant-waters:resume", () => setPaused(false));
+  document.addEventListener("visibilitychange", () => setPaused(document.hidden));
   function showCast() {
     cleanup(); phase = "ready"; meterArea.hidden = true; result.hidden = true; bobber.setAttribute("opacity","0");
     status.textContent = "You picked the " + labels[spot] + ". Cast when you’re ready.";
@@ -130,13 +151,7 @@
     bobber.setAttribute("opacity","1");
     const castButton = document.getElementById("cast");
     if (castButton) castButton.disabled = true;
-    biteTimer = setTimeout(() => {
-      phase = "bite";
-      status.textContent = "The bobber dips! Set the hook now.";
-      controls.innerHTML = '<button id="hook">Set the hook</button>';
-      document.getElementById("hook").addEventListener("click", hook);
-      bobber.setAttribute("cy","290");
-    }, 1900 + Math.random()*1400);
+    scheduleBite(1900 + Math.random()*1400);
   }
   function hook() {
     phase = "reel"; tension = 44; progress = 0; meterArea.hidden = false;
@@ -145,6 +160,7 @@
     document.getElementById("ease").addEventListener("click", ease);
     status.textContent = "Fish on! Reel in short pulls. Keep the line steady and give when it tugs.";
     tick = setInterval(() => {
+      if (paused) return;
       tension = Math.max(12, Math.min(96, tension + (Math.random() > .52 ? 7 : -5)));
       paintMeter();
     }, 700);
@@ -174,6 +190,7 @@
     cleanup(); phase = "landed"; catches++; meterArea.hidden = true; bobber.setAttribute("opacity","0");
     status.textContent = "You brought it in!";
     window.parent.postMessage({type:"abundant-waters:fish-landed",fish:fishNames[spot]},location.origin);
+    window.AbundantWaters.complete();
     result.hidden = false;
     result.innerHTML = '<p class="catch"><strong>' + fishNames[spot] + '!</strong> A great catch for the family fish log. This trip’s log: ' + catches + (catches === 1 ? " fish." : " fish.") + '</p>';
     controls.innerHTML = '<button id="again">Try another cast</button>';

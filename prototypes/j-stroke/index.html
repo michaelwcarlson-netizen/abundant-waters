@@ -215,7 +215,7 @@
       <h2 id="endTitle">Sawbill Lake, crossed</h2>
       <div class="stamps" id="endStamps"></div>
       <dl class="stats-list" id="endStats"></dl>
-      <p class="next">Next on the route: the portage to Smoke Lake. That part isn't built yet.</p>
+      <p class="next">Next: read the shoreline, find the portage landing, and carry across to Smoke Lake.</p>
       <div class="actions"><button class="btn primary" id="again">Paddle again</button></div>
     </div>
   </div>
@@ -911,6 +911,7 @@
     ];
     $('endStats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     $('end').hidden = false;
+    window.AbundantWaters.complete();
     $('again').focus();
   }
   $('again').addEventListener('click', () => { $('end').hidden = true; reset(); });
@@ -951,10 +952,14 @@
     : 'Paddle north to the portage. Drag down on either side of the screen to paddle on that side.', 0);
 
   let last = performance.now();
+  let paused = false;
+  window.addEventListener('abundant-waters:pause', () => { paused = true; });
+  window.addEventListener('abundant-waters:resume', () => { paused = false; last = performance.now(); });
+  document.addEventListener('visibilitychange', () => { paused = document.hidden; last = performance.now(); });
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000);
     last = now;
-    update(dt);
+    if (!paused) update(dt);
     draw();
     requestAnimationFrame(frame);
   }

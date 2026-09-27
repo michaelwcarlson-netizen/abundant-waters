@@ -50,7 +50,7 @@
 <main>
   <p class="eyebrow">Smoke Lake · First night</p>
   <h1>Look up for a while</h1>
-  <p class="lead">The food pack is hung. The fire burns low. Above the pines, a few stars are bright enough to follow.</p>
+  <p class="lead">The fire is out. Before hanging the food pack, you and Dad linger at the granite shore. Above the pines, a few stars are bright enough to follow.</p>
   <div class="scene" id="scene" role="group" aria-label="Night sky with seven Big Dipper stars and the North Star">
     <svg class="sky" viewBox="0 0 800 460" preserveAspectRatio="none" aria-hidden="true">
       <g fill="#dfdbcb" opacity=".52">
@@ -64,18 +64,18 @@
     </svg>
     <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <polyline id="dipper-line" fill="none" stroke="#e9dfb7" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>
-      <line id="bowl-close" x1="51" y1="52" x2="53" y2="21" stroke="#e9dfb7" stroke-width=".3" opacity="0"/>
-      <line id="north-line" x1="75" y1="22" x2="84" y2="9" stroke="#e9dfb7" stroke-width=".25" stroke-dasharray="1 1" opacity="0"/>
+      <line id="bowl-close" x1="49" y1="43" x2="52" y2="35" stroke="#e9dfb7" stroke-width=".3" opacity="0"/>
+      <line id="north-line" x1="66" y1="44" x2="78" y2="12" stroke="#e9dfb7" stroke-width=".25" stroke-dasharray="1 1" opacity="0"/>
     </svg>
     <div class="shore"></div><div class="water"></div>
-    <button type="button" class="star" data-star="0" style="left:8%;top:34%" aria-label="First star, end of the handle"></button>
-    <button type="button" class="star" data-star="1" style="left:23%;top:19%" aria-label="Second star, bend in the handle"></button>
-    <button type="button" class="star" data-star="2" style="left:38%;top:29%" aria-label="Third star, near the bowl"></button>
-    <button type="button" class="star" data-star="3" style="left:53%;top:21%" aria-label="Fourth star, top of the bowl"></button>
-    <button type="button" class="star" data-star="4" style="left:75%;top:22%" aria-label="Fifth star, outer top of the bowl"></button>
-    <button type="button" class="star" data-star="5" style="left:73%;top:51%" aria-label="Sixth star, outer bottom of the bowl"></button>
-    <button type="button" class="star" data-star="6" style="left:51%;top:52%" aria-label="Seventh star, bottom of the bowl"></button>
-    <button type="button" class="star polaris" id="polaris" style="left:84%;top:9%" aria-label="Bright star above the bowl, Polaris" hidden></button>
+    <button type="button" class="star" data-star="0" style="left:13%;top:42%" aria-label="First star, end of the handle"></button>
+    <button type="button" class="star" data-star="1" style="left:24%;top:31%" aria-label="Second star, bend in the handle"></button>
+    <button type="button" class="star" data-star="2" style="left:39%;top:38%" aria-label="Third star, near the bowl"></button>
+    <button type="button" class="star" data-star="3" style="left:52%;top:35%" aria-label="Fourth star, top of the bowl"></button>
+    <button type="button" class="star" data-star="4" style="left:69%;top:36%" aria-label="Fifth star, outer top of the bowl"></button>
+    <button type="button" class="star" data-star="5" style="left:66%;top:44%" aria-label="Sixth star, outer bottom of the bowl"></button>
+    <button type="button" class="star" data-star="6" style="left:49%;top:43%" aria-label="Seventh star, bottom of the bowl"></button>
+    <button type="button" class="star polaris" id="polaris" style="left:78%;top:12%" aria-label="Bright star above the bowl, Polaris" hidden></button>
   </div>
   <p class="caption">An illustrated sky to explore, not a scale star chart. Tap or tab to the stars.</p>
   <section class="panel" aria-live="polite">
@@ -95,7 +95,7 @@
 </main>
 <script>
 (() => {
-  const points=[[8,34],[23,19],[38,29],[53,21],[75,22],[73,51],[51,52]];
+  const points=[[13,42],[24,31],[39,38],[52,35],[69,36],[66,44],[49,43]];
   const stars=[...document.querySelectorAll("[data-star]")];
   const status=document.getElementById("status");
   const polaris=document.getElementById("polaris");
@@ -139,6 +139,7 @@
   polaris.addEventListener("click",()=>{
     if(count!==stars.length||complete)return;
     complete=true;polaris.classList.remove("next");polaris.classList.add("found");
+    window.AbundantWaters.complete();
     document.getElementById("north-line").setAttribute("opacity","1");
     document.getElementById("note").hidden=false;
     document.getElementById("pause").hidden=false;
