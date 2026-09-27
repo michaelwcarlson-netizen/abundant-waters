@@ -43,7 +43,7 @@
   <p class="lead">The paper map and the shore tell the same story. Match the shape you see from the canoe, and follow the lake toward the portage.</p>
   <div class="map-frame">
     <svg viewBox="0 0 900 360" role="img" aria-labelledby="map-title map-desc">
-      <title id="map-title">A paper map of the route from Sawbill to Smoke Lake</title>
+      <title id="map-title">An illustrated route sketch from Sawbill toward Smoke Lake</title>
       <desc id="map-desc">A winding lake, wooded shore, a sheltered bay, a narrow channel, and a portage trail connecting two lakes.</desc>
       <rect width="900" height="360" fill="#e9e2cc"/>
       <g fill="none" stroke="#c8bea4" stroke-width="2" opacity=".65">
@@ -76,7 +76,7 @@
       <g transform="translate(835 38)" stroke="#223d2c" stroke-width="3" fill="none">
         <path d="M0 27V0M-9 10 0 0 9 10"/><text x="-6" y="44" fill="#223d2c" stroke="none" font-family="system-ui" font-size="13" font-weight="700">N</text>
       </g>
-      <text x="26" y="30" fill="#5b6662" font-family="system-ui" font-size="13">Boundary Waters field map · north ↑</text>
+      <text x="26" y="30" fill="#5b6662" font-family="system-ui" font-size="13">Illustrated route sketch · north ↑</text>
     </svg>
   </div>
   <div class="key" aria-label="Map key">
@@ -123,7 +123,7 @@
   function render() {
     if (complete) {
       checkpoint.textContent = "Route complete";
-      question.textContent = "You found your way to Smoke Lake";
+      question.textContent = "You found the portage landing";
       clue.textContent = "You matched the sheltered bay, read the narrows, and spotted the portage trail. A wrong turn would only have led to another little discovery.";
       choices.hidden = true; continueButton.hidden = false; continueButton.textContent = "Finish navigation";
       status.textContent = "The portage landing is just ahead. Your family is ready to carry across.";
