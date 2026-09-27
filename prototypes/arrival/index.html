@@ -189,7 +189,7 @@
       <button type="button" id="stroke-left" aria-label="Paddle on the left">Left stroke</button>
       <button type="button" id="stroke-right" aria-label="Paddle on the right">Right stroke</button>
     </div>
-    <p class="status" id="water-status" role="status">Find the open site. Watch the shore as you paddle.</p>
+    <p class="status" id="water-status" role="status">Swipe down beside the canoe, or use the stroke controls. Watch for an open campsite.</p>
     <div class="action"><button type="button" class="primary" id="land" hidden>Pull the canoe ashore</button></div>
   </section>
   <section class="panel" id="tent-step" hidden aria-live="polite">
@@ -278,7 +278,7 @@
     if(event.key==="Enter"||event.key===" "){event.preventDefault();event.currentTarget.dispatchEvent(new MouseEvent("click",{bubbles:true}));}
   }));
   lake.addEventListener("pointerdown",event=>{
-    if(water.hidden)return;
+    if(water.hidden||event.target.closest(".shore-hotspot"))return;
     gesture={id:event.pointerId,x:event.clientX,y:event.clientY,side:event.clientX<lake.getBoundingClientRect().left+lake.getBoundingClientRect().width/2?"left":"right"};
     lake.setPointerCapture(event.pointerId);
   });
