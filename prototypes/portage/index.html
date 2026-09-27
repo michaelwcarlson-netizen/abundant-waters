@@ -542,7 +542,8 @@
       ];
       $('endStats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
       $('end').hidden = false;
-      $('again').focus();
+      window.AbundantWaters.complete();
+    $('again').focus();
     }, 1600);
   }
   $('again').addEventListener('click', reset);
@@ -1164,10 +1165,14 @@
   reset();
 
   let last = performance.now();
+  let paused = false;
+  window.addEventListener('abundant-waters:pause', () => { paused = true; });
+  window.addEventListener('abundant-waters:resume', () => { paused = false; last = performance.now(); });
+  document.addEventListener('visibilitychange', () => { paused = document.hidden; last = performance.now(); });
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000);
     last = now;
-    update(dt);
+    if (!paused) update(dt);
     draw();
     requestAnimationFrame(frame);
   }
