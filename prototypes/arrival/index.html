@@ -28,22 +28,29 @@
   .tent-controls button { flex:1 1 130px; }
   .instruction { margin:10px 0; color:#39494a; }
   .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:12px; background:white; }
-  .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0; }
-  .tent-choices { grid-template-columns:repeat(3,minmax(0,1fr)); }
   button { min-height:52px; padding:10px 13px; border:1px solid var(--pine); border-radius:8px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; text-align:left; }
   button:hover { background:#e8eee8; }
   button:focus-visible { outline:3px solid var(--clay); outline-offset:2px; }
   button.primary { background:var(--pine); color:white; text-align:center; }
   button.primary:hover { background:#345744; }
   button:disabled { opacity:.55; cursor:default; }
-  button small { display:block; margin-top:4px; color:var(--muted); font-weight:400; line-height:1.35; }
-  button[aria-pressed="true"] { background:#e3eee2; border-color:#426b50; }
   .status { min-height:55px; margin:12px 0; padding:12px 14px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
   .action { display:flex; justify-content:flex-end; margin-top:12px; }
   .field-note { margin:10px 0 0; color:var(--muted); font-size:.9rem; }
   [hidden] { display:none !important; }
-  @media(max-width:480px) { .scene svg { width:130%; max-width:none; margin-left:-15%; } .scene svg text { display:none; } }
-  @media(max-width:650px) { .choices, .tent-choices { grid-template-columns:1fr; gap:8px; } button { min-height:48px; } }
+  @media(max-width:650px) {
+    main { padding:12px; }
+    .lead { display:none; }
+    .scene { height:clamp(230px,42dvh,340px); border-radius:5px; }
+    .scene svg { height:100%; width:100%; }
+    .scene svg text { display:none; }
+    .panel { margin-top:12px; padding:0; border:0; border-radius:0; background:transparent; }
+    .panel .field-note { margin-top:5px; }
+    .instruction { margin:7px 0; }
+    .stroke-controls { margin:8px 0; }
+    button { min-height:48px; }
+    .status { min-height:0; margin:8px 0; padding:9px 12px; }
+  }
   @media(prefers-reduced-motion:reduce) { #canoe, #occupied-smoke, #tent { transition:none; } }
 </style>
 <link rel="stylesheet" href="../immersive.css">
@@ -154,6 +161,15 @@
     point.x=event.clientX;point.y=event.clientY;
     return point.matrixTransform(svg.getScreenCTM().inverse());
   }
+  function frameScene(){
+    const narrow=window.matchMedia("(max-width:650px)").matches;
+    lake.setAttribute("viewBox",narrow?(clamp(canoeX-225,0,380)+" 0 520 330"):"0 0 900 330");
+    camp.setAttribute("viewBox",narrow?"105 0 540 330":"0 0 900 330");
+    lake.setAttribute("preserveAspectRatio",narrow?"xMidYMid slice":"xMidYMid meet");
+    camp.setAttribute("preserveAspectRatio",narrow?"xMidYMid slice":"xMidYMid meet");
+  }
+  window.addEventListener("resize",frameScene);
+  frameScene();
   function drawCanoe(){
     canoe.setAttribute("transform","translate("+(canoeX-350)+" "+(canoeY-260)+") rotate("+heading+" 350 260)");
   }
@@ -165,6 +181,7 @@
     canoeY=Math.max(206,canoeY-10);
     heading=turn*8;
     drawCanoe();
+    frameScene();
     const open=canoeX>=565&&canoeY<=225;
     land.hidden=!open;
     if(open){
@@ -212,6 +229,8 @@
     if(tentX>=335&&tentX<=510&&tentY>=155&&tentY<=215){
       tentX=425;tentY=180;drawTent();
       tentStep.hidden=true;finish.hidden=false;
+      tent.setAttribute("tabindex","-1");
+      tent.style.pointerEvents="none";
       tentStatus.textContent="";
       document.getElementById("finish-status").textContent=wrongGround
         ?"You moved off the soft ground. Tomorrow’s rain will have somewhere else to go."
