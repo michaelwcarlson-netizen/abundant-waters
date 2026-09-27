@@ -74,7 +74,7 @@ Arrive, pick a site, set up. Family jobs, each a small physics toy (v2 Stage 4):
 - **Tarp line and knots:** a good tarp matters on storm day.
 - **Firewood and fire building:** a good fire matters at dinner.
 - **Water filtering.**
-- Tent spot choice: pick the slope wrong and everyone slides into one corner overnight.
+- Tent spot choice at Smoke Lake: pass an occupied site, then land at an open designated campsite. Keep the fishing ledge for fishing, leave the moss growing, and pitch on existing level bare ground. The following morning’s storm quietly recalls the choice.
 
 Site choice matters a little: rocky points have good snorkeling and smallmouth; sheltered bays are calmer in wind.
 
