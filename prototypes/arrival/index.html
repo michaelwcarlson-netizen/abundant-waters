@@ -19,6 +19,11 @@
   svg { display:block; width:100%; height:auto; }
   #canoe { transition:transform .55s ease; }
   #occupied-smoke, #tent { transition:opacity .4s ease; }
+  .scene-target { cursor:pointer; }
+  .scene-target .hit { fill:transparent; }
+  .scene-target .pin { fill:#f1ebdd; stroke:#223d2c; stroke-width:5; }
+  .scene-target:hover .pin, .scene-target:focus-visible .pin { fill:#c0452b; stroke:#f1ebdd; }
+  .scene-target:focus-visible { outline:none; }
   .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:12px; background:white; }
   .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0; }
   .tent-choices { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -63,6 +68,8 @@
         <path d="M160 186h23l-12-15Z" fill="#a88362"/>
         <path d="M190 177q-8-15 0-25m8 29q-5-19 4-29" fill="none" stroke="#d6c5a1" stroke-width="3" opacity=".7"/>
       </g>
+      <g class="scene-target" role="button" tabindex="0" aria-label="Occupied campsite at first landing" data-site="near"><circle class="hit" cx="171" cy="171" r="70"/><circle class="pin" cx="171" cy="171" r="17"/></g>
+      <g class="scene-target" role="button" tabindex="0" aria-label="Open campsite at rocky point" data-site="point"><circle class="hit" cx="650" cy="192" r="70"/><circle class="pin" cx="650" cy="192" r="17"/></g>
       <g id="canoe">
         <path d="M304 262 Q349 276 403 261 Q354 283 304 262Z" fill="#aa4a32" stroke="#743628" stroke-width="2"/>
         <path d="M337 263v-14m25 16v-15" stroke="#654a36" stroke-width="3"/>
@@ -90,6 +97,9 @@
       </g>
       <path d="M742 179h36" stroke="#373a32" stroke-width="5"/>
       <path d="M735 228q-27 7-53 24" fill="none" stroke="#9b8c6e" stroke-width="6" stroke-dasharray="5 6"/>
+      <g class="scene-target" role="button" tabindex="0" aria-label="Sloping granite ledge by water" data-tent="rock"><circle class="hit" cx="207" cy="230" r="68"/><circle class="pin" cx="207" cy="230" r="17"/></g>
+      <g class="scene-target" role="button" tabindex="0" aria-label="Damp mossy hollow" data-tent="hollow"><circle class="hit" cx="618" cy="256" r="68"/><circle class="pin" cx="618" cy="256" r="17"/></g>
+      <g class="scene-target" role="button" tabindex="0" aria-label="Existing bare patch for tent" data-tent="bare"><circle class="hit" cx="425" cy="179" r="68"/><circle class="pin" cx="425" cy="179" r="17"/></g>
       <g id="tent" opacity="0">
         <path d="M362 205 424 146 496 207Z" fill="#b5a271" stroke="#5b6550" stroke-width="3"/>
         <path d="M424 146 440 206H496Z" fill="#768663"/>
@@ -105,7 +115,7 @@
       <button type="button" data-site="near">The first landing<small>A thin curl of smoke rises through the trees.</small></button>
       <button type="button" data-site="point">The rocky point<small>Granite at the waterline, pines farther back.</small></button>
     </div>
-    <p class="status" id="water-status" role="status">Follow the shore and see which site is open.</p>
+    <p class="status" id="water-status" role="status">Tap a landing in the scene, or choose below. Look for signs of another group.</p>
     <div class="action"><button type="button" class="primary" id="land" hidden>Land and pull up the canoe</button></div>
   </section>
   <section class="panel" id="tent-step" hidden aria-live="polite">
@@ -116,7 +126,7 @@
       <button type="button" data-tent="hollow">The green hollow<small>Soft moss and dark, damp soil.</small></button>
       <button type="button" data-tent="bare">The existing bare patch<small>Level ground, back from the shore.</small></button>
     </div>
-    <p class="status" id="tent-status" role="status">Look at the ground before the packs come out.</p>
+    <p class="status" id="tent-status" role="status">Tap a place in the scene, or choose below. Look at the ground before the packs come out.</p>
   </section>
   <section class="panel" id="finish" hidden aria-live="polite">
     <h2>A place to stay</h2>
@@ -130,22 +140,24 @@
   const water=document.getElementById("water-step"),tent=document.getElementById("tent-step"),finish=document.getElementById("finish");
   const land=document.getElementById("land");
   let moved=false,chosen=false;
-  document.querySelectorAll("[data-site]").forEach(button=>button.addEventListener("click",()=>{
-    const point=button.dataset.site==="point";
-    document.querySelectorAll("[data-site]").forEach(item=>item.setAttribute("aria-pressed",String(item===button)));
+  function chooseSite(choice){
+    if (water.hidden) return;
+    const point=choice==="point";
+    document.querySelectorAll(".choices [data-site]").forEach(item=>item.setAttribute("aria-pressed",String(item.dataset.site===choice)));
     chosen=point;land.hidden=!point;
     document.getElementById("water-status").textContent=point
       ?"The grate is empty and no gear is on shore. This designated site is open. Ease toward the rock landing."
       :"A tent sits beyond the trees. Someone got here first. You wave and paddle farther along the shore.";
     document.getElementById("canoe").setAttribute("transform",point?"translate(190 -15)":"translate(-65 0)");
-  }));
+  }
+  document.querySelectorAll("[data-site]").forEach(item=>item.addEventListener("click",()=>chooseSite(item.dataset.site)));
   land.addEventListener("click",()=>{
     if(!chosen)return;
     water.hidden=true;document.getElementById("lake-scene").hidden=true;
     document.getElementById("camp-scene").hidden=false;tent.hidden=false;
   });
-  document.querySelectorAll("[data-tent]").forEach(button=>button.addEventListener("click",()=>{
-    const choice=button.dataset.tent;
+  function chooseTent(choice){
+    if (tent.hidden) return;
     if(choice!=="bare"){
       moved=true;
       document.getElementById("tent-status").textContent=choice==="rock"
@@ -160,6 +172,10 @@
       :"The tent is on level ground. The fishing rocks can wait until camp is ready.";
     window.parent.postMessage({type:"abundant-waters:tent-placed",placement:moved?"moved":"level"},location.origin);
     window.AbundantWaters.complete();
+  }
+  document.querySelectorAll("[data-tent]").forEach(item=>item.addEventListener("click",()=>chooseTent(item.dataset.tent)));
+  document.querySelectorAll(".scene-target").forEach(target=>target.addEventListener("keydown",event=>{
+    if(event.key==="Enter"||event.key===" "){event.preventDefault();target.dataset.site ? chooseSite(target.dataset.site) : chooseTent(target.dataset.tent);}
   }));
 })();
 </script>
