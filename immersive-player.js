@@ -35,6 +35,13 @@ window.createImmersivePlayer = function createImmersivePlayer(onClose) {
       frame = document.createElement("iframe");
       frame.title = name + " game";
       frame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      const loadedFrame = frame;
+      loadedFrame.addEventListener("load", () => {
+        if (!loadedFrame.isConnected) return;
+        loadedFrame.contentWindow?.postMessage({
+          type: shell.hidden ? "abundant-waters:pause" : "abundant-waters:resume"
+        }, location.origin);
+      });
       frame.src = url;
       host.append(frame);
       currentKey = key;
