@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#223d2c">
+<title>Arriving at Smoke Lake — Abundant Waters</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; --muted:#5b6662; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+  .eyebrow { margin:0 0 5px; color:var(--clay); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { margin:0; font-family:Georgia,serif; }
+  h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+  h2 { font-size:1.2rem; }
+  .lead { margin:8px 0 16px; color:#465556; }
+  .scene { overflow:hidden; border:1px solid #9cb1aa; border-radius:12px; background:#b8c7b6; }
+  svg { display:block; width:100%; height:auto; }
+  #canoe { transition:transform .55s ease; }
+  #occupied-smoke, #tent { transition:opacity .4s ease; }
+  .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:12px; background:white; }
+  .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0; }
+  .tent-choices { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  button { min-height:52px; padding:10px 13px; border:1px solid var(--pine); border-radius:8px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; text-align:left; }
+  button:hover { background:#e8eee8; }
+  button:focus-visible { outline:3px solid var(--clay); outline-offset:2px; }
+  button.primary { background:var(--pine); color:white; text-align:center; }
+  button.primary:hover { background:#345744; }
+  button:disabled { opacity:.55; cursor:default; }
+  button small { display:block; margin-top:4px; color:var(--muted); font-weight:400; line-height:1.35; }
+  button[aria-pressed="true"] { background:#e3eee2; border-color:#426b50; }
+  .status { min-height:55px; margin:12px 0; padding:12px 14px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
+  .action { display:flex; justify-content:flex-end; margin-top:12px; }
+  .field-note { margin:10px 0 0; color:var(--muted); font-size:.9rem; }
+  [hidden] { display:none !important; }
+  @media(max-width:650px) { .choices, .tent-choices { grid-template-columns:1fr; gap:8px; } button { min-height:48px; } }
+  @media(prefers-reduced-motion:reduce) { #canoe, #occupied-smoke, #tent { transition:none; } }
+</style>
+<link rel="stylesheet" href="../immersive.css">
+</head>
+<body>
+<main>
+  <p class="eyebrow">Sawbill → Smoke · After the portage</p>
+  <h1>The lake opens up</h1>
+  <p class="lead">The canoe slips back into the water. Smoke Lake is quieter on this side of the trail. Somewhere ahead is a place to spend the night.</p>
+  <div class="scene" id="lake-scene">
+    <svg viewBox="0 0 900 330" role="img" aria-labelledby="lake-title lake-desc">
+      <title id="lake-title">Paddling toward two campsites on Smoke Lake</title>
+      <desc id="lake-desc">A canoe approaches wooded shoreline. One designated campsite is occupied, and another near a granite ledge is empty.</desc>
+      <defs>
+        <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#b6c6ba"/><stop offset="1" stop-color="#e8ddbf"/></linearGradient>
+        <linearGradient id="water" x2="0" y2="1"><stop stop-color="#759ca1"/><stop offset="1" stop-color="#285466"/></linearGradient>
+      </defs>
+      <rect width="900" height="185" fill="url(#sky)"/>
+      <path d="M0 155 49 83 91 153 144 58 188 158 244 76 297 156 356 68 412 161 463 87 528 155 593 58 653 156 717 78 777 154 842 58 900 137 900 222 0 222Z" fill="#345744"/>
+      <path d="M0 185 Q120 174 232 192 T460 187 T696 188 T900 183 L900 330 0 330Z" fill="url(#water)"/>
+      <path d="M0 187 Q105 169 205 195 L250 210 315 186 374 208 438 188 512 204 593 175 688 199 761 183 900 198" fill="none" stroke="#91a993" stroke-width="8"/>
+      <path d="M544 187 Q591 175 628 188 L650 204 697 201 742 192" fill="none" stroke="#aaa48b" stroke-width="21" stroke-linecap="round"/>
+      <path d="M544 183 Q591 173 628 184 L650 199 697 197 742 188" fill="none" stroke="#c4b89a" stroke-width="8" stroke-linecap="round"/>
+      <g id="occupied-smoke" opacity=".9">
+        <path d="M154 185q8-13 16-24l16 24Z" fill="#c5b18c" stroke="#746c56" stroke-width="2"/>
+        <path d="M160 186h23l-12-15Z" fill="#a88362"/>
+        <path d="M190 177q-8-15 0-25m8 29q-5-19 4-29" fill="none" stroke="#d6c5a1" stroke-width="3" opacity=".7"/>
+      </g>
+      <g id="canoe">
+        <path d="M304 262 Q349 276 403 261 Q354 283 304 262Z" fill="#aa4a32" stroke="#743628" stroke-width="2"/>
+        <path d="M337 263v-14m25 16v-15" stroke="#654a36" stroke-width="3"/>
+        <circle cx="337" cy="246" r="5" fill="#e8d2ac"/><circle cx="362" cy="246" r="5" fill="#e8d2ac"/>
+        <path d="M322 256 306 282m68-27 16 27" stroke="#b19770" stroke-width="4" stroke-linecap="round"/>
+      </g>
+      <path d="M66 288 Q220 280 355 293 T659 284 T900 291" fill="none" stroke="#9ebbb8" stroke-width="3" opacity=".6"/>
+      <text x="44" y="44" fill="#25473f" font-family="system-ui" font-size="17" font-weight="700">SMOKE LAKE · LOOK FOR THE FIRE GRATE</text>
+    </svg>
+  </div>
+  <div class="scene" id="camp-scene" hidden>
+    <svg viewBox="0 0 900 330" role="img" aria-labelledby="camp-title camp-desc">
+      <title id="camp-title">An established campsite beside the granite fishing rocks</title>
+      <desc id="camp-desc">A sloping rock ledge touches the water, a damp hollow lies beside it, and a flat bare spot sits back from shore near a fire grate.</desc>
+      <rect width="900" height="330" fill="#c1c6aa"/>
+      <path d="M0 117 64 38 124 132 188 46 244 132 317 39 375 132 449 64 507 137 580 36 638 132 717 57 785 135 845 39 900 121 900 330 0 330Z" fill="#3c5944"/>
+      <path d="M0 232 Q164 224 269 250 T509 254 T737 247 T900 234 L900 330 0 330Z" fill="#467383"/>
+      <path d="M0 212 Q119 190 211 233 L340 216 Q418 205 463 240 L480 288 0 288Z" fill="#a69b7f" stroke="#8c846e" stroke-width="4"/>
+      <path d="M516 253 Q612 230 688 250 L734 275 581 294Z" fill="#728a68"/>
+      <path d="M499 245 Q549 231 574 243 T632 248" fill="none" stroke="#415e67" stroke-width="5" opacity=".6"/>
+      <path d="M318 147 Q425 139 518 156 Q547 182 524 213 Q428 226 333 207 Q303 181 318 147Z" fill="#b8ad8e" stroke="#90856b" stroke-width="4"/>
+      <path d="M339 169 Q425 153 495 170" fill="none" stroke="#d5c9a7" stroke-width="4" opacity=".7"/>
+      <g stroke="#4e553c" stroke-width="4" fill="none">
+        <path d="M758 174 747 225m28-51 10 51m-38 0h38m-30-30h20"/>
+      </g>
+      <path d="M742 179h36" stroke="#373a32" stroke-width="5"/>
+      <path d="M735 228q-27 7-53 24" fill="none" stroke="#9b8c6e" stroke-width="6" stroke-dasharray="5 6"/>
+      <g id="tent" opacity="0">
+        <path d="M362 205 424 146 496 207Z" fill="#b5a271" stroke="#5b6550" stroke-width="3"/>
+        <path d="M424 146 440 206H496Z" fill="#768663"/>
+        <path d="M440 206 425 181 409 206Z" fill="#4b5b4c"/>
+      </g>
+      <text x="37" y="41" fill="#263f38" font-family="system-ui" font-size="16" font-weight="700">ROCKS TO FISH · BARE GROUND FOR THE TENT</text>
+    </svg>
+  </div>
+  <section class="panel" id="water-step" aria-live="polite">
+    <h2>Find a place to land</h2>
+    <p class="lead">Two marked campsites lie along this shore. You can make out a fire grate at each one.</p>
+    <div class="choices">
+      <button type="button" data-site="near">The first landing<small>A thin curl of smoke rises through the trees.</small></button>
+      <button type="button" data-site="point">The rocky point<small>Granite at the waterline, pines farther back.</small></button>
+    </div>
+    <p class="status" id="water-status" role="status">Follow the shore and see which site is open.</p>
+    <div class="action"><button type="button" class="primary" id="land" hidden>Land and pull up the canoe</button></div>
+  </section>
+  <section class="panel" id="tent-step" hidden aria-live="polite">
+    <h2>Where will the tent go?</h2>
+    <p class="lead">The grate is cold, the latrine path is clear, and nobody’s gear is here. There are a few places to look at within the site.</p>
+    <div class="choices tent-choices">
+      <button type="button" data-tent="rock">Granite at the water’s edge<small>Good for a cast. It tilts toward the lake.</small></button>
+      <button type="button" data-tent="hollow">The green hollow<small>Soft moss and dark, damp soil.</small></button>
+      <button type="button" data-tent="bare">The existing bare patch<small>Level ground, back from the shore.</small></button>
+    </div>
+    <p class="status" id="tent-status" role="status">Look at the ground before the packs come out.</p>
+  </section>
+  <section class="panel" id="finish" hidden aria-live="polite">
+    <h2>A place to stay</h2>
+    <p class="lead">The tent sits on the worn, level patch. Dad points to the granite ledge: “That’s where we’ll fish.” You hear the canoe scrape softly as the family pulls it above the waterline.</p>
+    <p class="status" id="finish-status">The shore is yours for the night. There’s time to set up the tarp, and maybe cast from those rocks.</p>
+    <p class="field-note">One open campsite. A good landing. Room for the family without clearing anything new.</p>
+  </section>
+</main>
+<script>
+(() => {
+  const water=document.getElementById("water-step"),tent=document.getElementById("tent-step"),finish=document.getElementById("finish");
+  const land=document.getElementById("land");
+  let moved=false,chosen=false;
+  document.querySelectorAll("[data-site]").forEach(button=>button.addEventListener("click",()=>{
+    const point=button.dataset.site==="point";
+    document.querySelectorAll("[data-site]").forEach(item=>item.setAttribute("aria-pressed",String(item===button)));
+    chosen=point;land.hidden=!point;
+    document.getElementById("water-status").textContent=point
+      ?"The grate is empty and no gear is on shore. This designated site is open. Ease toward the rock landing."
+      :"A tent sits beyond the trees. Someone got here first. You wave and paddle farther along the shore.";
+    document.getElementById("canoe").setAttribute("transform",point?"translate(190 -15)":"translate(-65 0)");
+  }));
+  land.addEventListener("click",()=>{
+    if(!chosen)return;
+    water.hidden=true;document.getElementById("lake-scene").hidden=true;
+    document.getElementById("camp-scene").hidden=false;tent.hidden=false;
+  });
+  document.querySelectorAll("[data-tent]").forEach(button=>button.addEventListener("click",()=>{
+    const choice=button.dataset.tent;
+    if(choice!=="bare"){
+      moved=true;
+      document.getElementById("tent-status").textContent=choice==="rock"
+        ?"The ledge is a fine place to fish. The tent would lean toward the water here. Look farther into camp."
+        :"The moss is living ground, and that low spot holds water. Find an existing bare place to sleep.";
+      return;
+    }
+    tent.hidden=true;finish.hidden=false;
+    document.getElementById("tent").setAttribute("opacity","1");
+    document.getElementById("finish-status").textContent=moved
+      ?"You moved off the low ground. Tomorrow’s rain will have somewhere else to go."
+      :"The tent is on level ground. The fishing rocks can wait until camp is ready.";
+    window.parent.postMessage({type:"abundant-waters:tent-placed",placement:moved?"moved":"level"},location.origin);
+  }));
+})();
+</script>
+<script src="../immersive-bridge.js"></script>
+</body>
+</html>
