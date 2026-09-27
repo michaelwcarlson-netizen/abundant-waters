@@ -159,6 +159,7 @@
       ?"You moved off the low ground. Tomorrow’s rain will have somewhere else to go."
       :"The tent is on level ground. The fishing rocks can wait until camp is ready.";
     window.parent.postMessage({type:"abundant-waters:tent-placed",placement:moved?"moved":"level"},location.origin);
+    window.AbundantWaters.complete();
   }));
 })();
 </script>
