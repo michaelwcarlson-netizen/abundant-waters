@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fishing at Smoke Lake</title>
+  <style>
+    :root { --ink:#1c2a2e; --paper:#f1ebdd; --paper2:#e2d8c2; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --canoe:#c0452b; --muted:#5b6662; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+    main { width:min(900px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+    .eyebrow { margin:0 0 5px; color:var(--canoe); font-size:.77rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    h1,h2 { margin:0; font-family:Georgia,serif; }
+    h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+    h2 { font-size:1.25rem; }
+    .lead { margin:8px 0 18px; color:#465556; }
+    .lake { overflow:hidden; border:1px solid #9eaeaa; border-radius:14px; background:#c9d9d1; }
+    svg { display:block; width:100%; height:auto; }
+    .panel { margin-top:16px; padding:18px; border:1px solid var(--line); border-radius:14px; background:white; }
+    .spots { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+    button { min-height:46px; padding:10px 13px; border:1px solid var(--pine); border-radius:9px; background:var(--pine); color:white; font:inherit; font-weight:750; cursor:pointer; }
+    button:hover { filter:brightness(1.08); }
+    button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
+    button.secondary { background:transparent; color:var(--pine); }
+    .spot { min-height:100px; text-align:left; background:#f7f4eb; color:var(--ink); border-color:var(--line); }
+    .spot[aria-pressed="true"] { border:2px solid var(--lake); box-shadow:0 0 0 2px #2d6a8030; }
+    .spot strong,.spot small { display:block; }
+    .spot small { margin-top:5px; color:var(--muted); font-weight:500; }
+    .status { min-height:52px; margin:10px 0; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
+    .controls { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
+    .meter-wrap { margin:10px 0 14px; }
+    .meter-label { display:flex; justify-content:space-between; color:var(--muted); font-size:.88rem; }
+    .meter { height:18px; margin-top:5px; overflow:hidden; border-radius:99px; background:linear-gradient(90deg,#d5e6d3 0 30%,#74a96c 30% 75%,#e5d18f 75% 88%,#d99580 88%); }
+    .meter-fill { width:44%; height:100%; border-right:3px solid #18392e; transition:width .3s ease; }
+    .progress-track { height:9px; margin-top:5px; border-radius:99px; background:#e8e4d9; overflow:hidden; }
+    .progress-fill { width:0; height:100%; background:var(--lake); transition:width .25s ease; }
+    .catch { padding:10px 13px; border-left:4px solid var(--canoe); background:#f7f4eb; }
+    .quiet { color:var(--muted); font-size:.88rem; }
+    @media(max-width:620px) { .spots { grid-template-columns:1fr; } .spot { min-height:72px; } }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Smoke Lake · Free time</p>
+  <h1>Read the water. Try a cast.</h1>
+  <p class="lead">Fish are easier to find when you notice what the shoreline is telling you. Pick a spot, cast, and see what’s biting.</p>
+  <div class="lake">
+    <svg viewBox="0 0 900 300" role="img" aria-labelledby="scene-title scene-desc">
+      <title id="scene-title">Shoreline and fishing water at Smoke Lake</title>
+      <desc id="scene-desc">A calm lake with a rocky point, a weed bed, and deeper water beyond the drop-off.</desc>
+      <defs>
+        <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#c9ddd6"/><stop offset="1" stop-color="#e5e3ce"/></linearGradient>
+        <linearGradient id="water" x2="0" y2="1"><stop stop-color="#6793a0"/><stop offset="1" stop-color="#244e61"/></linearGradient>
+      </defs>
+      <rect width="900" height="115" fill="url(#sky)"/>
+      <path d="M0 110 L48 40 92 110 138 28 186 112 234 50 279 112 325 36 365 112 410 58 456 113 520 45 565 112 620 33 668 114 720 52 770 112 820 30 872 111 900 75 900 140 0 140Z" fill="#345744"/>
+      <path d="M0 120 Q90 105 170 131 T350 122 T535 132 T720 121 T900 129 L900 300 0 300Z" fill="url(#water)"/>
+      <path d="M0 120 Q120 112 215 145 Q272 166 320 205 Q370 241 415 225 Q445 216 470 170 L500 132 Q557 110 640 126 Q740 145 900 124 L900 160 Q755 176 640 151 Q559 134 518 151 L490 188 Q458 240 416 248 Q358 260 301 217 Q251 180 203 159 Q116 127 0 142Z" fill="#758568"/>
+      <path d="M0 120 Q120 112 215 145 Q272 166 320 205 Q370 241 415 225 Q445 216 470 170 L500 132 Q557 110 640 126 Q740 145 900 124 L900 300 0 300Z" fill="none" stroke="#d9cba3" stroke-width="5"/>
+      <g fill="#b9aa82">
+        <ellipse cx="358" cy="235" rx="22" ry="9"/><ellipse cx="396" cy="245" rx="20" ry="8"/><ellipse cx="435" cy="224" rx="18" ry="7"/>
+      </g>
+      <g stroke="#adc19b" stroke-width="4" stroke-linecap="round">
+        <path d="M92 162q-7-35-3-50m9 50q7-30 16-43m-9 46q-1-31 0-54"/>
+        <path d="M128 169q-4-27-1-45m8 44q8-27 18-38m-9 40q-1-24 2-43"/>
+        <path d="M790 157q-4-29-2-49m10 50q7-24 14-39m-9 41q0-29 2-46"/>
+      </g>
+      <path d="M255 280 Q335 270 390 240" fill="none" stroke="#f4e4b7" stroke-width="2" stroke-dasharray="7 7"/>
+      <text x="35" y="278" fill="white" font-size="17" font-family="system-ui">Shallow edge</text>
+      <text x="610" y="276" fill="white" font-size="17" font-family="system-ui">Deeper water</text>
+      <text x="332" y="196" fill="white" font-size="16" font-family="system-ui">rock point</text>
+      <circle id="bobber" cx="255" cy="280" r="8" fill="#c0452b" stroke="white" stroke-width="3" opacity="0"/>
+    </svg>
+  </div>
+  <section class="panel" aria-live="polite">
+    <div id="choose">
+      <h2>Where will you fish?</h2>
+      <div class="spots">
+        <button class="spot" data-spot="rocks" aria-pressed="true"><strong>Rock point</strong><small>Smallmouth bass · look by the drop-off</small></button>
+        <button class="spot" data-spot="weeds" aria-pressed="false"><strong>Weed edge</strong><small>Northern pike · cast beside the reeds</small></button>
+        <button class="spot" data-spot="deep" aria-pressed="false"><strong>Deep water at dusk</strong><small>Walleye · try the darker water</small></button>
+      </div>
+      <p class="quiet">Tip: points and weed edges are good places to start. You can try every spot.</p>
+    </div>
+    <div class="status" id="status" role="status">You picked the rocky point. A good cast lands just beyond the drop-off.</div>
+    <div id="controls" class="controls"><button id="cast">Cast here</button></div>
+    <div id="meterArea" hidden>
+      <div class="meter-wrap">
+        <div class="meter-label"><span>Line tension</span><span id="tensionText">Steady</span></div>
+        <div class="meter" role="meter" aria-label="Line tension" aria-valuemin="0" aria-valuemax="100" aria-valuenow="44"><div class="meter-fill" id="tensionFill"></div></div>
+      </div>
+      <div class="meter-label"><span>Bring it in</span><span id="catchPct">0%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="catchFill"></div></div>
+    </div>
+    <div id="result" hidden></div>
+  </section>
+</main>
+<script>
+(() => {
+  const labels = { rocks:"rocky point", weeds:"weed edge", deep:"deeper water" };
+  const fishNames = { rocks:"Smallmouth bass", weeds:"Northern pike", deep:"Walleye" };
+  let spot = "rocks", phase = "choose", tension = 44, progress = 0, tick = null, biteTimer = null, catches = 0;
+  const status = document.getElementById("status");
+  const controls = document.getElementById("controls");
+  const meterArea = document.getElementById("meterArea");
+  const result = document.getElementById("result");
+  const bobber = document.getElementById("bobber");
+  const tensionFill = document.getElementById("tensionFill");
+  const tensionText = document.getElementById("tensionText");
+  const catchFill = document.getElementById("catchFill");
+  const catchPct = document.getElementById("catchPct");
+
+  function setSpot(value) {
+    spot = value; result.hidden = true;
+    document.querySelectorAll("[data-spot]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.spot === spot)));
+    status.textContent = "You picked the " + labels[spot] + ". " + (spot === "rocks" ? "A good cast lands just beyond the drop-off." : spot === "weeds" ? "Set it down beside the weeds and keep an eye on the line." : "Walleye tend to move in as the light gets low.");
+    bobber.setAttribute("opacity","0");
+  }
+  function cleanup() { clearInterval(tick); clearTimeout(biteTimer); tick = null; biteTimer = null; }
+  function showCast() {
+    cleanup(); phase = "ready"; meterArea.hidden = true; result.hidden = true; bobber.setAttribute("opacity","0");
+    status.textContent = "You picked the " + labels[spot] + ". Cast when you’re ready.";
+    controls.innerHTML = '<button id="cast">Cast here</button>';
+    document.getElementById("cast").addEventListener("click", cast);
+  }
+  function cast() {
+    cleanup(); phase = "waiting"; result.hidden = true; meterArea.hidden = true;
+    status.textContent = "The line settles. Watch the bobber for a bite…";
+    bobber.setAttribute("opacity","1");
+    const castButton = document.getElementById("cast");
+    if (castButton) castButton.disabled = true;
+    biteTimer = setTimeout(() => {
+      phase = "bite";
+      status.textContent = "The bobber dips! Set the hook now.";
+      controls.innerHTML = '<button id="hook">Set the hook</button>';
+      document.getElementById("hook").addEventListener("click", hook);
+      bobber.setAttribute("cy","290");
+    }, 1900 + Math.random()*1400);
+  }
+  function hook() {
+    phase = "reel"; tension = 44; progress = 0; meterArea.hidden = false;
+    controls.innerHTML = '<button id="reel">Reel in</button> <button class="secondary" id="ease">Ease the line</button>';
+    document.getElementById("reel").addEventListener("click", reel);
+    document.getElementById("ease").addEventListener("click", ease);
+    status.textContent = "Fish on! Reel in short pulls. Keep the line steady and give when it tugs.";
+    tick = setInterval(() => {
+      tension = Math.max(12, Math.min(96, tension + (Math.random() > .52 ? 7 : -5)));
+      paintMeter();
+    }, 700);
+  }
+  function paintMeter() {
+    tensionFill.style.width = tension + "%";
+    document.querySelector('[role="meter"]').setAttribute("aria-valuenow",String(Math.round(tension)));
+    tensionText.textContent = tension < 25 ? "Line going slack" : tension > 78 ? "Too much pull — ease up" : "Steady";
+    catchFill.style.width = progress + "%";
+    catchPct.textContent = progress + "%";
+  }
+  function reel() {
+    if (phase !== "reel") return;
+    if (tension > 78) { status.textContent = "That’s a strong tug. Ease up for a moment, then reel again."; return; }
+    tension = Math.min(95, tension + 15);
+    progress = Math.min(100, progress + 25);
+    paintMeter();
+    if (progress >= 100) landFish();
+    else status.textContent = tension < 30 ? "Keep a little tension on the line as you reel." : "Nice pull. The fish is coming closer.";
+  }
+  function ease() {
+    if (phase !== "reel") return;
+    tension = Math.max(18, tension - 20); paintMeter();
+    status.textContent = "Good—let the fish tire a little, then reel again.";
+  }
+  function landFish() {
+    cleanup(); phase = "landed"; catches++; meterArea.hidden = true; bobber.setAttribute("opacity","0");
+    status.textContent = "You brought it in!";
+    result.hidden = false;
+    result.innerHTML = '<p class="catch"><strong>' + fishNames[spot] + '!</strong> A great catch for the family fish log. This trip’s log: ' + catches + (catches === 1 ? " fish." : " fish.") + '</p>';
+    controls.innerHTML = '<button id="again">Try another cast</button>';
+    document.getElementById("again").addEventListener("click", showCast);
+  }
+  document.querySelectorAll("[data-spot]").forEach(button => button.addEventListener("click", () => {
+    if (phase !== "choose" && phase !== "ready" && phase !== "landed") return;
+    setSpot(button.dataset.spot); phase = "ready";
+    controls.innerHTML = '<button id="cast">Cast here</button>';
+    document.getElementById("cast").addEventListener("click", cast);
+  }));
+  document.getElementById("cast").addEventListener("click", cast);
+})();
+</script>
+</body>
+</html>
