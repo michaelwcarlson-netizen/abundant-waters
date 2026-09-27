@@ -15,7 +15,8 @@ button { touch-action: manipulation; }
   #app .bar .brand { flex: 0 1 auto; }
   #app .bar .brand b { font-size: 16px; }
   #app .bar .stats { font-size: 12px; }
-  #app .bar .btn, #app .tools .btn, #app .calls .btn, #app .actions .btn { min-height: 44px; }
+  #app .bar .btn, #app .tools .btn, #app .calls .btn, #app .actions .btn, #app .knot { min-height: 44px; }
+  body > main .star { min-width: 44px; min-height: 44px; }
   #app .hint { top: 56px; max-width: calc(100% - 24px); font-size: 14px; }
   #app .tune { top: 55px; max-height: calc(100% - 70px); }
   #app .end, #app .sheet { height: 100%; min-height: 0; padding: 10px; overflow: auto; display: flex; align-items: center; justify-content: center; }
