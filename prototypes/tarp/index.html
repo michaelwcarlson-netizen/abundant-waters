@@ -241,7 +241,7 @@
 
   // ---------- State ----------
   let W = 0, H = 0, DPR = 1, S = 18, GY = 0;
-  let mode, tMode, cloth, ridge, edges, drops, splashes, pops, people, gear, stats, got, lightning, bubble, lastInput, storyDone, stormK, picking, acc, windNow;
+  let mode, tMode, cloth, ridge, edges, drops, splashes, pops, people, gear, stats, got, bubble, lastInput, storyDone, stormK, picking, acc, windNow;
   let tNow = 0;
 
   function reset() {
@@ -265,7 +265,6 @@
     ];
     stats = { dumps: 0, knotFails: [], early: false };
     got = new Set();
-    lightning = { next: 6, flash: 0, boomAt: -1, count: 0, n: 0 };
     bubble = null; lastInput = 0; storyDone = false; picking = null;
     $('picker').hidden = true; $('end').hidden = true;
     toastQueue.length = 0; $('toast').innerHTML = '';
@@ -594,7 +593,6 @@
     if (!stats.knotFails.length) award('knots');
     if (wood.wet < 10) award('wood');
     say('Parent', 'Look, a rainbow.');
-    setTimeout(showEnd, 3200);
   }
   function showEnd() {
     const dryPeople = people.filter((p) => p.wet < 12).length;
@@ -732,6 +730,7 @@
       setTools();
     } else if (mode === 'after') {
       stormK = 0; windNow *= 0.95;
+      if (tMode >= 3.2) showEnd();
     }
     if (mode === 'prep') updateHeader();
 
