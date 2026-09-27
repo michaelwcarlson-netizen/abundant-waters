@@ -66,6 +66,7 @@
       .actions .button { flex: 1 1 auto; }
     }
   </style>
+  <link rel="stylesheet" href="immersive-player.css">
 </head>
 <body>
   <header class="topbar">
@@ -87,6 +88,11 @@
     </div>
   </main>
   <footer class="footer">Your trip progress stays in this browser tab. Refreshing starts a new day.</footer>
+  <section class="level-player" id="level-player" role="dialog" aria-modal="true" aria-label="Level player" hidden>
+    <div class="level-toolbar"><strong id="level-title">Trip activity</strong><button class="button" id="level-exit" type="button">Exit Full Screen</button></div>
+    <div class="level-stage" id="level-stage"></div>
+  </section>
+  <script src="immersive-player.js"></script>
   <script>
     (() => {
       const activities = {
@@ -124,9 +130,13 @@
       const back = document.getElementById("back");
       const fill = document.getElementById("fill");
       const progress = document.querySelector('[role="progressbar"]');
+      const player = window.createImmersivePlayer(() => {
+        const start = panel.querySelector(".start-level");
+        if (start) start.textContent = "Resume Level";
+      });
       window.addEventListener("message", (event) => {
         if (event.origin !== location.origin || steps[stepIndex].activity !== "fishing" ||
-            event.source !== panel.querySelector("iframe")?.contentWindow ||
+            event.source !== player.iframe?.contentWindow ||
             event.data?.type !== "abundant-waters:fish-landed") return;
         if (["Smallmouth bass", "Northern pike", "Walleye"].includes(event.data.fish)) dinnerFish = event.data.fish;
       });
@@ -160,10 +170,14 @@
               button("J-Stroke", "jstroke", paddleChoice === "jstroke") +
               button("Bow & Stern", "bowstern", paddleChoice === "bowstern") + '</div>';
           }
-          panel.innerHTML = '<div class="activity-heading"><div><p class="eyebrow">Trip activity</p><h2>' + activity.name + '</h2><p>' + activity.description + '</p></div></div>' + choices +
-            '<div class="activity"><iframe title="' + activity.name + ' game" src="' + activity.path + (activityKey === "campfire" && dinnerFish ? "?fish=" + encodeURIComponent(dinnerFish) : "") + '" sandbox="allow-scripts allow-same-origin"></iframe></div>' +
-            '<p class="activity-note">Use the controls inside the game. This trip guide stays here above it.</p>';
+          const activityUrl = activity.path + (activityKey === "campfire" && dinnerFish ? "?fish=" + encodeURIComponent(dinnerFish) : "");
+          panel.innerHTML = '<div class="activity-heading"><div><p class="eyebrow">Trip activity</p><h2>' + activity.name + '</h2><p>' + activity.description + '</p></div><button class="button secondary fullscreen-open" type="button">Full Screen</button></div>' + choices +
+            '<div class="activity-launch"><button class="button start-level" type="button">' + (player.isCurrent(activityKey) ? "Resume Level" : "Start Level") + '</button></div>';
+          const launch = () => player.open({ key: activityKey, name: activity.name, url: activityUrl });
+          panel.querySelector(".start-level").addEventListener("click", launch);
+          panel.querySelector(".fullscreen-open").addEventListener("click", launch);
           panel.querySelectorAll("[data-paddle]").forEach((choice) => choice.addEventListener("click", () => {
+            player.dispose();
             paddleChoice = choice.dataset.paddle;
             render();
           }));
@@ -173,12 +187,14 @@
       }
 
       next.addEventListener("click", () => {
+        player.dispose();
         if (stepIndex === steps.length - 1) { stepIndex = 0; dinnerFish = null; }
         else stepIndex = Math.min(stepIndex + 1, steps.length - 1);
         render();
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
       back.addEventListener("click", () => {
+        player.dispose();
         stepIndex = Math.max(0, stepIndex - 1);
         render();
         window.scrollTo({ top: 0, behavior: "smooth" });
