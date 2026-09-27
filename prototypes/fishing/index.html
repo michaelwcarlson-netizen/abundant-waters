@@ -172,6 +172,7 @@
   function landFish() {
     cleanup(); phase = "landed"; catches++; meterArea.hidden = true; bobber.setAttribute("opacity","0");
     status.textContent = "You brought it in!";
+    window.parent.postMessage({type:"abundant-waters:fish-landed",fish:fishNames[spot]},location.origin);
     result.hidden = false;
     result.innerHTML = '<p class="catch"><strong>' + fishNames[spot] + '!</strong> A great catch for the family fish log. This trip’s log: ' + catches + (catches === 1 ? " fish." : " fish.") + '</p>';
     controls.innerHTML = '<button id="again">Try another cast</button>';
