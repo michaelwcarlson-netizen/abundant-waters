@@ -4,7 +4,7 @@
 
 ## Play
 
-- [Start the connected day-one trip](index.html): break camp, paddle Sawbill, read the shoreline, cross the portage, make camp, fish, snorkel, hang the food, then ride out a storm the next morning at Smoke Lake. Progress lasts only while the page is open; refreshing starts over.
+- [Start the connected day-one trip](index.html): break camp, paddle Sawbill, read the shoreline, cross the portage, make camp, fish, snorkel, hang the food, find Polaris under the night sky, then ride out a storm the next morning at Smoke Lake. Progress lasts only while the page is open; refreshing starts over.
 
 ## Design and activities
 
@@ -15,6 +15,7 @@
 - [Portage Trail](prototypes/portage/index.html): choose your load, then balance packs and tilt the canoe from Sawbill to Smoke ([hosted prototype](https://claude.ai/artifact/68tMZjVatSB8xAbWd9ANBi))
 - [Fishing at Smoke Lake](prototypes/fishing/index.html): read the shoreline, pick a fishing spot, and try for smallmouth, pike, or walleye.
 - [Snorkeling and Diving](prototypes/snorkeling/index.html): explore the rocks, a sunken log, and the sandy bottom with your buddy nearby.
+- [Night Sky](prototypes/night-sky/index.html): connect the Big Dipper, find Polaris, and linger by the quiet lake.
 - [Storm Day](prototypes/storm/index.html): read the weather, get off the water, secure camp, pitch the tarp, and wait together for the rainbow.
 - [Bear Hang](prototypes/bear-hang/index.html): throw a rope over a branch, hoist the food pack 12 ft up and 6 ft out, then see what the bear does at 2 a.m. ([hosted prototype](https://claude.ai/artifact/BD5rvMKzuT4XWdhxjcCx1L))
 - [Storm Tarp](prototypes/tarp/index.html): pitch the tarp and tie your knots before the storm, then see who stays dry ([hosted prototype](https://claude.ai/artifact/3WH33nuCWfrb9iwnyyQ2dk))
