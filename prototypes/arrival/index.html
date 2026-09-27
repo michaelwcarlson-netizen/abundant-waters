@@ -163,8 +163,8 @@
   }
   function frameScene(){
     const narrow=window.matchMedia("(max-width:650px)").matches;
-    lake.setAttribute("viewBox",narrow?(clamp(canoeX-225,0,380)+" 0 520 330"):"0 0 900 330");
-    camp.setAttribute("viewBox",narrow?"105 0 540 330":"0 0 900 330");
+    lake.setAttribute("viewBox",narrow?(clamp(canoeX-350+Math.max(0,canoeX-440)*.6,0,380)+" 0 520 330"):"0 0 900 330");
+    camp.setAttribute("viewBox",narrow?"60 0 540 330":"0 0 900 330");
     lake.setAttribute("preserveAspectRatio",narrow?"xMidYMid slice":"xMidYMid meet");
     camp.setAttribute("preserveAspectRatio",narrow?"xMidYMid slice":"xMidYMid meet");
   }
