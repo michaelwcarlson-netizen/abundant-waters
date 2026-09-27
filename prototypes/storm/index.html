@@ -28,10 +28,9 @@
   button.done { background:#e3efe3; border-color:#6a936c; }
   .status { min-height:52px; margin-top:12px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
   .action { display:flex; justify-content:flex-end; margin-top:12px; }
-  iframe { display:block; width:100%; height:min(68vh,690px); min-height:470px; margin-top:12px; border:1px solid var(--line); border-radius:10px; background:var(--paper); }
   .story-choices { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:12px 0; }
   [hidden] { display:none !important; }
-  @media(max-width:650px) { .tasks,.story-choices { grid-template-columns:1fr; } iframe { height:62vh; min-height:430px; } }
+  @media(max-width:650px) { .tasks,.story-choices { grid-template-columns:1fr; } }
 </style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
@@ -39,7 +38,7 @@
 <main>
   <p class="eyebrow">Smoke Lake · Day two</p>
   <h1>Storm day</h1>
-  <p class="lead">The weather gives you a warning. You get off the water early, make camp secure, and spend the afternoon together under the tarp.</p>
+  <p class="lead">The weather gives you a warning. You get off the water early, secure camp, and wait together where the trees break the wind.</p>
   <div class="scene">
     <svg viewBox="0 0 900 290" role="img" aria-labelledby="storm-title storm-desc">
       <title id="storm-title">A storm building over a Boundary Waters lake</title>
@@ -70,7 +69,7 @@
   </div>
   <section class="panel" id="forecast" aria-live="polite">
     <p class="note"><strong>Read the sky:</strong> the wind shifts, clouds stack up, and the lake darkens. A storm is coming.</p>
-    <p class="status">The family spots the change before launching. Lightning means no paddling—head for shore early.</p>
+    <p class="status">The family spots the change before launching. If you hear thunder, stay off the lake and move away from the exposed shore.</p>
     <div class="action"><button class="primary" id="shore">Get off the water</button></div>
   </section>
   <section class="panel" id="secure" hidden aria-live="polite">
@@ -84,14 +83,14 @@
     <div class="action"><button class="primary" id="pitch" disabled>Finish securing camp first</button></div>
   </section>
   <section class="panel" id="tarp-step" hidden>
-    <h2>Pitch the tarp before the rain</h2>
-    <p class="lead">Use the tarp and knot activity to get a dry place ready. Take your time; the storm waits for your family.</p>
-    <iframe title="Storm tarp activity" src="../tarp/index.html" sandbox="allow-scripts allow-same-origin"></iframe>
-    <div class="action"><button class="primary" id="wait">The tarp is up — wait together</button></div>
+    <h2>Check the tarp lines</h2>
+    <p class="lead" id="tarp-memory">The tarp you pitched yesterday is still up. Check the knots and keep the gear tucked beneath it.</p>
+    <p class="note">A tarp keeps rain off gear. During thunder, the family waits away from the water and exposed rock, not under the tarp for lightning protection.</p>
+    <div class="action"><button class="primary" id="wait">Check the lines and wait inland</button></div>
   </section>
   <section class="panel" id="wait-step" hidden aria-live="polite">
     <h2>Rain on the tarp</h2>
-    <p class="lead">You’re off the water, the canoe is tied high, and everyone is dry. The storm passes while the family rests.</p>
+    <p class="lead">You’re off the water, the canoe is high on shore, and the family has found a sheltered place inland. Rain ticks on the tarp over the gear.</p>
     <p class="note" id="tent-payoff" hidden></p>
     <p><strong>What story do you tell?</strong></p>
     <div class="story-choices">
@@ -115,7 +114,16 @@
   const finish=document.getElementById("finish"),canoe=document.getElementById("canoe");
   const gear=document.getElementById("gear"),pitch=document.getElementById("pitch");
   let canoeSafe=false,gearStashed=false,storyChosen=false;
-  const tentChoice=new URLSearchParams(location.search).get("tent");
+  const trip=new URLSearchParams(location.search);
+  const tentChoice=trip.get("tent");
+  const dryPeople=Number(trip.get("dry"));
+  if(trip.has("dry") && Number.isInteger(dryPeople) && dryPeople>=0 && dryPeople<=6){
+    document.getElementById("tarp-memory").textContent=dryPeople===6
+      ?"Yesterday’s pitch held through the rain. Check those lines once more and keep the gear tucked beneath the tarp."
+      :"Yesterday’s shower showed where rain blew in. Lower the windward edge, check the knots, and move the gear farther under the tarp.";
+  } else {
+    document.getElementById("tarp-memory").textContent="Check the knots and lower the windward edge before the rain reaches camp. Keep the gear tucked beneath the tarp.";
+  }
   const tentPayoff=document.getElementById("tent-payoff");
   if(tentChoice==="moved" || tentChoice==="level"){
     tentPayoff.hidden=false;
@@ -127,7 +135,7 @@
     canoe.classList.toggle("done",canoeSafe);canoe.textContent=canoeSafe?"Canoe secured high on shore ✓":"Secure the canoe high on shore";
     gear.classList.toggle("done",gearStashed);gear.textContent=gearStashed?"Loose gear stashed ✓":"Stash loose gear and food";
     pitch.disabled=!(canoeSafe&&gearStashed);
-    pitch.textContent=pitch.disabled?"Finish securing camp first":"Pitch the tarp";
+    pitch.textContent=pitch.disabled?"Finish securing camp first":"Check the tarp lines";
     document.getElementById("secure-status").textContent=canoeSafe&&gearStashed
       ?"Camp is secure. Get the tarp up before the rain arrives."
       :"The wind is picking up. Finish both jobs before you pitch the tarp.";
@@ -151,6 +159,7 @@
     if(!storyChosen)return;
     wait.hidden=true;finish.hidden=false;
     document.getElementById("rainbow").setAttribute("opacity","1");
+    window.AbundantWaters.complete();
   });
 })();
 </script>
