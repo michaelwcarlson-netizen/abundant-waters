@@ -198,7 +198,7 @@
       const show=next==="wood"?!!item.dataset.wood
         :next==="build"?!!item.dataset.fuel&&order.indexOf(item.dataset.fuel)>=fuelStep
         :next==="end"?item.id==="water-kettle"&&!finished:false;
-      item.hidden=!show;item.tabIndex=show?0:-1;
+      item.toggleAttribute("hidden",!show);item.setAttribute("tabindex",show?"0":"-1");
       if(show)restore(item);
     });
     ring.setAttribute("opacity",next==="wood"||next==="build"||next==="end"?"1":"0");
@@ -227,7 +227,7 @@
           :fuelStep===1?"Feed the small flame with dry sticks before the bigger wood.":"The kindling is going. Add one larger piece.";
         restore(item);return;
       }
-      fuelStep++;item.hidden=true;item.tabIndex=-1;
+      fuelStep++;item.setAttribute("hidden","");item.setAttribute("tabindex","-1");
       if(fuelStep===1){
         document.getElementById("ember").setAttribute("opacity","1");
         document.getElementById("build-status").textContent="The tinder catches. Give it a few small sticks and room for air.";
@@ -248,7 +248,7 @@
   }
   items.forEach(item=>{
     item.addEventListener("pointerdown",event=>{
-      if(item.hidden)return;
+      if(item.hasAttribute("hidden"))return;
       const p=local(event);
       const key=item.id==="water-kettle"?"kettle":item.dataset.wood||item.dataset.fuel;
       drag={id:event.pointerId,item,x:event.clientX,y:event.clientY,dx:base[key]-p.x,dy:335-p.y};
