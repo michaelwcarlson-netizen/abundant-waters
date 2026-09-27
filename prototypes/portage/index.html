@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Portage Trail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -217,7 +222,9 @@
     #loadFill { transition: none; }
   }
 </style>
-
+<link rel="stylesheet" href="../immersive.css">
+</head>
+<body>
 <div id="app">
   <canvas id="c" aria-label="Side view of a portage trail from Sawbill Lake to Smoke Lake. Hold to walk, drag to balance your load." role="img"></canvas>
 
@@ -1167,3 +1174,7 @@
   requestAnimationFrame(frame);
 })();
 </script>
+
+<script src="../immersive-bridge.js"></script>
+</body>
+</html>

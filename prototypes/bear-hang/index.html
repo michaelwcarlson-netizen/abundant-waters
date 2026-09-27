@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bear Hang</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -133,7 +138,9 @@
   @media (max-width: 560px) { .brand span { display: none; } .bar { gap: 10px; padding-inline: 12px; } }
   @media (prefers-reduced-motion: reduce) { .toast .stamp { animation: none; } .hint { transition: none; } }
 </style>
-
+<link rel="stylesheet" href="../immersive.css">
+</head>
+<body>
 <div id="app">
   <canvas id="c" aria-label="Side view of a campsite at dusk with a food pack, trees, and branches. Drag back and let go to throw a rope over a branch." role="img"></canvas>
 
@@ -1051,3 +1058,7 @@
   requestAnimationFrame(frame);
 })();
 </script>
+
+<script src="../immersive-bridge.js"></script>
+</body>
+</html>

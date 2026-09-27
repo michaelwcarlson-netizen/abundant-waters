@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>J-Stroke Wobble Meter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -175,7 +180,9 @@
     .hint { transition: none; }
   }
 </style>
-
+<link rel="stylesheet" href="../immersive.css">
+</head>
+<body>
 <div id="app">
   <canvas id="c" aria-label="Top-down view of a canoe on Sawbill Lake. Drag down on either side to paddle." role="img"></canvas>
 
@@ -820,7 +827,7 @@
         const qx = W / 2 + s * W * 0.25;
         ctx.beginPath(); ctx.moveTo(qx, y0); ctx.lineTo(qx, y1); ctx.quadraticCurveTo(qx, y1 + 30, qx + s * 44, y1 + 32); ctx.stroke();
         ctx.fillText(s < 0 ? 'paddle left' : 'paddle right', qx, y0 - 12);
-        ctx.fillText('pull down, hook out', qx, y1 + 56);
+        ctx.fillText(H < 650 ? 'pull, then hook' : 'pull down, hook out', qx, y1 + (H < 650 ? 40 : 56));
       }
       ctx.setLineDash([]);
     }
@@ -836,7 +843,7 @@
     }
 
     // The wobble meter
-    const r = Math.min(116, (W - 72) / 2);
+    const r = Math.min(116, (W - 72) / 2, H < 650 ? H * 0.17 : 116);
     const cx = W / 2, cy = H - 44;
     roundRect(cx - r - 22, cy - r - 16, 2 * r + 44, r + 52, 14);
     ctx.fillStyle = 'rgba(241, 235, 221, 0.94)'; ctx.fill();
@@ -954,3 +961,7 @@
   requestAnimationFrame(frame);
 })();
 </script>
+
+<script src="../immersive-bridge.js"></script>
+</body>
+</html>

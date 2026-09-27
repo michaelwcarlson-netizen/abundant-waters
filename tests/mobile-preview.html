@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abundant Waters · Screen Check</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; padding:20px; background:#e2d8c2; color:#1c2a2e; font:15px/1.4 system-ui,sans-serif; }
+  header { display:flex; gap:12px; align-items:center; flex-wrap:wrap; max-width:900px; margin:auto auto 16px; }
+  h1 { margin:0; font:700 22px Georgia,serif; }
+  label { margin-left:auto; }
+  select { min-height:44px; padding:6px 12px; border:1px solid #223d2c; background:#faf7ef; color:#1c2a2e; font:inherit; }
+  p { margin:0; }
+  .frame { width:375px; height:812px; max-width:100%; margin:0 auto; border:2px solid #223d2c; background:white; }
+  iframe { display:block; width:100%; height:100%; border:0; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Screen check</h1><p>Open a level and check the actual frame at phone widths.</p></div>
+  <label for="size">Viewport
+    <select id="size">
+      <option value="320,568">Small phone · 320 × 568</option>
+      <option value="375,812" selected>iPhone · 375 × 812</option>
+      <option value="390,844">iPhone · 390 × 844</option>
+      <option value="430,932">Large phone · 430 × 932</option>
+      <option value="667,375">Phone landscape · 667 × 375</option>
+      <option value="768,1024">Tablet · 768 × 1024</option>
+    </select>
+  </label>
+</header>
+<div class="frame" id="frame"><iframe title="Abundant Waters preview" src="../index.html"></iframe></div>
+<script>
+  const frame=document.getElementById("frame");
+  document.getElementById("size").addEventListener("change",event=>{
+    const [width,height]=event.target.value.split(",");
+    frame.style.width=width+"px";
+    frame.style.height=height+"px";
+  });
+</script>
+</body>
+</html>
