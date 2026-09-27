@@ -111,7 +111,7 @@
   function updateButton(){
     if(found.size===3){diveButton.hidden=true;return;}
     diveButton.hidden=false;
-    diveButton.textContent=diving?"Surface with your buddy":"Warm up, then keep exploring";
+    diveButton.textContent=diving?"Surface with your buddy":found.size?"Warm up, then keep exploring":"Start snorkeling";
   }
   diveButton.addEventListener("click",()=>{
     if(diving){
@@ -133,6 +133,7 @@
     if(found.size===3){
       diving=false;
       status.textContent="You found all three discoveries! Your buddy leads you back to shore to warm up.";
+      window.AbundantWaters.complete();
     }else if(cold>=70){
       diving=false;
       status.textContent=finds[key].message+" You’re getting cold, so you and your buddy head up and warm up by shore.";
