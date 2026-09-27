@@ -39,7 +39,7 @@
   .field-note { margin:10px 0 0; color:var(--muted); font-size:.9rem; }
   [hidden] { display:none !important; }
   @media(max-width:650px) {
-    main { padding:12px; }
+    main { padding:12px 12px 156px; }
     .lead { display:none; }
     .scene { height:clamp(230px,42dvh,340px); border-radius:5px; }
     .scene svg { height:100%; width:100%; }
@@ -47,9 +47,25 @@
     .panel { margin-top:12px; padding:0; border:0; border-radius:0; background:transparent; }
     .panel .field-note { margin-top:5px; }
     .instruction { margin:7px 0; }
-    .stroke-controls { margin:8px 0; }
+    .stroke-controls, .action {
+      position:fixed; z-index:5; bottom:env(safe-area-inset-bottom,0px);
+      left:12px; right:12px; margin:0; padding:8px 0;
+      background:#faf7ef;
+    }
+    .action { display:block; }
+    .action button { width:100%; }
+    .tent-controls { display:grid; grid-template-columns:1fr 1fr; }
+    .tent-controls .primary { grid-column:span 2; }
     button { min-height:48px; }
-    .status { min-height:0; margin:8px 0; padding:9px 12px; }
+    .status {
+      position:fixed; z-index:4; left:12px; right:12px;
+      bottom:calc(72px + env(safe-area-inset-bottom,0px));
+      min-height:0; margin:0; padding:8px 10px; font-size:.88rem;
+      box-shadow:0 -4px 10px #faf7ef;
+    }
+    #tent-status { bottom:calc(124px + env(safe-area-inset-bottom,0px)); }
+    #finish .status { position:static; box-shadow:none; margin:8px 0; }
+    #finish { padding-bottom:0; }
   }
   @media(prefers-reduced-motion:reduce) { #canoe, #occupied-smoke, #tent { transition:none; } }
 </style>
@@ -184,6 +200,7 @@
     frameScene();
     const open=canoeX>=565&&canoeY<=225;
     land.hidden=!open;
+    document.querySelector("#water-step .stroke-controls").hidden=open;
     if(open){
       waterStatus.textContent="Empty grate, no tent or gear. The granite makes a good landing. Pull the canoe up.";
     }else if(canoeX<=230){
