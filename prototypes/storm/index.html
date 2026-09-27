@@ -42,7 +42,7 @@
   <div class="scene">
     <svg viewBox="0 0 900 290" role="img" aria-labelledby="storm-title storm-desc">
       <title id="storm-title">A storm building over a Boundary Waters lake</title>
-      <desc id="storm-desc">Dark clouds gather over a lake and wooded shore. After the storm, a rainbow appears.</desc>
+      <desc id="storm-desc">Dark clouds gather over a lake and wooded shore. After the storm, light returns to the far shore.</desc>
       <defs>
         <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#879da1"/><stop offset="1" stop-color="#d7d8c8"/></linearGradient>
         <linearGradient id="water" x2="0" y2="1"><stop stop-color="#517c87"/><stop offset="1" stop-color="#244d5e"/></linearGradient>
@@ -56,13 +56,6 @@
       </g>
       <g stroke="#d9e0d8" stroke-width="4" stroke-linecap="round" opacity=".7">
         <path d="M280 180l-7 27m38-27-7 27m37-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27"/>
-      </g>
-      <g id="rainbow" fill="none" stroke-linecap="round" opacity="0">
-        <path d="M188 192 A260 190 0 0 1 712 192" stroke="#c8574f" stroke-width="13"/>
-        <path d="M211 192 A237 168 0 0 1 689 192" stroke="#e29b49" stroke-width="12"/>
-        <path d="M234 192 A214 146 0 0 1 666 192" stroke="#e8d16c" stroke-width="11"/>
-        <path d="M257 192 A191 124 0 0 1 643 192" stroke="#6b9a63" stroke-width="10"/>
-        <path d="M280 192 A168 102 0 0 1 620 192" stroke="#5785a0" stroke-width="9"/>
       </g>
       <path d="M0 222 Q180 210 340 226 T650 217 T900 225" fill="none" stroke="#a3b8b3" stroke-width="3" opacity=".6"/>
     </svg>
@@ -103,7 +96,7 @@
   </section>
   <section class="panel" id="finish" hidden aria-live="polite">
     <h2>The storm passes</h2>
-    <p class="lead">The rain eases, the clouds lift, and a rainbow stretches across a glass-calm Smoke Lake. The family has nowhere else to be.</p>
+    <p class="lead">The rain eases. A sliver of light reaches the far shore, and Smoke Lake goes still. Dad listens before anyone reaches for the paddles.</p>
     <p class="note">You read the weather, got off the water, and waited it out together. The trip can continue when the sky clears.</p>
   </section>
 </main>
@@ -158,7 +151,6 @@
   document.getElementById("pass").addEventListener("click",()=>{
     if(!storyChosen)return;
     wait.hidden=true;finish.hidden=false;
-    document.getElementById("rainbow").setAttribute("opacity","1");
     window.AbundantWaters.complete();
   });
 })();
