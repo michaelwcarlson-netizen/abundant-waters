@@ -16,16 +16,15 @@
   .lead { margin:8px 0 16px; color:#465556; }
   .scene { overflow:hidden; border:1px solid #9cb7b9; border-radius:14px; background:#77adb2; }
   svg { display:block; width:100%; height:auto; }
-  .scene-target { cursor:pointer; }
-  .scene-target .hit { fill:transparent; }
-  .scene-target .pin { fill:#f1ebdd; stroke:#173d4a; stroke-width:5; }
-  .scene-target:hover .pin, .scene-target:focus-visible .pin { fill:#c0452b; stroke:#f1ebdd; }
-  .scene-target:focus-visible { outline:none; }
-  .scene-target[aria-disabled="true"] .pin { opacity:.55; }
-  .scene-target.seen .pin { fill:#e9dfb7; }
+  #swimmer { cursor:grab; touch-action:none; }
+  #swimmer:active { cursor:grabbing; }
+  #swimmer:focus-visible { outline:3px solid #f1ebdd; }
+  .discovery { opacity:.3; transition:opacity .3s ease; }
+  .discovery.seen { opacity:1; }
   .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
   .safety { padding:11px 13px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
-  .finds { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0; }
+  .swim-controls { display:flex; gap:8px; margin:12px 0; }
+  .swim-controls button { flex:1; }
   button { min-height:52px; padding:10px 12px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; }
   button:hover:not(:disabled) { background:#e8eee8; }
   button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
@@ -35,11 +34,36 @@
   .cold { margin-top:15px; }
   .meter-label { display:flex; justify-content:space-between; gap:8px; color:var(--muted); font-size:.9rem; }
   .track { height:15px; margin-top:6px; overflow:hidden; border-radius:99px; background:#e8e4d9; }
-  .fill { width:0; height:100%; background:linear-gradient(90deg,#72aab0,#e1b05b,#c97562); transition:width .35s ease; }
+  .fill { width:0; height:100%; background:#5f8490; transition:width .35s ease; }
   .actions { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .legend { margin-top:8px; color:var(--muted); font-size:.84rem; }
-  @media(max-width:480px) { .scene svg { width:130%; max-width:none; margin-left:-15%; } .scene svg text { display:none; } }
-  @media(max-width:650px) { .finds { grid-template-columns:1fr; } .finds button { min-height:46px; } }
+  [hidden] { display:none !important; }
+  @media(max-width:650px) {
+    main { padding:12px 12px 130px; }
+    .lead,.legend { display:none; }
+    .scene { height:clamp(230px,42dvh,340px); border-radius:5px; }
+    .scene svg { width:100%; height:100%; }
+    .scene svg text { display:none; }
+    .panel { border:0; background:transparent; padding:0; margin-top:9px; }
+    .safety { margin:0; padding:7px 10px; font-size:.88rem; }
+    .cold { margin-top:7px; }
+    .track { height:10px; margin-top:3px; }
+    .swim-controls,.actions {
+      position:fixed; z-index:5; bottom:env(safe-area-inset-bottom,0px);
+      left:12px; right:12px; margin:0; padding:8px 0; background:#faf7ef;
+    }
+    .actions button { width:100%; }
+    body.diving .actions { top:68px; right:18px; bottom:auto; left:auto; padding:0; background:transparent; }
+    body.diving .actions button { width:auto; min-height:42px; padding:5px 9px; font-size:.83rem; box-shadow:0 2px 8px #1c2a2e44; }
+    .swim-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .swim-controls button { min-width:0; }
+    .status {
+      position:fixed; z-index:4; left:12px; right:12px;
+      bottom:calc(72px + env(safe-area-inset-bottom,0px));
+      margin:0; min-height:0; padding:8px 10px; font-size:.88rem;
+      box-shadow:0 -4px 10px #faf7ef;
+    }
+  }
 </style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
@@ -74,18 +98,29 @@
         <path d="M379 142q28-25 56 0-28 25-56 0zm49 0 18-13v26z"/><path d="M675 115q22-20 44 0-22 20-44 0zm39 0 15-11v22z"/>
         <path d="M537 182q18-16 36 0-18 16-36 0zm32 0 13-9v18z"/>
       </g>
-      <g fill="none" stroke="#e7e0c5" stroke-width="3">
-        <circle id="find-rocks" cx="192" cy="247" r="20" opacity="0"/>
-        <circle id="find-log" cx="469" cy="232" r="20" opacity="0"/>
-        <circle id="find-sand" cx="738" cy="269" r="20" opacity="0"/>
+      <g class="discovery" id="find-rocks">
+        <path d="M165 254q28-35 55 0" fill="none" stroke="#cbbfa0" stroke-width="5"/>
+        <path d="M185 251q-15-18 0-20m7 16q20-16 15-21" fill="none" stroke="#d5b59a" stroke-width="4"/>
       </g>
-      <g class="scene-target" role="button" aria-label="Explore rocks with buddy" data-scene-find="rocks" tabindex="-1"><circle class="hit" cx="192" cy="247" r="70"/><circle class="pin" cx="192" cy="247" r="17"/></g>
-      <g class="scene-target" role="button" aria-label="Explore sunken log with buddy" data-scene-find="log" tabindex="-1"><circle class="hit" cx="469" cy="232" r="70"/><circle class="pin" cx="469" cy="232" r="17"/></g>
-      <g class="scene-target" role="button" aria-label="Explore sandy bottom with buddy" data-scene-find="sand" tabindex="-1"><circle class="hit" cx="738" cy="269" r="70"/><circle class="pin" cx="738" cy="269" r="17"/></g>
+      <g class="discovery" id="find-log">
+        <path d="M451 232l21-14 18 4-21 19Z" fill="#c8a77e" stroke="#513c2d" stroke-width="3"/>
+        <path d="M470 220l11-15" stroke="#d5c8a1" stroke-width="3"/>
+      </g>
+      <g class="discovery" id="find-sand">
+        <path d="M700 262q30 12 68 0" fill="none" stroke="#e2cc9a" stroke-width="6"/>
+        <path d="M735 270l21-34m-21 34-14 15" stroke="#6b513c" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <g id="buddy" fill="#eddfb4" opacity=".8"><circle cx="71" cy="170" r="10"/><path d="M77 178l30 10-12 6-30-8Z"/><path d="M66 182l-15 14m14-12-6 20" stroke="#355767" stroke-width="5"/></g>
+      <g id="swimmer" role="button" tabindex="0" aria-label="Swimmer. Drag or use arrow keys to explore." fill="#f1e2bf">
+        <circle cx="121" cy="167" r="11" stroke="#244e5a" stroke-width="4"/>
+        <path d="M130 176l35 13-13 9-36-12Z" fill="#bf6f51"/>
+        <path d="M119 185l-16 17m22-15-5 22" stroke="#315763" stroke-width="6" stroke-linecap="round"/>
+        <rect x="93" y="148" width="90" height="69" fill="transparent"/>
+      </g>
       <text x="33" y="35" fill="#173d4a" font-family="system-ui" font-size="15" font-weight="700">SUNLIGHT · SHALLOW WATER · STAY NEAR SHORE</text>
     </svg>
   </div>
-  <p class="legend">Tap a place in the water, or use the choices below.</p>
+  <p class="legend">Drag the swimmer through the water, or use the left and right controls.</p>
   <section class="panel" aria-live="polite">
     <p class="safety"><strong>Buddy check:</strong> Stay together. Surface when you feel cold.</p>
     <div class="cold">
@@ -93,93 +128,115 @@
       <div class="track" role="meter" aria-label="Cold meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="cold-fill"></div></div>
     </div>
     <p class="meter-label"><span>Discoveries</span><strong id="find-count">0 of 3</strong></p>
-    <div class="finds">
-      <button data-find="rocks" disabled>Look around the rocks</button>
-      <button data-find="log" disabled>Check under the sunken log</button>
-      <button data-find="sand" disabled>Explore the sandy bottom</button>
+    <div class="swim-controls" aria-label="Swim controls" hidden>
+      <button id="swim-left" type="button">Swim left</button>
+      <button id="swim-right" type="button">Swim right</button>
     </div>
-    <div class="status" id="status" role="status">Start when your buddy is ready. There’s no rush—surface whenever you like.</div>
+    <div class="status" id="status" role="status">Start when your buddy is ready. Look among the rocks, under the log, and along the sandy bottom.</div>
     <div class="actions"><button class="primary" id="dive">Start snorkeling</button></div>
   </section>
 </main>
 <script>
 (() => {
-  const finds = {
-    rocks:{name:"Freshwater sponge and crayfish",message:"A freshwater sponge clings to the rocks while a crayfish slips into a crack."},
-    log:{name:"A lost fishing lure",message:"Under the sunken log, you spot a lost lure caught in the branches."},
-    sand:{name:"An old canoe paddle",message:"Half-buried in the sand is an old wooden paddle. You leave it where it lies and tell Dad what you saw."}
+  const finds={
+    rocks:"A crayfish darts beneath the rocks. A freshwater sponge holds fast beside it.",
+    log:"An old fishing lure is caught in the sunken branches. You leave it there.",
+    sand:"A weathered canoe paddle lies half buried in the sand. You tell Dad where you saw it."
   };
-  let diving=false,warming=false,cold=0,found=new Set();
-  const status=document.getElementById("status"),diveButton=document.getElementById("dive");
-  const coldFill=document.getElementById("cold-fill"),coldLabel=document.getElementById("cold-label");
-  const count=document.getElementById("find-count"),coldMeter=document.querySelector('[role="meter"]');
-  const buttons=[...document.querySelectorAll("[data-find]")];
-  const targets=[...document.querySelectorAll("[data-scene-find]")];
-  function updateTargets(){
-    targets.forEach(target=>{
-      const disabled=!diving||found.has(target.dataset.sceneFind);
-      target.setAttribute("aria-disabled",String(disabled));
-      target.tabIndex=disabled?-1:0;
-      target.classList.toggle("seen",found.has(target.dataset.sceneFind));
-    });
+  const points={rocks:[192,247],log:[469,232],sand:[738,269]};
+  const scene=document.querySelector(".scene svg"),swimmer=document.getElementById("swimmer"),buddy=document.getElementById("buddy");
+  const status=document.getElementById("status"),action=document.getElementById("dive");
+  const controls=document.querySelector(".swim-controls"),count=document.getElementById("find-count");
+  const meter=document.querySelector('[role="meter"]'),fill=document.getElementById("cold-fill"),label=document.getElementById("cold-label");
+  let x=121,y=167,cold=0,diving=false,warming=false,finished=false,drag=null;
+  const found=new Set(),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function camera(){
+    const narrow=window.matchMedia("(max-width:650px)").matches;
+    scene.setAttribute("viewBox",narrow?(clamp(x-290,0,380)+" 0 520 330"):"0 0 900 330");
+    scene.setAttribute("preserveAspectRatio",narrow?"xMidYMid slice":"xMidYMid meet");
   }
-  function updateMeter(){
-    coldFill.style.width=cold+"%";
-    coldMeter.setAttribute("aria-valuenow",String(cold));
-    coldLabel.textContent=cold<35?"Warm and comfortable":cold<70?"Starting to feel cool":"Time to warm up";
+  window.addEventListener("resize",camera);camera();
+  function local(event){
+    const p=scene.createSVGPoint();p.x=event.clientX;p.y=event.clientY;
+    return p.matrixTransform(scene.getScreenCTM().inverse());
   }
-  function syncChoices(){
-    buttons.forEach(button=>button.disabled=!diving||found.has(button.dataset.find));
-    updateTargets();
+  function meterUpdate(){
+    fill.style.width=cold+"%";meter.setAttribute("aria-valuenow",String(Math.round(cold)));
+    label.textContent=cold<35?"Warm and comfortable":cold<65?"Starting to feel cool":"Time to warm up";
   }
-  function updateButton(){
-    if(found.size===3){diveButton.hidden=true;syncChoices();return;}
-    diveButton.hidden=false;
-    diveButton.textContent=diving?"Surface with your buddy":warming?"Warm up by shore":found.size?"Dive again with your buddy":"Start snorkeling";
-    syncChoices();
+  function layout(){
+    controls.hidden=!diving;
+    document.body.classList.toggle("diving",diving);
+    action.textContent=finished?"All ashore":warming?"Warm up by shore":diving?"Surface with your buddy":found.size?"Dive again with your buddy":"Start snorkeling";
+    action.hidden=finished;
+    meterUpdate();
   }
-  diveButton.addEventListener("click",()=>{
-    if(warming){
-      warming=false;cold=0;status.textContent="You warm up on the rocks while Dad watches the water. Your buddy is ready when you are.";
-      updateMeter();updateButton();return;
+  function move(nx,ny){
+    if(!diving)return;
+    const px=clamp(nx,65,830),py=clamp(ny,125,264);
+    cold=clamp(cold+Math.hypot(px-x,py-y)/30,0,100);
+    x=px;y=py;
+    swimmer.setAttribute("transform","translate("+(x-121)+" "+(y-167)+")");
+    buddy.setAttribute("transform","translate("+(x-121)+" "+(y-167)+")");
+    camera();
+    for(const [key,[fx,fy]] of Object.entries(points)){
+      if(!found.has(key)&&Math.hypot(x-fx,y-fy)<64){discover(key);break;}
     }
-    if(diving){
-      diving=false;status.textContent=found.size===3?"You and your buddy are safely back at shore.":"You surface together and warm up by the rocks. The remaining discoveries can wait.";
-      cold=0;
-      updateMeter();updateButton();buttons.forEach(button=>button.disabled=found.has(button.dataset.find));return;
-    }
-    diving=true;
-    status.textContent="Your buddy is in sight. Choose a place to explore, then surface whenever you want.";
-    buttons.forEach(button=>button.disabled=found.has(button.dataset.find));
-    updateButton();
-  });
-  function explore(key){
-    if(!diving||found.has(key))return;
-    found.add(key);buttons.find(button=>button.dataset.find===key).disabled=true;cold=Math.min(100,cold+40);
-    document.getElementById("find-"+key).setAttribute("opacity","1");
-    count.textContent=found.size+" of 3";updateMeter();
-    if(found.size===3){
-      diving=false;
-      status.textContent="You found all three discoveries! Your buddy leads you back to shore to warm up.";
-      window.AbundantWaters.complete();
-    }else if(cold>=70){
+    meterUpdate();
+    if(cold>=72&&diving){
       diving=false;warming=true;
-      status.textContent=finds[key].message+" You’re getting cold, so you and your buddy head up and warm up by shore.";
-    }else if(cold>=35){
-      status.textContent=finds[key].message+" You’re starting to feel cool. One more look if you like, then warm up.";
-    }else{
-      status.textContent=finds[key].message+" Your buddy is still right there beside you.";
+      status.textContent="Your hands are getting cold. You and your buddy head for the sunny rocks to warm up.";
+      layout();
     }
-    updateButton();
   }
-  buttons.forEach(button=>button.addEventListener("click",()=>explore(button.dataset.find)));
-  targets.forEach(target=>{
-    target.addEventListener("click",()=>explore(target.dataset.sceneFind));
-    target.addEventListener("keydown",event=>{
-      if(event.key==="Enter"||event.key===" "){event.preventDefault();explore(target.dataset.sceneFind);}
-    });
+  function discover(key){
+    found.add(key);cold=clamp(cold+24,0,100);
+    document.getElementById("find-"+key).classList.add("seen");
+    count.textContent=found.size+" of 3";
+    status.textContent=finds[key];
+    if(found.size===3){
+      diving=false;finished=true;
+      status.textContent+=" You and your buddy surface together and show Dad where you found it.";
+      window.AbundantWaters.complete();
+    }else if(cold>=65){
+      diving=false;warming=true;
+      status.textContent+=" The lake feels cold now. Time to warm up.";
+    }
+    layout();
+  }
+  action.addEventListener("click",()=>{
+    if(finished)return;
+    if(warming){
+      warming=false;cold=0;
+      status.textContent="Sun on the rocks, a dry towel, and a moment with Dad. Your buddy is ready when you are.";
+    }else if(diving){
+      diving=false;cold=0;
+      status.textContent="You and your buddy surface together. The rest of the lake can wait.";
+    }else{
+      diving=true;
+      status.textContent="Stay together. Swim toward something that catches your eye.";
+    }
+    layout();
   });
-  updateMeter();updateButton();
+  document.getElementById("swim-left").addEventListener("click",()=>move(x-56,210));
+  document.getElementById("swim-right").addEventListener("click",()=>move(x+56,210));
+  swimmer.addEventListener("pointerdown",event=>{
+    if(!diving)return;
+    const p=local(event);
+    drag={id:event.pointerId,dx:x-p.x,dy:y-p.y};
+    swimmer.setPointerCapture(event.pointerId);
+  });
+  swimmer.addEventListener("pointermove",event=>{
+    if(!drag||drag.id!==event.pointerId)return;
+    const p=local(event);move(p.x+drag.dx,p.y+drag.dy);
+  });
+  swimmer.addEventListener("pointerup",()=>{drag=null;});
+  swimmer.addEventListener("pointercancel",()=>{drag=null;});
+  swimmer.addEventListener("keydown",event=>{
+    const steps={ArrowLeft:[-56,0],ArrowRight:[56,0],ArrowUp:[0,-35],ArrowDown:[0,35]};
+    if(steps[event.key]){event.preventDefault();move(x+steps[event.key][0],y+steps[event.key][1]);}
+  });
+  layout();
 })();
 </script>
 <script src="../immersive-bridge.js"></script>
