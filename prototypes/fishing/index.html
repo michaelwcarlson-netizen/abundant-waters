@@ -109,8 +109,9 @@
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   new ResizeObserver(resize).observe(canvas);resize();
+  function setStatus(text){if(status.textContent!==text)status.textContent=text;}
   function message(text,title,detail){
-    status.textContent=text;
+    setStatus(text);
     if(title)hudTitle.textContent=title;
     if(detail)hudText.textContent=detail;
   }
@@ -124,7 +125,8 @@
     progressFill.style.setProperty("--progress",Math.round(progress*100)+"%");
     distanceLabel.textContent=Math.round(progress*100)+"%";
     tensionLabel.textContent=tension<.24?"Slack — reel":tension>.77?"Hard pull — release":"Steady";
-    reel.textContent=phase==="fight"?"Reel in":"Reel the lure";
+    const reelLabel=phase==="fight"?"Reel in":"Reel the lure";
+    if(reel.textContent!==reelLabel)reel.textContent=reelLabel;
   }
   function stopReel(){pressing=false;reel.classList.remove("active");}
   function stopGive(){giving=false;give.classList.remove("active");}
@@ -212,7 +214,7 @@
       if(tension>.97){lost("snap");return;}
       if(tension>.18&&tension<.88)progress=Math.min(1,progress+.085);
       if(progress>=1){landed();return;}
-      status.textContent=tension>.77?"Hard pull! Let go and let it run.":"A short turn of the reel brings it closer.";
+      setStatus(tension>.77?"Hard pull! Give line before it snaps.":"A short turn of the reel brings it closer.");
       ui();
     }
   });
@@ -227,7 +229,7 @@
     if(phase!=="fight")return;
     tension=Math.max(.16,tension-.16);
     progress=Math.max(0,progress-.012);
-    status.textContent="You let the fish run. Take up line when the pull softens.";
+    setStatus("You let the fish run. Take up line when the pull softens.");
     ui();
   });
   window.addEventListener("keydown",e=>{
@@ -278,9 +280,9 @@
       if(tension>.97){lost("snap");return;}
       if(slackTime>1.25){lost("slack");return;}
       if(progress>=1){landed();return;}
-      if(tension>.77)status.textContent="Hard pull! Give line before it snaps.";
-      else if(tension<.24)status.textContent="The line is going slack. Reel gently.";
-      else status.textContent=active?"You gain a little line. Keep it steady.":"It runs a little. Take up line when the pull softens.";
+      if(tension>.77)setStatus("Hard pull! Give line before it snaps.");
+      else if(tension<.24)setStatus("The line is going slack. Reel gently.");
+      else setStatus(active?"You gain a little line. Keep it steady.":"It runs a little. Take up line when the pull softens.");
       ui();
     }
     if(phase==="lost" && clock-failedAt>1.8)ready("The lake is still here. Aim a fresh cast beside the cover.");
