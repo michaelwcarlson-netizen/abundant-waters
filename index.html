@@ -160,12 +160,14 @@
 
       function render() {
         const step = steps[stepIndex];
+        document.querySelector("main > .eyebrow").textContent = stepIndex >= 11 ? "Smoke Lake · Day two" : "Sawbill → Smoke · Day one";
         document.getElementById("title").textContent = step.title;
         document.getElementById("phase").textContent = step.phase;
         document.getElementById("count").textContent = stepIndex === 0 ? "Ready when you are" : "Part " + stepIndex + " of " + (steps.length - 1);
         document.getElementById("intro").textContent = stepIndex === 0
           ? "Break camp, paddle north, read the shoreline, cross the portage, find a campsite, and settle in before evening. Find north before bed; the storm comes next morning. Take your time."
-          : "The day unfolds at your pace. Finish an activity when you’re ready, then continue the trip.";
+          : stepIndex === steps.length - 1 ? "The sky is clearing. Take a moment before heading on." :
+            "The day unfolds at your pace. Return to the trip when you’re ready.";
         fill.style.width = (stepIndex / (steps.length - 1) * 100) + "%";
         progress.setAttribute("aria-valuenow", String(stepIndex));
         back.hidden = stepIndex === 0;
@@ -203,7 +205,7 @@
             render();
           }));
         } else {
-          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good couple of days</h2><p class="intro">The lake is quiet again. You can still hear rain dripping from the pines.</p><p class="trip-memory"></p>';
+          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp after the storm"><span>Smoke Lake · Sky clearing</span></div><h2>A good couple of days</h2><p class="intro">The lake is quiet again. You can still hear rain dripping from the pines.</p><p class="trip-memory"></p>';
           const memories = [
             ["navigation", "You found the landing by reading the shoreline."],
             ["arrival", "You chose existing bare ground for the tent."],
