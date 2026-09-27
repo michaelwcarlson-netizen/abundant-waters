@@ -66,8 +66,8 @@
         <rect width="880" height="340" fill="#e5dcc5"/>
         <g fill="none" stroke="#c7b99a" stroke-width="2" opacity=".7"><path d="M0 25Q180 2 360 30T700 25M0 47Q180 24 360 52T700 47M0 300Q160 270 330 303T700 295M0 322Q160 292 330 325T700 317"/></g>
         <path d="M30 210Q120 163 190 192Q252 216 299 122Q331 90 366 164Q407 209 469 199Q489 178 517 189Q544 206 568 192Q636 167 703 173L716 248Q626 274 564 248Q531 238 510 251Q489 268 467 252Q409 226 361 246Q297 273 256 233Q176 211 117 258L35 269Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
-        <path d="M704 169Q728 134 757 93Q781 58 823 69Q866 79 881 115L881 179Q843 163 813 170Q766 174 742 205L716 248Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
-        <path d="M662 174Q684 145 708 113Q725 90 749 84" fill="none" stroke="#956444" stroke-width="6" stroke-dasharray="3 9" stroke-linecap="round"/>
+        <path d="M757 127Q778 67 823 69Q866 79 881 115L881 179Q843 163 813 170Q785 177 763 205L749 192Q753 160 757 127Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
+        <path d="M687 177Q709 144 727 121Q742 105 763 104" fill="none" stroke="#956444" stroke-width="6" stroke-dasharray="3 9" stroke-linecap="round"/>
         <path d="M0 0L0 340" stroke="#cfbfa0" stroke-width="2"/>
         <g fill="#31543d"><path d="M164 179l12-32 12 32M272 107l13-35 13 35M399 177l13-35 13 35M539 175l13-35 13 35M628 148l13-35 13 35M782 46l12-32 12 32"/></g>
         <g fill="#294c53" font-family="system-ui" font-size="17" font-weight="700"><text x="62" y="294">SAWBILL</text><text x="770" y="228">SMOKE</text></g>
@@ -109,7 +109,7 @@
   canvas.addEventListener("pointerdown",event=>{canvas.focus();canvas.setPointerCapture(event.pointerId);const p=point(event);setTarget(p.x,p.y);});
   canvas.addEventListener("pointermove",event=>{if(event.buttons){const p=point(event);setTarget(p.x,p.y);}});
   document.getElementById("north").addEventListener("click",()=>setTarget(boat.x+105,boat.y-78));
-  document.getElementById("ahead").addEventListener("click",()=>setTarget(boat.x+165,center(boat.x+165)));
+  document.getElementById("ahead").addEventListener("click",()=>{const x=Math.min(2130,Math.max(boat.x,target?.x||boat.x)+115);setTarget(x,center(x));});
   document.getElementById("south").addEventListener("click",()=>setTarget(boat.x+105,boat.y+78));
   function showMap(open){mapSheet.hidden=!open;mapToggle.setAttribute("aria-expanded",String(open));if(open){target=null;document.getElementById("close-map").focus();}else mapToggle.focus();}
   mapToggle.addEventListener("click",()=>showMap(mapSheet.hidden));
@@ -188,7 +188,7 @@
     ctx.fillStyle="#e6cda5";for(const x of [-8,11]){ctx.beginPath();ctx.arc(x,-4,3.7,0,Math.PI*2);ctx.fill();}ctx.restore();
     ctx.restore();
   }
-  function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;update(dt);draw();requestAnimationFrame(frame);}
+  function frame(now){const dt=Math.min((now-last)/1000,.18);last=now;update(dt);draw();requestAnimationFrame(frame);}
   requestAnimationFrame(frame);
 })();
 </script>
