@@ -89,7 +89,7 @@
   const marker=document.getElementById("map-player");
   const boat={x:115,y:300,angle:0},keys=new Set();
   let target=null,paused=false,finished=false,last=performance.now(),scale=1,camX=0,camY=0,viewW=0,viewH=0;
-  let noticedBay=false,noticedNarrows=false,landingReady=false,lastShoreMessage=0;
+  let noticedBay=false,noticedNarrows=false,noticedLanding=false,overshot=false,landingReady=false,lastShoreMessage=0;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const center=x=>295+38*Math.sin(x/195)-17*Math.sin(x/410);
   const bay=x=>x>330&&x<760?130*Math.sin(Math.PI*(x-330)/430)**2:0;
@@ -108,9 +108,9 @@
   function setTarget(x,y){if(paused||finished||!mapSheet.hidden)return;target={x:clamp(x,35,2130),y:clamp(y,30,550)};hint.hidden=true;}
   canvas.addEventListener("pointerdown",event=>{canvas.focus();canvas.setPointerCapture(event.pointerId);const p=point(event);setTarget(p.x,p.y);});
   canvas.addEventListener("pointermove",event=>{if(event.buttons){const p=point(event);setTarget(p.x,p.y);}});
-  document.getElementById("north").addEventListener("click",()=>setTarget(boat.x+105,boat.y-78));
+  document.getElementById("north").addEventListener("click",()=>setTarget(boat.x+10,boat.y-78));
   document.getElementById("ahead").addEventListener("click",()=>{const x=Math.min(2130,Math.max(boat.x,target?.x||boat.x)+115);setTarget(x,center(x));});
-  document.getElementById("south").addEventListener("click",()=>setTarget(boat.x+105,boat.y+78));
+  document.getElementById("south").addEventListener("click",()=>setTarget(boat.x+10,boat.y+78));
   function showMap(open){mapSheet.hidden=!open;mapToggle.setAttribute("aria-expanded",String(open));if(open){target=null;document.getElementById("close-map").focus();}else mapToggle.focus();}
   mapToggle.addEventListener("click",()=>showMap(mapSheet.hidden));
   document.getElementById("close-map").addEventListener("click",()=>showMap(false));
@@ -141,6 +141,8 @@
     }
     if(!noticedBay&&boat.x>515){noticedBay=true;status.textContent="The north shore folds into a sheltered bay. A loon slips from the reeds as you paddle past.";}
     if(!noticedNarrows&&boat.x>1135){noticedNarrows=true;status.textContent="Granite points pinch the lake into a narrow channel. The map shows it opening up beyond.";}
+    if(!noticedLanding&&boat.x>1710){noticedLanding=true;status.textContent="The dotted trail meets the north shore near pale granite. Look for the worn opening in the pines.";}
+    if(!overshot&&boat.x>2010){overshot=true;status.textContent="The granite landing is behind us. Turn back and aim for that opening on the north shore.";}
     const close=boat.x>1790&&boat.x<1985&&boat.y<north(boat.x)+60;
     if(close&&!landingReady){status.textContent="A worn opening breaks the pines above the granite. The dotted trail on the map begins here.";target=null;}
     landingReady=close;land.hidden=!close;controls.hidden=close;
@@ -156,7 +158,7 @@
   function pine(x,y,size){ctx.fillStyle="#31533c";ctx.beginPath();ctx.moveTo(x,y-size);ctx.lineTo(x-size*.46,y+size*.55);ctx.lineTo(x+size*.46,y+size*.55);ctx.closePath();ctx.fill();ctx.fillStyle="#694e37";ctx.fillRect(x-size*.07,y+size*.4,size*.14,size*.5);}
   function draw(){
     ctx.clearRect(0,0,viewW,viewH);
-    camX=clamp(boat.x-viewW/scale*.36,0,2200-viewW/scale);
+    camX=clamp(boat.x-viewW/scale*(boat.x>1700?.6:.36),0,2200-viewW/scale);
     camY=clamp(boat.y-viewH/scale*.52,0,580-viewH/scale);
     ctx.save();ctx.scale(scale,scale);ctx.translate(-camX,-camY);
     ctx.fillStyle="#d7d1b8";ctx.fillRect(camX,camY,viewW/scale,viewH/scale);
