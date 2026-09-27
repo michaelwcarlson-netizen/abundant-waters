@@ -78,7 +78,7 @@
     <p class="intro" id="intro">Break camp, paddle north, cross the portage, and settle in before evening. Take your time; this is a trip, not a race.</p>
     <div class="progress-wrap" aria-label="Trip progress">
       <div class="progress-label"><span id="phase">Morning at camp</span><span id="count">Ready when you are</span></div>
-      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><div class="fill" id="fill"></div></div>
     </div>
     <section class="card" id="panel" aria-live="polite"></section>
     <div class="actions">
@@ -92,6 +92,7 @@
       const activities = {
         jstroke: { name: "J-Stroke", path: "prototypes/j-stroke/index.html", description: "Paddle north on Sawbill and work on a clean J-stroke." },
         bowstern: { name: "Bow & Stern", path: "prototypes/bow-stern/index.html", description: "Paddle in rhythm with your partner through the rock garden." },
+        navigation: { name: "Map & Navigation", path: "prototypes/navigation/index.html", description: "Read the shoreline to find the bay, narrows, and portage landing." },
         portage: { name: "Portage Trail", path: "prototypes/portage/index.html", description: "Choose your load, balance the canoe, and make the trail to Smoke." },
         tarp: { name: "Storm Tarp", path: "prototypes/tarp/index.html", description: "Pitch the tarp and tie it down before the weather moves in." },
         fishing: { name: "Fishing at Smoke Lake", path: "prototypes/fishing/index.html", description: "Read the shoreline, choose a spot, and try for smallmouth, pike, or walleye." },
@@ -100,11 +101,12 @@
       const steps = [
         { phase: "Morning at camp", title: "Break camp", description: "The sky is clear and the lake is calm. Pack up together, then head north toward Smoke Lake.", activity: null },
         { phase: "On the water", title: "Paddle Sawbill", description: "Choose a paddling activity. When you’re ready to move on, return here and continue the trip.", activity: "jstroke" },
+        { phase: "Read the map", title: "Find your way to the landing", description: activities.navigation.description, activity: "navigation" },
         { phase: "The portage", title: "Cross to Smoke", description: activities.portage.description, activity: "portage" },
         { phase: "Make camp", title: "Get the tarp ready", description: activities.tarp.description, activity: "tarp" },
         { phase: "Free time", title: "Fish the shoreline", description: activities.fishing.description, activity: "fishing" },
         { phase: "Evening at camp", title: "Hang the food", description: activities.bear.description, activity: "bear" },
-        { phase: "Day complete", title: "Camp is settled", description: "The canoe is ashore, you tried your luck fishing, and the food is hung for the night. Take a breath and look back on your first day.", activity: null }
+        { phase: "Day complete", title: "Camp is settled", description: "You read the shoreline, found the portage, tried your luck fishing, and settled in at Smoke Lake. Take a breath and look back on your first day.", activity: null }
       ];
       let stepIndex = 0;
       let paddleChoice = "jstroke";
@@ -124,7 +126,7 @@
         document.getElementById("phase").textContent = step.phase;
         document.getElementById("count").textContent = stepIndex === 0 ? "Ready when you are" : "Part " + stepIndex + " of " + (steps.length - 1);
         document.getElementById("intro").textContent = stepIndex === 0
-          ? "Break camp, paddle north, cross the portage, and settle in before evening. Take your time; this is a trip, not a race."
+          ? "Break camp, paddle north, read the shoreline, cross the portage, and settle in before evening. Take your time; this is a trip, not a race."
           : "The day unfolds at your pace. Finish an activity when you’re ready, then continue the trip.";
         fill.style.width = (stepIndex / (steps.length - 1) * 100) + "%";
         progress.setAttribute("aria-valuenow", String(stepIndex));
@@ -151,7 +153,7 @@
             render();
           }));
         } else {
-          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good first day</h2><p class="intro">You made it to Smoke Lake together. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Traveled from Sawbill to Smoke</li><li>Made camp and tried fishing</li><li>Hung the food for the night</li><li>Ready for tomorrow’s adventure</li></ul>';
+          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good first day</h2><p class="intro">You made it to Smoke Lake together. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Read the map and found the landing</li><li>Traveled from Sawbill to Smoke</li><li>Made camp and tried fishing</li><li>Hung the food for the night</li><li>Ready for tomorrow’s adventure</li></ul>';
         }
       }
 
