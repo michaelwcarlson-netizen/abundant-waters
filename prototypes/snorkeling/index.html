@@ -38,6 +38,7 @@
   .fill { width:0; height:100%; background:linear-gradient(90deg,#72aab0,#e1b05b,#c97562); transition:width .35s ease; }
   .actions { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .legend { margin-top:8px; color:var(--muted); font-size:.84rem; }
+  @media(max-width:480px) { .scene svg { width:130%; max-width:none; margin-left:-15%; } .scene svg text { display:none; } }
   @media(max-width:650px) { .finds { grid-template-columns:1fr; } .finds button { min-height:46px; } }
 </style>
 <link rel="stylesheet" href="../immersive.css">
@@ -86,7 +87,7 @@
   </div>
   <p class="legend">Tap a place in the water, or use the choices below.</p>
   <section class="panel" aria-live="polite">
-    <p class="safety"><strong>Buddy check:</strong> You can see your buddy from shore. The cold meter is a reminder to warm up, not a countdown.</p>
+    <p class="safety"><strong>Buddy check:</strong> Stay together. Surface when you feel cold.</p>
     <div class="cold">
       <div class="meter-label"><span>Cold meter</span><strong id="cold-label">Warm and comfortable</strong></div>
       <div class="track" role="meter" aria-label="Cold meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="cold-fill"></div></div>
