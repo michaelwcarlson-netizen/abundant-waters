@@ -117,7 +117,7 @@
     progressFill.style.setProperty("--progress",Math.round(progress*100)+"%");
     distanceLabel.textContent=Math.round(progress*100)+"%";
     tensionLabel.textContent=tension<.24?"Slack — reel":tension>.77?"Hard pull — release":"Steady";
-    reel.textContent=phase==="fight"?"Hold to reel · release on a hard pull":"Hold to work the lure";
+    reel.textContent=phase==="fight"?"Reel · release on a hard pull":"Reel the lure";
   }
   function stopReel(){pressing=false;reel.classList.remove("active");}
   function ready(text="Touch the lake to cast. Aim beside the granite or reeds."){
@@ -187,12 +187,26 @@
     if(phase!=="retrieve"&&phase!=="fight")return;
     reel.setPointerCapture(e.pointerId);pressStart=performance.now();pressing=true;reel.classList.add("active");
   });
-  reel.addEventListener("pointerup",()=>{if(pressing&&performance.now()-pressStart<600)burst=.55;stopReel();});
+  reel.addEventListener("pointerup",stopReel);
   reel.addEventListener("pointercancel",stopReel);
   reel.addEventListener("lostpointercapture",stopReel);
   reel.addEventListener("click",e=>{
-    if((phase==="retrieve"||phase==="fight") && (e.detail===0 || performance.now()-pressStart<900))
-      burst=Math.max(burst,.8);
+    if(e.detail!==0 && performance.now()-pressStart>=700)return;
+    if(phase==="retrieve"){
+      retrieve=Math.min(1,retrieve+.09);
+      lure.x=landing.x+(source.x-landing.x)*retrieve;
+      lure.y=landing.y+(source.y-landing.y)*retrieve;
+      if(targetFish && retrieve>.16 && retrieve<.57)hook();
+      else if(retrieve>=.96)ready("The lure comes back without a strike. Try along the rocky drop or weed edge.");
+      else message("The lure darts closer. Watch the edge for a follower.");
+    } else if(phase==="fight"){
+      tension=Math.min(1,tension+.095);
+      if(tension>.97){lost("snap");return;}
+      if(tension>.18&&tension<.88)progress=Math.min(1,progress+.085);
+      if(progress>=1){landed();return;}
+      status.textContent=tension>.77?"Hard pull! Let go and let it run.":"A short turn of the reel brings it closer.";
+      ui();
+    }
   });
   window.addEventListener("keydown",e=>{
     if((e.key===" "||e.key.toLowerCase()==="r")&&(phase==="retrieve"||phase==="fight")){
@@ -216,7 +230,7 @@
       lure.y=source.y+(landing.y-source.y)*arc-Math.sin(castFlight*Math.PI)*.18;
       if(castFlight>=1){
         phase="retrieve";lure={...landing};
-        message("It lands with a small ring. Work it slowly past the edge.","Watch the lure","Hold Reel. A fish may follow when the lure moves near cover.");ui();
+        message("It lands with a small ring. Work it slowly past the edge.","Watch the lure","Hold or tap Reel. A fish may follow when the lure moves near cover.");ui();
       }
     }
     if(phase==="retrieve"){
