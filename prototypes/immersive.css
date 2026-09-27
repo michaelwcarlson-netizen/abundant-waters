@@ -51,5 +51,6 @@ button { touch-action: manipulation; }
   body > main .panel { padding: 10px; border-radius: 8px; }
   body > main .status { padding: 9px 10px; font-size: .94rem; }
   body > main .clue { min-height: 0; }
+  body > main .map-frame svg { width: 140%; max-width: none; margin-left: -15%; }
   #app .bar #tuneBtn { display: none; }
 }
