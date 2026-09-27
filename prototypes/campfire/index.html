@@ -201,7 +201,7 @@
       item.toggleAttribute("hidden",!show);item.setAttribute("tabindex",show?"0":"-1");
       if(show)restore(item);
     });
-    ring.setAttribute("opacity",next==="wood"||next==="build"||next==="end"?"1":"0");
+    ring.setAttribute("opacity",!finished&&(next==="wood"||next==="build"||next==="end")?"1":"0");
   }
   function place(item){
     if(finished)return;
