@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snorkeling and Diving at Smoke Lake</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --canoe:#c0452b; --muted:#5b6662; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+  .eyebrow { margin:0 0 5px; color:var(--canoe); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { margin:0; font-family:Georgia,serif; }
+  h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+  h2 { font-size:1.2rem; }
+  .lead { margin:8px 0 16px; color:#465556; }
+  .scene { overflow:hidden; border:1px solid #9cb7b9; border-radius:14px; background:#77adb2; }
+  svg { display:block; width:100%; height:auto; }
+  .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
+  .safety { padding:11px 13px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
+  .finds { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0; }
+  button { min-height:52px; padding:10px 12px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; }
+  button:hover:not(:disabled) { background:#e8eee8; }
+  button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
+  button.primary { background:var(--pine); color:white; }
+  button:disabled { opacity:.55; cursor:default; }
+  .status { min-height:55px; margin-top:12px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
+  .cold { margin-top:15px; }
+  .meter-label { display:flex; justify-content:space-between; gap:8px; color:var(--muted); font-size:.9rem; }
+  .track { height:15px; margin-top:6px; overflow:hidden; border-radius:99px; background:#e8e4d9; }
+  .fill { width:0; height:100%; background:linear-gradient(90deg,#72aab0,#e1b05b,#c97562); transition:width .35s ease; }
+  .actions { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .legend { margin-top:8px; color:var(--muted); font-size:.84rem; }
+  @media(max-width:650px) { .finds { grid-template-columns:1fr; } .finds button { min-height:46px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Smoke Lake · Free time</p>
+  <h1>Explore the clear water</h1>
+  <p class="lead">Put on your mask and snorkel. Stay close to shore, keep your buddy in sight, and come up when you start to feel cold.</p>
+  <div class="scene">
+    <svg viewBox="0 0 900 330" role="img" aria-labelledby="scene-title scene-desc">
+      <title id="scene-title">Underwater discoveries in clear Boundary Waters lake water</title>
+      <desc id="scene-desc">A shallow lake bottom with rocks, a sunken log, fish, aquatic plants, and three places to explore.</desc>
+      <defs>
+        <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#9bd0ca"/><stop offset=".46" stop-color="#4f99a3"/><stop offset="1" stop-color="#1d596c"/></linearGradient>
+        <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff7ca" stop-opacity=".45"/><stop offset="1" stop-color="#fff7ca" stop-opacity="0"/></linearGradient>
+      </defs>
+      <rect width="900" height="330" fill="url(#water)"/>
+      <path d="M90 0 220 0 315 260 205 260Z M340 0 420 0 475 245 405 245Z M650 0 760 0 690 245 610 245Z" fill="url(#ray)" opacity=".6"/>
+      <path d="M0 278 Q100 259 194 276 T383 282 T570 269 T760 279 T900 263 L900 330 0 330Z" fill="#c6b587"/>
+      <path d="M0 298 Q140 283 265 300 T510 297 T745 293 T900 285" fill="none" stroke="#ad9b70" stroke-width="3" opacity=".65"/>
+      <g fill="#9b9279" stroke="#706c5e" stroke-width="3">
+        <ellipse cx="110" cy="273" rx="38" ry="21"/><ellipse cx="164" cy="285" rx="30" ry="18"/><ellipse cx="222" cy="273" rx="42" ry="22"/>
+        <ellipse cx="287" cy="289" rx="27" ry="17"/><ellipse cx="582" cy="280" rx="33" ry="17"/><ellipse cx="641" cy="291" rx="39" ry="19"/>
+      </g>
+      <g fill="none" stroke="#5a8058" stroke-width="7" stroke-linecap="round">
+        <path d="M30 292q-9-75 0-125m8 125q13-52 24-77m-12 79q-1-65 3-101"/>
+        <path d="M845 288q-9-70-2-125m12 125q12-44 22-66m-12 67q1-61 5-96"/>
+      </g>
+      <path d="M337 264 Q422 231 508 250 Q564 263 598 253" fill="none" stroke="#6d5037" stroke-width="25" stroke-linecap="round"/>
+      <path d="M344 257 Q425 225 509 244" fill="none" stroke="#987653" stroke-width="8" stroke-linecap="round"/>
+      <g fill="#d4d5b6" opacity=".95">
+        <path d="M379 142q28-25 56 0-28 25-56 0zm49 0 18-13v26z"/><path d="M675 115q22-20 44 0-22 20-44 0zm39 0 15-11v22z"/>
+        <path d="M537 182q18-16 36 0-18 16-36 0zm32 0 13-9v18z"/>
+      </g>
+      <g fill="none" stroke="#e7e0c5" stroke-width="3">
+        <circle id="find-rocks" cx="192" cy="247" r="20" opacity="0"/>
+        <circle id="find-log" cx="469" cy="232" r="20" opacity="0"/>
+        <circle id="find-sand" cx="738" cy="269" r="20" opacity="0"/>
+      </g>
+      <text x="33" y="35" fill="#173d4a" font-family="system-ui" font-size="15" font-weight="700">SUNLIGHT · SHALLOW WATER · STAY NEAR SHORE</text>
+    </svg>
+  </div>
+  <p class="legend">Explore the rocks, the sunken log, or the sandy bottom. The discoveries stay in this activity only.</p>
+  <section class="panel" aria-live="polite">
+    <p class="safety"><strong>Buddy check:</strong> You can see your buddy from shore. The cold meter is a reminder to warm up, not a countdown.</p>
+    <div class="cold">
+      <div class="meter-label"><span>Cold meter</span><strong id="cold-label">Warm and comfortable</strong></div>
+      <div class="track" role="meter" aria-label="Cold meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="cold-fill"></div></div>
+    </div>
+    <p class="meter-label"><span>Discoveries</span><strong id="find-count">0 of 3</strong></p>
+    <div class="finds">
+      <button data-find="rocks" disabled>Look around the rocks</button>
+      <button data-find="log" disabled>Check under the sunken log</button>
+      <button data-find="sand" disabled>Explore the sandy bottom</button>
+    </div>
+    <div class="status" id="status" role="status">Start when your buddy is ready. There’s no rush—surface whenever you like.</div>
+    <div class="actions"><button class="primary" id="dive">Start snorkeling</button></div>
+  </section>
+</main>
+<script>
+(() => {
+  const finds = {
+    rocks:{name:"Freshwater sponge and crayfish",message:"A freshwater sponge clings to the rocks while a crayfish slips into a crack."},
+    log:{name:"A lost fishing lure",message:"Under the sunken log, you spot a lost lure caught in the branches."},
+    sand:{name:"An old canoe paddle",message:"Half-buried in the sand is an old wooden paddle—one for the family journal."}
+  };
+  let diving=false,cold=0,found=new Set();
+  const status=document.getElementById("status"),diveButton=document.getElementById("dive");
+  const coldFill=document.getElementById("cold-fill"),coldLabel=document.getElementById("cold-label");
+  const count=document.getElementById("find-count"),coldMeter=document.querySelector('[role="meter"]');
+  const buttons=[...document.querySelectorAll("[data-find]")];
+  function updateMeter(){
+    coldFill.style.width=cold+"%";
+    coldMeter.setAttribute("aria-valuenow",String(cold));
+    coldLabel.textContent=cold<35?"Warm and comfortable":cold<70?"Starting to feel cool":"Time to warm up";
+  }
+  function updateButton(){
+    if(found.size===3){diveButton.hidden=true;return;}
+    diveButton.hidden=false;
+    diveButton.textContent=diving?"Surface with your buddy":"Warm up, then keep exploring";
+  }
+  diveButton.addEventListener("click",()=>{
+    if(diving){
+      diving=false;status.textContent=found.size===3?"You and your buddy are safely back at shore.":"You surface together and warm up by the rocks. The remaining discoveries can wait.";
+      cold=found.size===3?cold:0;
+      updateMeter();updateButton();buttons.forEach(button=>button.disabled=found.has(button.dataset.find));return;
+    }
+    diving=true;
+    status.textContent="Your buddy is in sight. Choose a place to explore, then surface whenever you want.";
+    buttons.forEach(button=>button.disabled=found.has(button.dataset.find));
+    updateButton();
+  });
+  buttons.forEach(button=>button.addEventListener("click",()=>{
+    const key=button.dataset.find;
+    if(!diving||found.has(key))return;
+    found.add(key);button.disabled=true;cold=Math.min(100,cold+28);
+    document.getElementById("find-"+key).setAttribute("opacity","1");
+    count.textContent=found.size+" of 3";updateMeter();
+    if(found.size===3){
+      diving=false;
+      status.textContent="You found all three discoveries! Your buddy leads you back to shore to warm up.";
+    }else if(cold>=70){
+      diving=false;
+      status.textContent=finds[key].message+" You’re getting cold, so you and your buddy head up and warm up by shore.";
+    }else if(cold>=35){
+      status.textContent=finds[key].message+" You’re starting to feel cool. One more look if you like, then warm up.";
+    }else{
+      status.textContent=finds[key].message+" Your buddy is still right there beside you.";
+    }
+    updateButton();
+  }));
+  updateMeter();updateButton();
+})();
+</script>
+</body>
+</html>
