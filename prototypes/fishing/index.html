@@ -111,7 +111,7 @@
   const catchPct = document.getElementById("catchPct");
 
   function setSpot(value) {
-    spot = value;
+    spot = value; result.hidden = true;
     document.querySelectorAll("[data-spot]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.spot === spot)));
     status.textContent = "You picked the " + labels[spot] + ". " + (spot === "rocks" ? "A good cast lands just beyond the drop-off." : spot === "weeds" ? "Set it down beside the weeds and keep an eye on the line." : "Walleye tend to move in as the light gets low.");
     bobber.setAttribute("opacity","0");
