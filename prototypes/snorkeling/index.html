@@ -21,6 +21,8 @@
   #swimmer:focus-visible { outline:3px solid #f1ebdd; }
   .discovery { opacity:.3; transition:opacity .3s ease; }
   .discovery.seen { opacity:1; }
+  .discovery.near { opacity:.88; cursor:pointer; }
+  .discovery:focus-visible { outline:3px solid #f1ebdd; }
   .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
   .safety { padding:11px 13px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
   .swim-controls { display:flex; gap:8px; margin:12px 0; }
@@ -64,6 +66,45 @@
       box-shadow:0 -4px 10px #faf7ef;
     }
   }
+  html,body { width:100%; height:100%; overflow:hidden; }
+  body { background:#174759; }
+  main { position:relative; width:100%; height:100%; height:100dvh; padding:0; overflow:hidden; }
+  main>.eyebrow,main>h1 { position:absolute; z-index:3; left:max(14px,env(safe-area-inset-left)); margin:0; color:#f1ebdd; text-shadow:0 2px 5px #15343b; }
+  main>.eyebrow { top:max(10px,env(safe-area-inset-top)); color:#f1dfb7; }
+  main>h1 { top:calc(max(10px,env(safe-area-inset-top)) + 17px); font-size:clamp(20px,3vw,30px); }
+  main>.lead,main>.legend { display:none; }
+  .scene { position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:0; }
+  .scene svg { width:100%; height:100%; }
+  .scene svg text { display:none; }
+  .panel { position:static; margin:0; padding:0; border:0; background:transparent; }
+  .panel .safety { position:absolute; z-index:3; top:calc(max(10px,env(safe-area-inset-top)) + 58px); left:max(14px,env(safe-area-inset-left)); max-width:330px; padding:7px 10px; border-left:3px solid #e2c99c; background:#f1ebdded; font-size:.84rem; }
+  .cold { position:absolute; z-index:3; top:calc(max(10px,env(safe-area-inset-top)) + 58px); right:max(14px,env(safe-area-inset-right)); width:min(240px,36%); margin:0; padding:7px 10px; background:#f1ebdded; color:#223d2c; }
+  .cold .meter-label { display:block; font-size:.72rem; }
+  .cold .meter-label strong { display:block; }
+  .panel>.meter-label { position:absolute; z-index:3; top:calc(max(10px,env(safe-area-inset-top)) + 119px); right:max(14px,env(safe-area-inset-right)); padding:5px 8px; background:#f1ebdded; font-size:.78rem; }
+  .panel>.meter-label strong { margin-left:8px; }
+  .status { position:absolute; z-index:4; bottom:calc(91px + env(safe-area-inset-bottom)); left:50%; width:min(560px,calc(100% - 24px)); transform:translateX(-50%); margin:0; min-height:0; padding:9px 12px; border:0; border-left:3px solid #b96848; border-radius:0; background:#f1ebddf2; font-size:.9rem; }
+  .swim-controls,.actions { position:absolute; z-index:5; left:50%; bottom:max(15px,env(safe-area-inset-bottom)); width:min(400px,calc(100% - 24px)); transform:translateX(-50%); display:flex; gap:9px; margin:0; padding:0; background:transparent; }
+  .swim-controls button,.actions button { flex:1; min-height:56px; border-radius:5px; }
+  .actions:not([hidden])+.swim-controls { display:none; }
+  body.diving .actions { left:auto; right:max(14px,env(safe-area-inset-right)); top:calc(max(10px,env(safe-area-inset-top)) + 157px); bottom:auto; width:auto; transform:none; }
+  body.diving .actions button { min-height:44px; padding:6px 9px; font-size:.8rem; }
+  @media(max-width:700px) {
+    body>main { padding:0; }
+    .panel .safety { top:calc(max(10px,env(safe-area-inset-top)) + 58px); right:12px; max-width:none; }
+    .cold { top:calc(max(10px,env(safe-area-inset-top)) + 101px); left:12px; right:auto; width:min(235px,66%); }
+    .panel>.meter-label { top:calc(max(10px,env(safe-area-inset-top)) + 101px); }
+    .status { position:absolute; bottom:calc(92px + env(safe-area-inset-bottom)); left:50%; right:auto; width:calc(100% - 24px); transform:translateX(-50%); box-shadow:0 3px 8px #16374333; }
+    .swim-controls,.actions { position:absolute; left:50%; right:auto; bottom:max(12px,env(safe-area-inset-bottom)); width:calc(100% - 24px); transform:translateX(-50%); padding:0; background:transparent; }
+    body.diving .actions { top:calc(max(10px,env(safe-area-inset-top)) + 150px); right:12px; left:auto; bottom:auto; width:auto; transform:none; }
+  }
+  @media(max-width:390px) { .panel>.meter-label { top:calc(max(10px,env(safe-area-inset-top)) + 146px); right:12px; } }
+  @media(max-height:520px) and (orientation:landscape) {
+    .panel .safety { display:none; }
+    .cold { top:62px; right:12px; left:auto; width:170px; }
+    .panel>.meter-label { display:none; }
+    .status { left:12px; bottom:74px; width:240px; transform:none; }
+  }
 </style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
@@ -98,17 +139,20 @@
         <path d="M379 142q28-25 56 0-28 25-56 0zm49 0 18-13v26z"/><path d="M675 115q22-20 44 0-22 20-44 0zm39 0 15-11v22z"/>
         <path d="M537 182q18-16 36 0-18 16-36 0zm32 0 13-9v18z"/>
       </g>
-      <g class="discovery" id="find-rocks">
+      <g class="discovery" id="find-rocks" role="button" tabindex="0" aria-label="Look among the rocks">
         <path d="M165 254q28-35 55 0" fill="none" stroke="#cbbfa0" stroke-width="5"/>
         <path d="M185 251q-15-18 0-20m7 16q20-16 15-21" fill="none" stroke="#d5b59a" stroke-width="4"/>
+        <rect x="145" y="205" width="100" height="86" fill="transparent"/>
       </g>
-      <g class="discovery" id="find-log">
+      <g class="discovery" id="find-log" role="button" tabindex="0" aria-label="Look under the sunken log">
         <path d="M451 232l21-14 18 4-21 19Z" fill="#c8a77e" stroke="#513c2d" stroke-width="3"/>
         <path d="M470 220l11-15" stroke="#d5c8a1" stroke-width="3"/>
+        <rect x="419" y="185" width="104" height="83" fill="transparent"/>
       </g>
-      <g class="discovery" id="find-sand">
+      <g class="discovery" id="find-sand" role="button" tabindex="0" aria-label="Look along the sandy bottom">
         <path d="M700 262q30 12 68 0" fill="none" stroke="#e2cc9a" stroke-width="6"/>
         <path d="M735 270l21-34m-21 34-14 15" stroke="#6b513c" stroke-width="7" stroke-linecap="round"/>
+        <rect x="685" y="219" width="103" height="85" fill="transparent"/>
       </g>
       <g id="buddy" fill="#eddfb4" opacity=".8"><circle cx="71" cy="170" r="10"/><path d="M77 178l30 10-12 6-30-8Z"/><path d="M66 182l-15 14m14-12-6 20" stroke="#355767" stroke-width="5"/></g>
       <g id="swimmer" role="button" tabindex="0" aria-label="Swimmer. Drag or use arrow keys to explore." fill="#f1e2bf">
@@ -140,20 +184,21 @@
 (() => {
   const finds={
     rocks:"A crayfish darts beneath the rocks. A freshwater sponge holds fast beside it.",
-    log:"An old fishing lure is caught in the sunken branches. You leave it there.",
+    log:"An old fishing lure is snagged beneath the log. You tell Dad instead of reaching into the branches.",
     sand:"A weathered canoe paddle lies half buried in the sand. You tell Dad where you saw it."
   };
   const points={rocks:[192,247],log:[469,232],sand:[738,269]};
   const scene=document.querySelector(".scene svg"),swimmer=document.getElementById("swimmer"),buddy=document.getElementById("buddy");
+  document.querySelectorAll(".discovery").forEach(item=>scene.append(item));
   const status=document.getElementById("status"),action=document.getElementById("dive");
   const controls=document.querySelector(".swim-controls"),count=document.getElementById("find-count");
   const meter=document.querySelector('[role="meter"]'),fill=document.getElementById("cold-fill"),label=document.getElementById("cold-label");
-  let x=121,y=167,cold=0,diving=false,warming=false,finished=false,drag=null;
+  let x=121,y=167,cold=0,diving=false,warming=false,finished=false,drag=null,nearKey=null;
   const found=new Set(),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   function camera(){
-    const narrow=window.matchMedia("(max-width:650px)").matches;
-    scene.setAttribute("viewBox",narrow?(clamp(x-290,0,380)+" 0 520 330"):"0 0 900 330");
-    scene.setAttribute("preserveAspectRatio",narrow?"xMidYMid slice":"xMidYMid meet");
+    const rect=scene.getBoundingClientRect(),width=clamp(330*rect.width/Math.max(rect.height,1),150,900);
+    scene.setAttribute("viewBox",clamp(x-width*.5,0,900-width)+" 0 "+width+" 330");
+    scene.setAttribute("preserveAspectRatio","xMidYMid meet");
   }
   window.addEventListener("resize",camera);camera();
   function local(event){
@@ -179,9 +224,12 @@
     swimmer.setAttribute("transform","translate("+(x-121)+" "+(y-167)+")");
     buddy.setAttribute("transform","translate("+(x-121)+" "+(y-167)+")");
     camera();
+    nearKey=null;
     for(const [key,[fx,fy]] of Object.entries(points)){
-      if(!found.has(key)&&Math.hypot(x-fx,y-fy)<64){discover(key);break;}
+      if(!found.has(key)&&Math.hypot(x-fx,y-fy)<76){nearKey=key;break;}
     }
+    document.querySelectorAll(".discovery").forEach(item=>item.classList.toggle("near",item.id==="find-"+nearKey));
+    if(nearKey)status.textContent="Something catches your eye. Tap "+({rocks:"the rocks",log:"the sunken log",sand:"the sandy bottom"}[nearKey])+" to look closer.";
     meterUpdate();
     if(cold>=72&&diving){
       diving=false;warming=true;
@@ -190,8 +238,15 @@
     }
   }
   function discover(key){
+    if(!diving||found.has(key))return;
+    if(nearKey!==key){
+      status.textContent="Swim closer with your buddy before you inspect that spot.";
+      return;
+    }
     found.add(key);cold=clamp(cold+24,0,100);
     document.getElementById("find-"+key).classList.add("seen");
+    document.getElementById("find-"+key).classList.remove("near");
+    nearKey=null;
     count.textContent=found.size+" of 3";
     status.textContent=finds[key];
     if(found.size===3){
@@ -220,15 +275,22 @@
   });
   document.getElementById("swim-left").addEventListener("click",()=>move(x-56,210));
   document.getElementById("swim-right").addEventListener("click",()=>move(x+56,210));
+  Object.keys(points).forEach(key=>{
+    const item=document.getElementById("find-"+key);
+    item.addEventListener("click",()=>discover(key));
+    item.addEventListener("keydown",event=>{
+      if(event.key==="Enter"||event.key===" "){event.preventDefault();discover(key);}
+    });
+  });
   swimmer.addEventListener("pointerdown",event=>{
     if(!diving)return;
-    const p=local(event);
-    drag={id:event.pointerId,dx:x-p.x,dy:y-p.y};
+    const rect=scene.getBoundingClientRect(),view=scene.viewBox.baseVal;
+    drag={id:event.pointerId,clientX:event.clientX,clientY:event.clientY,startX:x,startY:y,scaleX:rect.width/view.width,scaleY:rect.height/view.height};
     swimmer.setPointerCapture(event.pointerId);
   });
   swimmer.addEventListener("pointermove",event=>{
     if(!drag||drag.id!==event.pointerId)return;
-    const p=local(event);move(p.x+drag.dx,p.y+drag.dy);
+    move(drag.startX+(event.clientX-drag.clientX)/drag.scaleX,drag.startY+(event.clientY-drag.clientY)/drag.scaleY);
   });
   swimmer.addEventListener("pointerup",()=>{drag=null;});
   swimmer.addEventListener("pointercancel",()=>{drag=null;});
