@@ -52,6 +52,8 @@
       left:12px; right:12px; margin:0; padding:8px 0;
       background:#faf7ef;
     }
+    .stroke-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .stroke-controls button { min-width:0; font-size:.9rem; }
     .action { display:block; }
     .action button { width:100%; }
     .tent-controls { display:grid; grid-template-columns:1fr 1fr; }
@@ -137,8 +139,8 @@
     <p class="field-note">A thin curl of smoke rises at the first campsite. Farther on, granite reaches the water and the fire grate looks empty.</p>
     <p class="instruction">Swipe down beside the canoe to paddle. A left stroke turns you right; a right stroke turns you left.</p>
     <div class="stroke-controls" aria-label="Paddle controls">
-      <button type="button" id="stroke-left">Paddle on the left</button>
-      <button type="button" id="stroke-right">Paddle on the right</button>
+      <button type="button" id="stroke-left" aria-label="Paddle on the left">Left stroke</button>
+      <button type="button" id="stroke-right" aria-label="Paddle on the right">Right stroke</button>
     </div>
     <p class="status" id="water-status" role="status">Find the open site. Watch the shore as you paddle.</p>
     <div class="action"><button type="button" class="primary" id="land" hidden>Pull the canoe ashore</button></div>
