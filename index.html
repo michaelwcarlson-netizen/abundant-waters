@@ -89,7 +89,7 @@
   </main>
   <footer class="footer">Your trip progress stays in this browser tab. Refreshing starts a new day.</footer>
   <section class="level-player" id="level-player" role="dialog" aria-modal="true" aria-label="Level player" hidden>
-    <div class="level-toolbar"><strong id="level-title">Trip activity</strong><button class="button" id="level-exit" type="button">Exit Full Screen</button></div>
+    <div class="level-toolbar"><strong id="level-title">Trip activity</strong><div class="level-tools"><button class="button" id="level-continue" type="button" hidden>Continue trip</button><button class="button" id="level-exit" type="button" aria-label="Exit Full Screen and return to trip">Exit Full Screen</button></div></div>
     <div class="level-stage" id="level-stage"></div>
   </section>
   <script src="immersive-player.js"></script>
@@ -115,12 +115,12 @@
         { phase: "Read the map", title: "Find your way to the landing", description: activities.navigation.description, activity: "navigation" },
         { phase: "The portage", title: "Cross to Smoke", description: activities.portage.description, activity: "portage" },
         { phase: "Smoke Lake", title: "Find a campsite", description: activities.arrival.description, activity: "arrival" },
-        { phase: "Make camp", title: "Get the tarp ready", description: activities.tarp.description, activity: "tarp" },
+        { phase: "Make camp", title: "Pitch for the afternoon rain", description: activities.tarp.description, activity: "tarp" },
         { phase: "Free time", title: "Fish the shoreline", description: activities.fishing.description, activity: "fishing" },
         { phase: "Explore the water", title: "Snorkel with your buddy", description: activities.snorkeling.description, activity: "snorkeling" },
         { phase: "Supper time", title: "Make dinner together", description: activities.campfire.description, activity: "campfire" },
-        { phase: "Evening at camp", title: "Hang the food", description: activities.bear.description, activity: "bear" },
         { phase: "Night at camp", title: "Look up for a while", description: activities.night.description, activity: "night" },
+        { phase: "Before bed", title: "Hang the food", description: activities.bear.description, activity: "bear" },
         { phase: "Next morning", title: "Wait out the storm", description: activities.storm.description, activity: "storm" },
         { phase: "Day complete", title: "The storm has passed", description: "You read the weather, got off the water, and waited together under the tarp. The sky is clearing over Smoke Lake.", activity: null }
       ];
@@ -128,6 +128,8 @@
       let paddleChoice = "jstroke";
       let dinnerFish = null;
       let tentPlacement = null;
+      let tarpResult = null;
+      const completed = new Set();
       const panel = document.getElementById("panel");
       const next = document.getElementById("next");
       const back = document.getElementById("back");
@@ -139,6 +141,13 @@
       });
       window.addEventListener("message", (event) => {
         if (event.origin !== location.origin || event.source !== player.iframe?.contentWindow) return;
+        if (event.data?.type === "abundant-waters:activity-complete") {
+          completed.add(stepIndex === 1 ? paddleChoice : steps[stepIndex].activity);
+          if (steps[stepIndex].activity === "tarp" && Number.isInteger(event.data.detail?.dryPeople) &&
+              event.data.detail.dryPeople >= 0 && event.data.detail.dryPeople <= 6) tarpResult = event.data.detail;
+          player.markComplete();
+          next.textContent = "Continue trip";
+        }
         if (steps[stepIndex].activity === "fishing" && event.data?.type === "abundant-waters:fish-landed" &&
             ["Smallmouth bass", "Northern pike", "Walleye"].includes(event.data.fish)) dinnerFish = event.data.fish;
         if (steps[stepIndex].activity === "arrival" && event.data?.type === "abundant-waters:tent-placed" &&
@@ -155,16 +164,17 @@
         document.getElementById("phase").textContent = step.phase;
         document.getElementById("count").textContent = stepIndex === 0 ? "Ready when you are" : "Part " + stepIndex + " of " + (steps.length - 1);
         document.getElementById("intro").textContent = stepIndex === 0
-          ? "Break camp, paddle north, read the shoreline, cross the portage, find a campsite, and settle in before evening. Watch the sky after the bear hang; the storm comes next morning. Take your time."
+          ? "Break camp, paddle north, read the shoreline, cross the portage, find a campsite, and settle in before evening. Find north before bed; the storm comes next morning. Take your time."
           : "The day unfolds at your pace. Finish an activity when you’re ready, then continue the trip.";
         fill.style.width = (stepIndex / (steps.length - 1) * 100) + "%";
         progress.setAttribute("aria-valuenow", String(stepIndex));
         back.hidden = stepIndex === 0;
-        next.textContent = stepIndex === 0 ? "Start the day" : stepIndex === steps.length - 1 ? "Start over" : "Finished — continue";
+        next.textContent = stepIndex === 0 ? "Start the day" : stepIndex === steps.length - 1 ? "Start over" :
+          completed.has(stepIndex === 1 ? paddleChoice : step.activity) ? "Continue trip" : "Continue when ready";
         panel.innerHTML = "";
 
         if (stepIndex === 0) {
-          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Morning on a Boundary Waters lake"><span>Morning light on Sawbill Lake</span></div><h2>First light, first paddle</h2><p class="intro">Your family is packed and ready. Today you’ll paddle to the portage, carry across to Smoke, and make camp before nightfall.</p><ul class="checklist"><li>No timers or fail states</li><li>Play each activity in any order you like</li><li>Refresh any time to begin a fresh trip</li></ul>';
+          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Morning on a Boundary Waters lake"><span>Morning light on Sawbill Lake</span></div><h2>First light, first paddle</h2><p class="intro">Your family is packed and ready. Today you’ll paddle to the portage, carry across to Smoke, and make camp before nightfall.</p><ul class="checklist"><li>Each stop moves at your pace; the tarp has its own weather clock</li><li>Return to a level without losing your place</li><li>Refresh for a fresh trip</li></ul>';
         } else if (step.activity) {
           const activityKey = stepIndex === 1 ? paddleChoice : step.activity;
           const activity = activities[activityKey];
@@ -175,10 +185,16 @@
               button("Bow & Stern", "bowstern", paddleChoice === "bowstern") + '</div>';
           }
           const activityUrl = activity.path + (activityKey === "campfire" && dinnerFish ? "?fish=" + encodeURIComponent(dinnerFish) :
-            activityKey === "storm" && tentPlacement ? "?tent=" + encodeURIComponent(tentPlacement) : "");
+            activityKey === "storm" ? "?" + new URLSearchParams({
+              ...(tentPlacement ? { tent: tentPlacement } : {}),
+              ...(tarpResult ? { dry: String(tarpResult.dryPeople) } : {})
+            }) : "");
           panel.innerHTML = '<div class="activity-heading"><div><p class="eyebrow">Trip activity</p><h2>' + activity.name + '</h2><p>' + activity.description + '</p></div><button class="button secondary fullscreen-open" type="button">Full Screen</button></div>' + choices +
             '<div class="activity-launch"><button class="button start-level" type="button">' + (player.isCurrent(activityKey) ? "Resume Level" : "Start Level") + '</button></div>';
-          const launch = () => player.open({ key: activityKey, name: activity.name, url: activityUrl });
+          const launch = () => {
+            player.open({ key: activityKey, name: activity.name, url: activityUrl });
+            if (completed.has(activityKey)) player.markComplete();
+          };
           panel.querySelector(".start-level").addEventListener("click", launch);
           panel.querySelector(".fullscreen-open").addEventListener("click", launch);
           panel.querySelectorAll("[data-paddle]").forEach((choice) => choice.addEventListener("click", () => {
@@ -187,13 +203,24 @@
             render();
           }));
         } else {
-          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good couple of days</h2><p class="intro">You made it to Smoke Lake together and rode out the storm. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Read the map and found the landing</li><li>Traveled from Sawbill to Smoke</li><li>Made camp, explored the lake, and cooked dinner</li><li>Hung the food and found north by starlight</li><li>Got off the water and waited out the storm</li><li>Ready to paddle on when the weather clears</li></ul>';
+          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good couple of days</h2><p class="intro">The lake is quiet again. You can still hear rain dripping from the pines.</p><p class="trip-memory"></p>';
+          const memories = [
+            ["navigation", "You found the landing by reading the shoreline."],
+            ["arrival", "You chose existing bare ground for the tent."],
+            ["fishing", "A fish came to the net."],
+            ["campfire", "Supper was shared and the fire was put out."],
+            ["night", "You followed the Dipper to north."],
+            ["bear", "You hung the food before bed."],
+            ["storm", "You stayed ashore until the storm passed."]
+          ].filter(([key]) => completed.has(key)).map(([, line]) => line);
+          panel.querySelector(".trip-memory").textContent = memories.length
+            ? memories.join(" ") : "Take another look at the route whenever you like.";
         }
       }
 
       next.addEventListener("click", () => {
         player.dispose();
-        if (stepIndex === steps.length - 1) { stepIndex = 0; dinnerFish = null; tentPlacement = null; }
+        if (stepIndex === steps.length - 1) { stepIndex = 0; dinnerFish = null; tentPlacement = null; tarpResult = null; completed.clear(); }
         else stepIndex = Math.min(stepIndex + 1, steps.length - 1);
         render();
         window.scrollTo({ top: 0, behavior: "smooth" });
