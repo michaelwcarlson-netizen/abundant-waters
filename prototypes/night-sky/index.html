@@ -2,158 +2,133 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#182d36">
 <title>Night Sky at Smoke Lake — Abundant Waters</title>
 <style>
-  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; --muted:#5b6662; }
-  * { box-sizing:border-box; }
-  body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
-  main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
-  .eyebrow { margin:0 0 5px; color:var(--clay); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
-  h1,h2 { margin:0; font-family:Georgia,serif; }
-  h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
-  h2 { font-size:1.2rem; }
-  .lead { margin:8px 0 16px; color:#465556; }
-  .scene { position:relative; aspect-ratio:800/460; min-height:320px; overflow:hidden; border:1px solid #536568; border-radius:14px; background:radial-gradient(ellipse at 64% 58%,#2b4350 0%,#1a303d 62%,#142731 100%); }
-  .sky, .lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-  .sky { opacity:.95; }
-  .lines { overflow:visible; }
-  .shore { position:absolute; right:0; bottom:0; left:0; height:15%; background:#152923; clip-path:polygon(0 45%,8% 20%,13% 53%,23% 29%,29% 58%,39% 26%,46% 61%,54% 36%,63% 63%,72% 30%,82% 56%,91% 24%,100% 48%,100% 100%,0 100%); }
-  .water { position:absolute; right:0; bottom:0; left:0; height:5%; background:#254752; opacity:.65; }
-  .star { position:absolute; z-index:1; display:grid; place-items:center; width:44px; height:44px; padding:0; transform:translate(-50%,-50%); border:0; border-radius:50%; background:transparent; color:#f3e9c8; cursor:pointer; }
-  .star::before { content:""; width:8px; height:8px; border-radius:50%; background:currentColor; box-shadow:0 0 0 3px #f3e9c829,0 0 12px #f3e9c8a8; transition:box-shadow .2s,transform .2s; }
-  .star:hover::before, .star:focus-visible::before { transform:scale(1.5); box-shadow:0 0 0 8px #f3e9c839,0 0 18px #f3e9c8; }
-  .star:focus-visible { outline:2px solid #f3e9c8; outline-offset:1px; }
-  .star.found::before { width:10px; height:10px; background:#fff9df; box-shadow:0 0 0 6px #fff9df35,0 0 20px #fff9df; }
-  .star.next::after { content:""; position:absolute; inset:4px; border:1px solid #e9dfb789; border-radius:50%; }
-  .star.polaris { color:#e3d4ac; }
-  .star.polaris::before { width:10px; height:10px; }
-  .star.polaris[hidden] { display:none; }
-  .caption { margin:8px 0 0; color:var(--muted); font-size:.86rem; }
-  .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
-  .status { min-height:55px; margin:12px 0; padding:12px 14px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
-  .note { color:var(--muted); }
-  .field-note { margin:14px 0 0; padding:14px 16px; border:1px solid var(--line); background:#f7f4eb; }
-  .field-note p { margin:.5em 0 0; }
-  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
-  button.action { min-height:48px; padding:10px 15px; border:1px solid var(--pine); border-radius:9px; background:var(--pine); color:white; font:inherit; font-weight:750; cursor:pointer; }
-  button.action.secondary { background:#f7f4eb; color:var(--pine); }
-  button.action:focus-visible { outline:3px solid var(--clay); outline-offset:2px; }
-  [hidden] { display:none !important; }
-  @media(max-width:500px) { .scene { aspect-ratio:auto; height:360px; } .star { width:40px; height:40px; } }
-  @media(prefers-reduced-motion:reduce) { .star::before { transition:none; } }
+  :root { --paper:#f1ebdd; --ink:#1c2a2e; --pine:#223d2c; --clay:#c0452b; }
+  * { box-sizing:border-box; } [hidden] { display:none!important; }
+  html,body { width:100%; height:100%; margin:0; overflow:hidden; }
+  body { color:var(--paper); background:#152730; font:15px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  button { font:inherit; cursor:pointer; touch-action:manipulation; }
+  button:focus-visible { outline:3px solid #d4a66b; outline-offset:3px; }
+  .scene { position:relative; width:100%; height:100%; height:100dvh; min-height:320px; overflow:hidden; touch-action:none; background:radial-gradient(ellipse at 55% 45%,#354f55,#1b333f 66%,#122631); }
+  .sky { position:absolute; inset:0; width:100%; height:100%; opacity:.66; pointer-events:none; }
+  .constellation { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .constellation polyline,.constellation line { fill:none; stroke:#eee2bb; stroke-width:.19; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 0 2px #fff5cb); }
+  #pointer { stroke-dasharray:.75 .75; opacity:.8; }
+  .horizon { position:absolute; left:0; right:0; bottom:0; height:23%; background:#142a29; clip-path:polygon(0 32%,5% 26%,11% 40%,16% 19%,22% 43%,29% 24%,35% 48%,40% 31%,47% 52%,53% 27%,59% 47%,66% 24%,71% 48%,78% 20%,84% 42%,91% 25%,100% 46%,100% 100%,0 100%); }
+  .horizon:after { content:""; position:absolute; inset:50% 0 0; background:#112a31; }
+  .water { position:absolute; bottom:0; left:0; right:0; height:9%; background:repeating-linear-gradient(175deg,#23495455 0 2px,#153740a8 3px 14px); }
+  .stone { position:absolute; bottom:0; left:-4%; width:47%; height:12%; background:#404b43; clip-path:polygon(0 65%,13% 48%,22% 24%,42% 20%,57% 35%,68% 22%,91% 32%,100% 100%,0 100%); }
+  .star { position:absolute; z-index:2; width:48px; height:48px; padding:0; transform:translate(-50%,-50%); border:0; border-radius:50%; background:transparent; color:#fff0c6; touch-action:none; }
+  .star:before { content:""; display:block; width:7px; height:7px; margin:auto; border-radius:50%; background:currentColor; box-shadow:0 0 8px 2px #fff2c482; }
+  .star.found:before { width:11px; height:11px; box-shadow:0 0 0 5px #fff3c135,0 0 14px 4px #fff1bb; }
+  .star:hover:before,.star:focus-visible:before { transform:scale(1.45); }
+  .star.polaris:before { width:10px; height:10px; box-shadow:0 0 14px 3px #fff2c6; }
+  .star.polaris.found:before { width:15px; height:15px; }
+  .top { position:absolute; z-index:3; top:0; left:0; right:0; display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 12px; padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left)); background:linear-gradient(#11252bdf,#11252b00); pointer-events:none; }
+  .top h1 { margin:0; font:700 clamp(20px,3vw,29px) Georgia,serif; }
+  .top p { margin:0; color:#d8d4c2; font-size:.83rem; }
+  .bottom { position:absolute; z-index:4; left:0; right:0; bottom:0; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:12px max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); background:linear-gradient(transparent,#112625d9 18%,#102524ee); }
+  .bottom p { margin:0; max-width:590px; text-shadow:0 1px 3px #061923; }
+  .bottom strong { display:block; margin-bottom:3px; font:700 18px Georgia,serif; }
+  .bottom button { flex:none; min-height:48px; padding:8px 14px; border:1px solid #dbcaa8; border-radius:4px; color:#20362c; background:#eee2ca; font-weight:750; }
+  .hint { position:absolute; z-index:3; top:calc(max(12px,env(safe-area-inset-top)) + 60px); left:max(16px,env(safe-area-inset-left)); max-width:320px; padding:8px 11px; border-left:3px solid #c1a37b; color:#e6dcc5; background:#1a3339d9; font-size:13px; pointer-events:none; }
+  @media(max-width:600px) {
+    .top p { width:100%; }
+    .hint { top:calc(max(12px,env(safe-area-inset-top)) + 73px); max-width:58%; font-size:12px; }
+    .star { width:46px; height:46px; }
+    .bottom { align-items:stretch; flex-direction:column; gap:8px; font-size:14px; }
+    .bottom button { align-self:flex-start; }
+  }
+  @media(max-height:530px) and (orientation:landscape) {
+    .top p { display:none; }
+    .hint { top:45px; }
+    .bottom { max-height:105px; }
+  }
 </style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
 <body>
-<main>
-  <p class="eyebrow">Smoke Lake · First night</p>
-  <h1>Look up for a while</h1>
-  <p class="lead">The fire is out. Before hanging the food pack, you and Dad linger at the granite shore. Above the pines, a few stars are bright enough to follow.</p>
-  <div class="scene" id="scene" role="group" aria-label="Night sky with seven Big Dipper stars and the North Star">
-    <svg class="sky" viewBox="0 0 800 460" preserveAspectRatio="none" aria-hidden="true">
-      <g fill="#dfdbcb" opacity=".52">
-        <circle cx="50" cy="57" r="1.2"/><circle cx="91" cy="137" r="1"/><circle cx="150" cy="39" r="1.5"/>
-        <circle cx="216" cy="137" r="1"/><circle cx="279" cy="77" r="1.1"/><circle cx="346" cy="161" r="1.1"/>
-        <circle cx="411" cy="48" r="1"/><circle cx="472" cy="126" r="1.3"/><circle cx="544" cy="59" r="1"/>
-        <circle cx="636" cy="138" r="1"/><circle cx="756" cy="157" r="1.3"/><circle cx="714" cy="257" r="1"/>
-        <circle cx="616" cy="289" r="1"/><circle cx="390" cy="321" r="1.2"/><circle cx="205" cy="295" r="1"/>
-        <circle cx="72" cy="296" r="1.1"/><circle cx="493" cy="251" r="1"/><circle cx="312" cy="249" r="1.2"/>
-      </g>
-    </svg>
-    <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <polyline id="dipper-line" fill="none" stroke="#e9dfb7" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>
-      <line id="bowl-close" x1="49" y1="43" x2="52" y2="35" stroke="#e9dfb7" stroke-width=".3" opacity="0"/>
-      <line id="north-line" x1="66" y1="44" x2="78" y2="12" stroke="#e9dfb7" stroke-width=".25" stroke-dasharray="1 1" opacity="0"/>
-    </svg>
-    <div class="shore"></div><div class="water"></div>
-    <button type="button" class="star" data-star="0" style="left:13%;top:42%" aria-label="First star, end of the handle"></button>
-    <button type="button" class="star" data-star="1" style="left:24%;top:31%" aria-label="Second star, bend in the handle"></button>
-    <button type="button" class="star" data-star="2" style="left:39%;top:38%" aria-label="Third star, near the bowl"></button>
-    <button type="button" class="star" data-star="3" style="left:52%;top:35%" aria-label="Fourth star, top of the bowl"></button>
-    <button type="button" class="star" data-star="4" style="left:69%;top:36%" aria-label="Fifth star, outer top of the bowl"></button>
-    <button type="button" class="star" data-star="5" style="left:66%;top:44%" aria-label="Sixth star, outer bottom of the bowl"></button>
-    <button type="button" class="star" data-star="6" style="left:49%;top:43%" aria-label="Seventh star, bottom of the bowl"></button>
-    <button type="button" class="star polaris" id="polaris" style="left:78%;top:12%" aria-label="Bright star above the bowl, Polaris" hidden></button>
-  </div>
-  <p class="caption">An illustrated sky to explore, not a scale star chart. Tap or tab to the stars.</p>
-  <section class="panel" aria-live="polite">
-    <h2 id="heading">Trace the dipper</h2>
-    <p class="lead" id="instruction">Start at the left end of the handle. Follow its bend toward the four stars that make the bowl.</p>
-    <p class="status" id="status" role="status">Take your time. The stars will wait.</p>
-    <div class="field-note" id="note" hidden>
-      <h2>Field note · Finding north</h2>
-      <p>The two stars on the outer side of the Big Dipper’s bowl point toward Polaris. It sits almost above Earth’s north axis, so it can help you find north on a clear night.</p>
-    </div>
-    <p class="note" id="quiet" hidden>The lake has gone still. Somewhere across the water, a loon calls once.</p>
-    <div class="actions">
-      <button class="action" id="pause" type="button" hidden>Stay a moment</button>
-      <button class="action secondary" id="again" type="button" hidden>Trace it again</button>
-    </div>
-  </section>
-</main>
+<div class="scene" id="scene" role="group" aria-label="Night sky over Smoke Lake; trace the Big Dipper and find Polaris">
+  <svg class="sky" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <g fill="#e1dfd0"><circle cx="5" cy="12" r=".13"/><circle cx="8" cy="32" r=".1"/><circle cx="18" cy="18" r=".12"/><circle cx="27" cy="24" r=".13"/><circle cx="33" cy="14" r=".09"/><circle cx="42" cy="24" r=".12"/><circle cx="48" cy="13" r=".1"/><circle cx="58" cy="18" r=".12"/><circle cx="63" cy="25" r=".09"/><circle cx="73" cy="29" r=".1"/><circle cx="87" cy="13" r=".13"/><circle cx="94" cy="26" r=".1"/><circle cx="84" cy="40" r=".13"/><circle cx="91" cy="51" r=".1"/><circle cx="74" cy="56" r=".12"/><circle cx="53" cy="57" r=".13"/><circle cx="29" cy="55" r=".1"/><circle cx="16" cy="52" r=".12"/><circle cx="9" cy="66" r=".12"/><circle cx="61" cy="65" r=".11"/><circle cx="92" cy="67" r=".1"/></g>
+  </svg>
+  <svg class="constellation" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <polyline id="trace" points=""/>
+    <line id="close-bowl" x1="49" y1="43" x2="52" y2="35" hidden/>
+    <line id="pointer" x1="66" y1="44" x2="78" y2="18" hidden/>
+  </svg>
+  <div class="horizon"></div><div class="water"></div><div class="stone"></div>
+  <button class="star" data-star="0" style="left:13%;top:42%" aria-label="Star at end of Dipper handle"></button>
+  <button class="star" data-star="1" style="left:24%;top:31%" aria-label="Star in Dipper handle"></button>
+  <button class="star" data-star="2" style="left:39%;top:38%" aria-label="Star at start of Dipper bowl"></button>
+  <button class="star" data-star="3" style="left:52%;top:35%" aria-label="Star on top of Dipper bowl"></button>
+  <button class="star" data-star="4" style="left:69%;top:36%" aria-label="Outer top star of Dipper bowl"></button>
+  <button class="star" data-star="5" style="left:66%;top:44%" aria-label="Outer bottom star of Dipper bowl"></button>
+  <button class="star" data-star="6" style="left:49%;top:43%" aria-label="Bottom star of Dipper bowl"></button>
+  <button class="star polaris" id="polaris" style="left:78%;top:18%" aria-label="Polaris, North Star"></button>
+  <div class="top"><h1>Look up for a while</h1><p>Smoke Lake · the first night with Dad</p></div>
+  <div class="hint" id="hint">Begin at the far left of the handle. Trace through the bright stars toward the bowl.</div>
+  <div class="bottom"><p role="status" aria-live="polite"><strong id="chapter">The Dipper</strong><span id="status">Drag a finger across the stars, or tap them one at a time. Take your time.</span></p><button id="again" hidden>Trace again</button></div>
+</div>
 <script>
 (() => {
   const points=[[13,42],[24,31],[39,38],[52,35],[69,36],[66,44],[49,43]];
-  const stars=[...document.querySelectorAll("[data-star]")];
-  const status=document.getElementById("status");
-  const polaris=document.getElementById("polaris");
-  const line=document.getElementById("dipper-line");
-  const heading=document.getElementById("heading");
-  const instruction=document.getElementById("instruction");
-  let count=0,complete=false;
-  function reset(){
-    count=0;complete=false;line.setAttribute("points","");
-    document.getElementById("bowl-close").setAttribute("opacity","0");
-    document.getElementById("north-line").setAttribute("opacity","0");
-    document.getElementById("note").hidden=true;
-    document.getElementById("quiet").hidden=true;
-    document.getElementById("pause").hidden=true;
-    document.getElementById("again").hidden=true;
-    polaris.hidden=true;polaris.classList.remove("found");
-    stars.forEach((star,i)=>{star.classList.toggle("next",i===0);star.classList.remove("found");});
-    heading.textContent="Trace the dipper";
-    instruction.textContent="Start at the left end of the handle. Follow its bend toward the four stars that make the bowl.";
-    status.textContent="Take your time. The stars will wait.";
+  const scene=document.getElementById("scene"),stars=[...document.querySelectorAll("[data-star]")];
+  const polaris=document.getElementById("polaris"),trace=document.getElementById("trace");
+  const status=document.getElementById("status"),chapter=document.getElementById("chapter"),hint=document.getElementById("hint");
+  let count=0,done=false,dragging=false,dragId=null;
+  function say(text){if(status.textContent!==text)status.textContent=text;}
+  function hit(e){
+    const rect=scene.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*100,y=(e.clientY-rect.top)/rect.height*100;
+    const near=(p)=>Math.hypot((p[0]-x)*rect.width/100,(p[1]-y)*rect.height/100)<Math.max(28,Math.min(42,rect.width*.075));
+    if(count<7){
+      if(near(points[count]))accept(count);
+    }else if(near([78,18]))finish();
   }
-  stars.forEach((star,i)=>star.addEventListener("click",()=>{
-    if(complete)return;
-    if(i!==count){
-      status.textContent=count===0?"Start with the star at the left end of the handle.":"Look for the softly circled star to continue the shape.";
-      return;
-    }
-    star.classList.remove("next");star.classList.add("found");count++;
-    line.setAttribute("points",points.slice(0,count).map(point=>point.join(",")).join(" "));
-    if(count<stars.length){
-      stars[count].classList.add("next");
-      status.textContent=count<3?"Follow the handle toward the bowl.":"Now trace around the bowl.";
-    }else{
-      document.getElementById("bowl-close").setAttribute("opacity","1");
-      polaris.hidden=false;polaris.classList.add("next");
-      heading.textContent="Find the North Star";
-      instruction.textContent="The two stars on the bowl’s outer edge point past the rim. Follow that line to the bright star above.";
-      status.textContent="One more star. Follow the outer edge of the bowl.";
-    }
-  }));
-  polaris.addEventListener("click",()=>{
-    if(count!==stars.length||complete)return;
-    complete=true;polaris.classList.remove("next");polaris.classList.add("found");
-    window.AbundantWaters.complete();
-    document.getElementById("north-line").setAttribute("opacity","1");
-    document.getElementById("note").hidden=false;
-    document.getElementById("pause").hidden=false;
+  function accept(index){
+    if(done||index!==count)return;
+    stars[index].classList.add("found");count++;
+    trace.setAttribute("points",points.slice(0,count).map(p=>p.join(",")).join(" "));
+    if(count===7){
+      document.getElementById("close-bowl").hidden=false;
+      chapter.textContent="Find north";
+      hint.textContent="The two stars on the bowl’s outside edge point beyond it. Follow their line.";
+      say("Follow the outside of the bowl into the sky. Which bright star lies beyond it?");
+    }else if(count<3)say("Follow the bend of the handle toward the bowl.");
+    else say("Keep tracing around the bowl. The stars are beginning to make a shape.");
+  }
+  function finish(){
+    if(done||count<7)return;
+    done=true;polaris.classList.add("found");
+    document.getElementById("pointer").hidden=false;
+    chapter.textContent="North, over the pines";
+    hint.textContent="The outer bowl stars point toward Polaris. It stays nearly fixed as the other stars wheel around it.";
+    say("Dad points over the pines. “That’s north.” A loon calls once across Smoke Lake. You can remember the way back.");
     document.getElementById("again").hidden=false;
-    heading.textContent="North, over the pines";
-    instruction.textContent="You found Polaris. The lake is quiet enough to hear the shore.";
-    status.textContent="The Big Dipper gave you a direction to carry into tomorrow.";
+    window.AbundantWaters.complete();
+  }
+  stars.forEach((star,index)=>star.addEventListener("click",()=>{
+    if(index===count)accept(index);
+    else if(!done)say(count===0?"Start at the left end of the handle.":"Try the next star along the line you are drawing.");
+  }));
+  polaris.addEventListener("click",()=>{if(count===7)finish();else say("First find the Dipper’s bowl. Its outer edge will show the way.");});
+  scene.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".bottom"))return;
+    dragging=true;dragId=e.pointerId;scene.setPointerCapture(e.pointerId);hit(e);
   });
-  document.getElementById("pause").addEventListener("click",()=>{
-    document.getElementById("quiet").hidden=false;
-    document.getElementById("pause").hidden=true;
+  scene.addEventListener("pointermove",e=>{if(dragging&&e.pointerId===dragId)hit(e);});
+  scene.addEventListener("pointerup",e=>{if(dragging&&e.pointerId===dragId)hit(e);dragging=false;dragId=null;});
+  scene.addEventListener("pointercancel",()=>{dragging=false;dragId=null;});
+  document.getElementById("again").addEventListener("click",()=>{
+    count=0;done=false;trace.setAttribute("points","");stars.forEach(star=>star.classList.remove("found"));polaris.classList.remove("found");
+    document.getElementById("close-bowl").hidden=true;document.getElementById("pointer").hidden=true;
+    chapter.textContent="The Dipper";hint.textContent="Begin at the far left of the handle. Trace through the bright stars toward the bowl.";
+    say("Drag a finger across the stars, or tap them one at a time. Take your time.");
+    document.getElementById("again").hidden=true;
   });
-  document.getElementById("again").addEventListener("click",reset);
-  reset();
 })();
 </script>
 <script src="../immersive-bridge.js"></script>
