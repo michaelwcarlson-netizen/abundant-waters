@@ -1,180 +1,197 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Map and Navigation — Abundant Waters</title>
-  <style>
-    :root { --ink:#1c2a2e; --paper:#f1ebdd; --paper2:#e2d8c2; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --canoe:#c0452b; --muted:#5b6662; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:#faf7ef; color:var(--ink); font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
-    main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
-    .eyebrow { margin:0 0 5px; color:var(--canoe); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
-    h1,h2 { margin:0; font-family:Georgia,serif; }
-    h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
-    h2 { font-size:1.2rem; }
-    .lead { margin:8px 0 16px; color:#465556; }
-    .map-frame { overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#e9e2cc; }
-    svg { display:block; width:100%; height:auto; }
-    .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
-    .clue { min-height:60px; margin:8px 0 14px; color:#39494a; }
-    .choices { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    button { min-height:54px; padding:10px 12px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; }
-    button:hover { background:#e8eee8; }
-    button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
-    button.primary { background:var(--pine); color:white; }
-    button:disabled { opacity:.6; cursor:default; }
-    .status { min-height:52px; margin-top:13px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
-    .actions { display:flex; justify-content:flex-end; margin-top:12px; }
-    .map-hit { fill:transparent; cursor:pointer; }
-    .map-hit:hover, .map-hit:focus-visible { stroke:#c0452b; stroke-width:5; outline:none; }
-    .key { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0 0; color:var(--muted); font-size:.82rem; }
-    .key span { display:flex; align-items:center; gap:6px; }
-    .swatch { width:13px; height:13px; display:inline-block; border:1px solid #456; border-radius:50%; background:#f6f0df; }
-    .swatch.player { border-color:#fff; background:var(--canoe); }
-    .swatch.water { border-radius:3px; background:var(--lake); }
-    .swatch.trail { border-radius:2px; background:repeating-linear-gradient(90deg,#945e37 0 3px,transparent 3px 5px); }
-    @media(max-width:650px) { .choices { grid-template-columns:1fr; } button { min-height:48px; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#223d2c">
+<title>Read the Shoreline — Abundant Waters</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; --line:#c9bc9f; }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  html,body { width:100%; height:100%; margin:0; overflow:hidden; }
+  body { color:var(--paper); background:var(--pine); font:16px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  button { min-height:48px; padding:9px 13px; border:1px solid #e2d8c2; border-radius:7px; background:var(--paper); color:var(--pine); font:700 15px/1.2 inherit; cursor:pointer; touch-action:manipulation; }
+  button:focus-visible { outline:3px solid #e4ae65; outline-offset:3px; }
+  button:hover { background:#fff9e9; }
+  #app { position:relative; width:100%; height:100%; overflow:hidden; }
+  #water { display:block; width:100%; height:100%; touch-action:none; }
+  .topbar { position:absolute; z-index:3; top:0; left:0; right:0; display:flex; align-items:center; gap:16px; min-height:66px; padding:8px max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left)); background:#1c2a2edc; backdrop-filter:blur(5px); }
+  .brand { flex:1; min-width:0; }
+  .brand b { display:block; font:700 clamp(17px,2.2vw,22px)/1.1 Georgia,serif; }
+  .brand span { display:block; margin-top:3px; color:#d8dac9; font-size:11px; letter-spacing:.11em; text-transform:uppercase; }
+  .map-button { flex:none; min-width:82px; }
+  .note { position:absolute; z-index:2; left:max(16px,env(safe-area-inset-left)); bottom:calc(18px + env(safe-area-inset-bottom)); max-width:min(480px,calc(100% - 32px)); margin:0; padding:11px 14px; border-left:3px solid #d9ad78; background:#1c2a2ee8; color:#f1ebdd; box-shadow:0 4px 20px #16231f55; }
+  .hint { position:absolute; z-index:2; top:78px; left:max(16px,env(safe-area-inset-left)); padding:6px 10px; background:#f1ebdde8; color:#223d2c; font-size:12px; font-weight:700; }
+  .paddle-controls { position:absolute; z-index:3; right:max(16px,env(safe-area-inset-right)); bottom:calc(18px + env(safe-area-inset-bottom)); display:flex; gap:7px; }
+  .paddle-controls button { min-width:90px; }
+  #land { position:absolute; z-index:4; right:max(16px,env(safe-area-inset-right)); bottom:calc(18px + env(safe-area-inset-bottom)); background:#e6c08a; }
+  .map-sheet { position:absolute; z-index:5; inset:0; display:grid; place-items:center; padding:calc(24px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); background:#172c28bb; }
+  .paper { position:relative; width:min(900px,100%); max-height:100%; overflow:auto; padding:18px; border:1px solid #907f61; background:#e9e1cb; box-shadow:0 16px 50px #09150e88; color:var(--ink); }
+  .paper header { display:flex; align-items:start; gap:16px; }
+  .paper header div { flex:1; }
+  .paper h2 { margin:0; font:700 clamp(20px,3vw,28px)/1.1 Georgia,serif; }
+  .paper p { margin:6px 0 12px; color:#455852; font-size:14px; }
+  #paper-map { width:100%; height:auto; display:block; border:1px solid #b9ad90; background:#e1dac6; }
+  .paper footer { margin-top:9px; color:#455852; font-size:13px; }
+  .end { position:absolute; z-index:6; inset:0; display:grid; place-items:center; padding:20px; background:#1c2a2eb5; }
+  .end article { width:min(470px,100%); padding:25px; border:1px solid #d6c5a0; background:var(--paper); color:var(--ink); }
+  .end h2 { margin:0 0 10px; font:700 29px/1.1 Georgia,serif; }
+  .end p { margin:0; }
+  @media(max-width:700px) {
+    .topbar { min-height:55px; padding-block:5px; }
+    .brand b { font-size:17px; }
+    .brand span { font-size:10px; }
+    .hint { top:65px; font-size:11px; }
+    .note { bottom:calc(79px + env(safe-area-inset-bottom)); left:10px; right:10px; max-width:none; padding:8px 10px; font-size:14px; }
+    .paddle-controls { left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+    .paddle-controls button { min-width:0; padding:7px 4px; font-size:12px; }
+    #land { left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); }
+  }
+  @media(max-width:370px) { .brand span { display:none; } .hint { max-width:calc(100% - 20px); } }
+</style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
 <body>
-<main>
-  <p class="eyebrow">Sawbill → Smoke · Map reading</p>
-  <h1>Read the shoreline</h1>
-  <p class="lead">The paper map and the shore tell the same story. Match the shape you see from the canoe, and follow the lake toward the portage.</p>
-  <div class="map-frame">
-    <svg viewBox="0 0 900 360" role="img" aria-labelledby="map-title map-desc">
-      <title id="map-title">An illustrated route sketch from Sawbill toward Smoke Lake</title>
-      <desc id="map-desc">A winding lake, wooded shore, a sheltered bay, a narrow channel, and a portage trail connecting two lakes.</desc>
-      <rect width="900" height="360" fill="#e9e2cc"/>
-      <g fill="none" stroke="#c8bea4" stroke-width="2" opacity=".65">
-        <path d="M-20 40 Q90 2 190 40 T400 40 T620 30 T920 40"/>
-        <path d="M-30 62 Q90 24 190 62 T400 62 T620 52 T930 62"/>
-        <path d="M-20 310 Q90 272 190 310 T400 310 T620 300 T920 310"/>
-        <path d="M-30 332 Q90 294 190 332 T400 332 T620 322 T930 332"/>
-        <path d="M155 20 Q130 95 168 150 T160 275 Q145 315 174 360"/>
-        <path d="M750 5 Q720 76 760 135 T752 250 Q738 305 768 355"/>
-      </g>
-      <path d="M42 192 C92 149 143 132 203 145 C250 155 274 185 322 184 C370 183 392 145 440 151 C471 155 484 178 510 180 C538 182 550 154 575 146 C624 129 681 143 723 160 C770 179 790 200 856 177 L866 236 C802 258 769 240 721 223 C679 209 630 198 591 211 C561 221 547 250 512 251 C472 253 453 222 425 216 C392 209 367 246 323 251 C271 257 236 224 199 218 C142 208 96 229 51 248Z" fill="#6a97a4" stroke="#2f6575" stroke-width="5"/>
-      <path d="M249 226 C280 209 302 200 332 199 C365 197 387 177 415 174 C440 172 465 190 489 193 C517 196 540 178 561 164" fill="none" stroke="#f1ebdd" stroke-width="3" stroke-dasharray="8 9"/>
-      <path d="M576 145 Q605 111 626 83 Q644 61 667 72 Q687 81 710 104" fill="none" stroke="#98633c" stroke-width="6" stroke-linecap="round" stroke-dasharray="3 8"/>
-      <g fill="#31543d">
-        <path d="M86 143l18-38 18 38z"/><path d="M120 151l16-34 16 34z"/><path d="M186 135l18-39 18 39z"/>
-        <path d="M302 174l14-31 14 31z"/><path d="M380 144l17-36 17 36z"/><path d="M469 147l17-36 17 36z"/>
-        <path d="M635 132l18-38 18 38z"/><path d="M730 154l16-34 16 34z"/><path d="M818 170l18-38 18 38z"/>
-      </g>
-      <g fill="#345e72" font-family="system-ui,sans-serif" font-size="17" font-weight="700">
-        <text x="82" y="283">SAWBILL</text><text x="752" y="286">SMOKE</text>
-      </g>
-      <g fill="#7a4b2b" font-family="system-ui,sans-serif" font-size="14" font-weight="700">
-        <text x="590" y="62">PORTAGE TRAIL</text>
-      </g>
-      <g fill="none" stroke="#fff" stroke-width="3">
-        <circle id="marker0" cx="105" cy="190" r="13"/><circle id="marker1" cx="321" cy="218" r="13"/>
-        <circle id="marker2" cx="512" cy="215" r="13"/><circle id="marker3" cx="584" cy="159" r="13"/>
-      </g>
-      <circle class="map-hit" role="button" tabindex="0" aria-label="Sheltered bay on map" data-map-answer="bay" cx="321" cy="218" r="46"/>
-      <circle class="map-hit" role="button" tabindex="0" aria-label="Narrows on map" data-map-answer="narrows" cx="512" cy="215" r="46"/>
-      <circle class="map-hit" role="button" tabindex="0" aria-label="Portage landing on map" data-map-answer="portage" cx="584" cy="159" r="46"/>
-      <circle id="player" cx="105" cy="190" r="9" fill="#c0452b" stroke="white" stroke-width="3"/>
-      <g transform="translate(835 38)" stroke="#223d2c" stroke-width="3" fill="none">
-        <path d="M0 27V0M-9 10 0 0 9 10"/><text x="-6" y="44" fill="#223d2c" stroke="none" font-family="system-ui" font-size="13" font-weight="700">N</text>
-      </g>
-      <text x="26" y="30" fill="#5b6662" font-family="system-ui" font-size="13">Illustrated route sketch · north ↑</text>
-    </svg>
-  </div>
-  <div class="key" aria-label="Map key">
-    <span><i class="swatch water"></i>Lake</span>
-    <span><i class="swatch trail"></i>Portage trail</span>
-    <span><i class="swatch player"></i>Your canoe</span>
-  </div>
-  <section class="panel" aria-live="polite">
-    <p class="eyebrow" id="checkpoint">Checkpoint 1 of 3</p>
-    <h2 id="question">Look for the sheltered bay</h2>
-    <p class="clue" id="clue">From the canoe, the shore curves away and wraps around a quiet pocket of water. Which map shape matches it?</p>
-    <div class="choices" id="choices">
-      <button data-answer="bay">A wide curve that cups into shore</button>
-      <button data-answer="narrows">Two points drawing close together</button>
-      <button data-answer="portage">A dotted trail reaching the water</button>
+<div id="app">
+  <canvas id="water" tabindex="0" aria-label="Steer the canoe along Sawbill Lake. Tap or drag on the lake to aim, or use the paddle controls."></canvas>
+  <header class="topbar"><div class="brand"><b>Read the shoreline</b><span>Sawbill Lake · toward the portage</span></div><button class="map-button" id="map-toggle" type="button" aria-expanded="false">Paper map</button></header>
+  <div class="hint" id="hint">Tap water ahead to steer · Arrow keys also work</div>
+  <p class="note" id="status" role="status">Dad steadies the map on the thwart. Follow the north shore and watch for a sheltered bay.</p>
+  <div class="paddle-controls" id="controls" aria-label="Canoe controls"><button type="button" id="north">North shore</button><button type="button" id="ahead">Paddle ahead</button><button type="button" id="south">South shore</button></div>
+  <button type="button" id="land" hidden>Beach the canoe</button>
+  <div class="map-sheet" id="map-sheet" hidden role="dialog" aria-modal="true" aria-label="Paper map of Sawbill to Smoke">
+    <div class="paper"><header><div><h2>Dad’s folded map</h2><p>Find the curve of the bay, the pinched channel, then the trail leaving Sawbill’s north shore.</p></div><button id="close-map" type="button">Close map</button></header>
+      <svg id="paper-map" viewBox="0 0 880 340" role="img" aria-label="Route sketch. Sawbill Lake on the left, a dotted portage trail leading north from its east shore, and separate Smoke Lake beyond it.">
+        <rect width="880" height="340" fill="#e5dcc5"/>
+        <g fill="none" stroke="#c7b99a" stroke-width="2" opacity=".7"><path d="M0 25Q180 2 360 30T700 25M0 47Q180 24 360 52T700 47M0 300Q160 270 330 303T700 295M0 322Q160 292 330 325T700 317"/></g>
+        <path d="M30 210Q120 163 190 192Q252 216 299 122Q331 90 366 164Q407 209 469 199Q489 178 517 189Q544 206 568 192Q636 167 703 173L716 248Q626 274 564 248Q531 238 510 251Q489 268 467 252Q409 226 361 246Q297 273 256 233Q176 211 117 258L35 269Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
+        <path d="M757 127Q778 67 823 69Q866 79 881 115L881 179Q843 163 813 170Q785 177 763 205L749 192Q753 160 757 127Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
+        <path d="M687 177Q709 144 727 121Q742 105 763 104" fill="none" stroke="#956444" stroke-width="6" stroke-dasharray="3 9" stroke-linecap="round"/>
+        <path d="M0 0L0 340" stroke="#cfbfa0" stroke-width="2"/>
+        <g fill="#31543d"><path d="M164 179l12-32 12 32M272 107l13-35 13 35M399 177l13-35 13 35M539 175l13-35 13 35M628 148l13-35 13 35M782 46l12-32 12 32"/></g>
+        <g fill="#294c53" font-family="system-ui" font-size="17" font-weight="700"><text x="62" y="294">SAWBILL</text><text x="770" y="228">SMOKE</text></g>
+        <text x="575" y="91" fill="#80543a" font-family="system-ui" font-size="14" font-weight="700">PORTAGE</text>
+        <g stroke="#284b42" stroke-width="3" fill="none"><path d="M48 65V27m-9 9 9-9 9 9"/></g><text x="42" y="83" fill="#284b42" font-family="system-ui" font-size="13">N</text>
+        <circle id="map-player" cx="60" cy="222" r="10" fill="#c0452b" stroke="#fff6dc" stroke-width="4"/>
+      </svg>
+      <footer>The lakes are separated by a portage. This is a route sketch, not a survey map.</footer>
     </div>
-    <div class="status" id="status" role="status">Tap the matching place on the sketch, or choose below. Wrong turns are fine.</div>
-    <div class="actions"><button class="primary" id="continue" hidden>Continue along the shore</button></div>
-  </section>
-</main>
+  </div>
+  <div class="end" id="end" hidden><article><h2>There’s the landing</h2><p>The canoe noses into granite. Dad folds the map as you point to the worn trail between the pines. Smoke Lake waits on the other side.</p></article></div>
+</div>
 <script>
 (() => {
-  const checkpoints = [
-    { name:"Find the bay", feature:"bay", question:"Look for the sheltered bay", clue:"From the canoe, the shore curves away and wraps around a quiet pocket of water. Which map shape matches it?", hint:"A bay makes a broad inward curve. Look for the shoreline that cups the water.", found:"You found the sheltered bay. A loon slips away from the reeds as you paddle on." },
-    { name:"Find the narrows", feature:"narrows", question:"Find where the lake pinches in", clue:"The channel ahead gets tighter. On the map, the east and west shores almost meet before opening out again. What are you looking for?", hint:"Look for two points facing each other across the narrowest part of the water.", found:"That’s the narrows. The water carries you through to the far side." },
-    { name:"Find the portage", feature:"portage", question:"Spot the landing to Smoke Lake", clue:"The shoreline ends at a small landing. On the paper map, a dotted trail leaves the water and crosses the wooded strip. Which feature marks your landing?", hint:"Portage trails are drawn from one shoreline to another. Find the dotted path touching the lake.", found:"You found the portage landing to Smoke Lake. No compass arrow needed—just a careful look at the shore." }
-  ];
-  let index = 0, wrongTurns = 0, complete = false;
-  const question = document.getElementById("question");
-  const clue = document.getElementById("clue");
-  const status = document.getElementById("status");
-  const choices = document.getElementById("choices");
-  const continueButton = document.getElementById("continue");
-  const checkpoint = document.getElementById("checkpoint");
-  const player = document.getElementById("player");
-  const positions = [[105,190],[321,218],[512,215],[584,159]];
-  const markers = [0,1,2,3].map(i => document.getElementById("marker"+i));
-
-  function drawProgress() {
-    const point = positions[index];
-    player.setAttribute("cx",point[0]); player.setAttribute("cy",point[1]);
-    markers.forEach((marker,i) => marker.setAttribute("fill",i < index ? "#3e7d52" : i === index ? "#c0452b" : "#6a97a4"));
+  const canvas=document.getElementById("water"),ctx=canvas.getContext("2d");
+  const status=document.getElementById("status"),hint=document.getElementById("hint");
+  const mapSheet=document.getElementById("map-sheet"),mapToggle=document.getElementById("map-toggle");
+  const controls=document.getElementById("controls"),land=document.getElementById("land");
+  const marker=document.getElementById("map-player");
+  const boat={x:115,y:300,angle:0},keys=new Set();
+  let target=null,paused=false,finished=false,last=performance.now(),scale=1,camX=0,camY=0,viewW=0,viewH=0;
+  let noticedBay=false,noticedNarrows=false,noticedLanding=false,overshot=false,landingReady=false,lastShoreMessage=0;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const center=x=>295+38*Math.sin(x/195)-17*Math.sin(x/410);
+  const bay=x=>x>330&&x<760?130*Math.sin(Math.PI*(x-330)/430)**2:0;
+  const width=x=>x>1040&&x<1310?96-37*Math.sin(Math.PI*(x-1040)/270)**2:96;
+  const north=x=>center(x)-width(x)-bay(x);
+  const south=x=>center(x)+width(x);
+  const seeded=n=>((Math.sin(n*76.897+31.17)*43758.5453)%1+1)%1;
+  function resize(){
+    const dpr=Math.min(devicePixelRatio||1,2),rect=canvas.getBoundingClientRect();
+    canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);
+    viewW=rect.width;viewH=rect.height;scale=Math.max(viewW/850,viewH/580);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  function render() {
-    if (complete) {
-      checkpoint.textContent = "Route complete";
-      question.textContent = "You found the portage landing";
-      clue.textContent = "You matched the sheltered bay, read the narrows, and spotted the portage trail. A wrong turn would only have led to another little discovery.";
-      choices.hidden = true; continueButton.hidden = true;
-      status.textContent = "The portage landing is just ahead. Your family is ready to carry across.";
-      drawProgress(); return;
+  window.addEventListener("resize",resize);resize();
+  function point(event){return {x:camX+event.clientX/scale,y:camY+event.clientY/scale};}
+  function setTarget(x,y){if(paused||finished||!mapSheet.hidden)return;target={x:clamp(x,35,2130),y:clamp(y,30,550)};hint.hidden=true;}
+  canvas.addEventListener("pointerdown",event=>{canvas.focus();canvas.setPointerCapture(event.pointerId);const p=point(event);setTarget(p.x,p.y);});
+  canvas.addEventListener("pointermove",event=>{if(event.buttons){const p=point(event);setTarget(p.x,p.y);}});
+  document.getElementById("north").addEventListener("click",()=>setTarget(boat.x+10,boat.y-78));
+  document.getElementById("ahead").addEventListener("click",()=>{const x=Math.min(2130,Math.max(boat.x,target?.x||boat.x)+115);setTarget(x,center(x));});
+  document.getElementById("south").addEventListener("click",()=>setTarget(boat.x+10,boat.y+78));
+  function showMap(open){mapSheet.hidden=!open;mapToggle.setAttribute("aria-expanded",String(open));if(open){target=null;document.getElementById("close-map").focus();}else mapToggle.focus();}
+  mapToggle.addEventListener("click",()=>showMap(mapSheet.hidden));
+  document.getElementById("close-map").addEventListener("click",()=>showMap(false));
+  window.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&!mapSheet.hidden){event.stopImmediatePropagation();showMap(false);return;}
+    if(event.key.toLowerCase()==="m"&&!event.repeat){showMap(mapSheet.hidden);return;}
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d"].includes(event.key)){
+      if(event.target instanceof HTMLButtonElement)return;
+      event.preventDefault();keys.add(event.key);hint.hidden=true;
     }
-    const step = checkpoints[index];
-    checkpoint.textContent = "Checkpoint " + (index + 1) + " of " + checkpoints.length;
-    question.textContent = step.question;
-    clue.textContent = step.clue;
-    choices.hidden = false; continueButton.hidden = true;
-    choices.querySelectorAll("button").forEach(button => button.disabled = false);
-    drawProgress();
-  }
-  function choose(answer) {
-    if (complete || !continueButton.hidden) return;
-    const step = checkpoints[index];
-    if (answer === step.feature) {
-      choices.querySelectorAll("button").forEach(choice => choice.disabled = true);
-      status.textContent = step.found;
-      continueButton.hidden = false;
-      continueButton.textContent = index === checkpoints.length - 1 ? "Reach the landing" : "Continue along the shore";
-      wrongTurns = 0;
-    } else {
-      wrongTurns++;
-      status.textContent = wrongTurns > 1
-        ? "You found a beaver lodge in a little side bay. Nice detour. " + step.hint
-        : "Not quite. Take another look at the shoreline. " + step.hint;
+  });
+  window.addEventListener("keyup",event=>keys.delete(event.key));
+  window.addEventListener("blur",()=>keys.clear());
+  window.addEventListener("abundant-waters:pause",()=>{paused=true;target=null;keys.clear();});
+  window.addEventListener("abundant-waters:resume",()=>{paused=false;last=performance.now();});
+  function update(dt){
+    if(paused||finished||!mapSheet.hidden)return;
+    let vx=0,vy=0;
+    if(keys.size){vx=Number(keys.has("ArrowRight")||keys.has("d"))-Number(keys.has("ArrowLeft")||keys.has("a"));vy=Number(keys.has("ArrowDown")||keys.has("s"))-Number(keys.has("ArrowUp")||keys.has("w"));target=null;}
+    else if(target){const dx=target.x-boat.x,dy=target.y-boat.y,d=Math.hypot(dx,dy);if(d>9){vx=dx/d;vy=dy/d;}else target=null;}
+    const length=Math.hypot(vx,vy);
+    if(length){
+      const nextX=clamp(boat.x+vx/length*225*dt,38,2120),nextY=boat.y+vy/length*225*dt;
+      const edgeN=north(nextX)+14,edgeS=south(nextX)-14;
+      boat.x=nextX;boat.y=clamp(nextY,edgeN,edgeS);
+      boat.angle=Math.atan2(vy,vx)*.45;
+      if(nextY<edgeN||nextY>edgeS){target=null;if(performance.now()-lastShoreMessage>1800){status.textContent="The water shoals at the rocks. Turn back into the channel and read the shore again.";lastShoreMessage=performance.now();}}
     }
+    if(!noticedBay&&boat.x>515){noticedBay=true;status.textContent="The north shore folds into a sheltered bay. A loon slips from the reeds as you paddle past.";}
+    if(!noticedNarrows&&boat.x>1135){noticedNarrows=true;status.textContent="Granite points pinch the lake into a narrow channel. The map shows it opening up beyond.";}
+    if(!noticedLanding&&boat.x>1710){noticedLanding=true;status.textContent="The dotted trail meets the north shore near pale granite. Look for the worn opening in the pines.";}
+    if(!overshot&&boat.x>2010){overshot=true;status.textContent="The granite landing is behind us. Turn back and aim for that opening on the north shore.";}
+    const close=boat.x>1790&&boat.x<1985&&boat.y<north(boat.x)+60;
+    if(close&&!landingReady){status.textContent="A worn opening breaks the pines above the granite. The dotted trail on the map begins here.";target=null;}
+    landingReady=close;land.hidden=!close;controls.hidden=close;
+    marker.setAttribute("cx",String(clamp(60+boat.x*.304,60,704)));
+    marker.setAttribute("cy",String(222+(boat.y-center(boat.x))*.34));
   }
-  choices.addEventListener("click", event => {
-    const button = event.target.closest("button[data-answer]");
-    if (button) choose(button.dataset.answer);
+  land.addEventListener("click",()=>{
+    if(!landingReady||finished)return;
+    finished=true;target=null;land.hidden=true;document.getElementById("end").hidden=false;
+    window.AbundantWaters.complete();
   });
-  document.querySelectorAll("[data-map-answer]").forEach(target => {
-    target.addEventListener("click", () => choose(target.dataset.mapAnswer));
-    target.addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(target.dataset.mapAnswer); }
-    });
-  });
-  continueButton.addEventListener("click", () => {
-    if (complete) return;
-    index++;
-    if (index >= checkpoints.length) { complete = true; window.AbundantWaters.complete(); }
-    render();
-  });
-  render();
+  function path(top){ctx.beginPath();for(let x=0;x<=2200;x+=15){const y=top?north(x):south(x);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
+  function pine(x,y,size){ctx.fillStyle="#31533c";ctx.beginPath();ctx.moveTo(x,y-size);ctx.lineTo(x-size*.46,y+size*.55);ctx.lineTo(x+size*.46,y+size*.55);ctx.closePath();ctx.fill();ctx.fillStyle="#694e37";ctx.fillRect(x-size*.07,y+size*.4,size*.14,size*.5);}
+  function draw(){
+    ctx.clearRect(0,0,viewW,viewH);
+    camX=clamp(boat.x-viewW/scale*(boat.x>1700?.6:.36),0,2200-viewW/scale);
+    camY=clamp(boat.y-viewH/scale*.52,0,580-viewH/scale);
+    ctx.save();ctx.scale(scale,scale);ctx.translate(-camX,-camY);
+    ctx.fillStyle="#d7d1b8";ctx.fillRect(camX,camY,viewW/scale,viewH/scale);
+    ctx.strokeStyle="#a9ad94";ctx.lineWidth=2;
+    for(let k=0;k<4;k++){ctx.beginPath();for(let x=0;x<=2200;x+=25){const y=25+k*28+16*Math.sin(x/170+k);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}
+    for(let k=0;k<4;k++){ctx.beginPath();for(let x=0;x<=2200;x+=25){const y=480+k*26+15*Math.sin(x/160+k);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}
+    for(let i=0;i<360;i++){
+      const x=seeded(i+31)*2200,y=seeded(i+1201)*580,size=11+seeded(i+2503)*17;
+      if(y<north(x)-size*.6||y>south(x)+size*.6)pine(x,y,size);
+    }
+    ctx.beginPath();for(let x=0;x<=2200;x+=12)ctx.lineTo(x,north(x));for(let x=2200;x>=0;x-=12)ctx.lineTo(x,south(x));ctx.closePath();
+    const water=ctx.createLinearGradient(0,135,0,445);water.addColorStop(0,"#7ca5a7");water.addColorStop(.6,"#487e8b");water.addColorStop(1,"#315c70");ctx.fillStyle=water;ctx.fill();
+    path(true);ctx.strokeStyle="#d6c7a3";ctx.lineWidth=8;ctx.stroke();path(false);ctx.stroke();
+    ctx.strokeStyle="#a5c6bd";ctx.lineWidth=2;ctx.globalAlpha=.45;
+    for(let k=0;k<3;k++){ctx.beginPath();for(let x=0;x<=2200;x+=25){const y=center(x)+(k-1)*27+6*Math.sin(x/60+k);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}ctx.globalAlpha=1;
+    // Reeds and a low beaver lodge distinguish the sheltered side bay.
+    ctx.fillStyle="#7e6548";ctx.beginPath();ctx.ellipse(535,north(535)+23,32,12,-.25,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#947651";ctx.lineWidth=4;for(let j=0;j<7;j++){const x=475+j*16,y=north(x)+8;ctx.beginPath();ctx.moveTo(x,y+19);ctx.lineTo(x-4,y-16);ctx.stroke();}
+    // The pinched shoreline is recognizable without a label or glowing target.
+    ctx.fillStyle="#a89d7f";for(const x of [1085,1215]){ctx.beginPath();ctx.ellipse(x,north(x)-1,30,13,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x,south(x)+1,35,14,0,0,Math.PI*2);ctx.fill();}
+    // The worn path leaves Sawbill; Smoke lies beyond dry ground.
+    ctx.strokeStyle="#8c6a45";ctx.lineWidth=10;ctx.setLineDash([4,11]);ctx.beginPath();ctx.moveTo(1880,north(1880)-8);ctx.bezierCurveTo(1900,92,1970,115,1990,52);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle="#b7a88a";ctx.beginPath();ctx.ellipse(1880,north(1880)-6,63,19,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#7e9fa0";ctx.beginPath();ctx.ellipse(2080,22,105,48,-.15,0,Math.PI*2);ctx.fill();
+    // The family canoe has two paddlers and one heading, like the other lake levels.
+    ctx.save();ctx.translate(boat.x,boat.y);ctx.rotate(boat.angle);
+    ctx.fillStyle="#9e4935";ctx.strokeStyle="#613829";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-23,-8);ctx.quadraticCurveTo(0,-17,25,-8);ctx.quadraticCurveTo(0,12,-23,-8);ctx.fill();ctx.stroke();
+    ctx.strokeStyle="#d7b98e";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-9,-11);ctx.lineTo(-9,4);ctx.moveTo(11,-11);ctx.lineTo(11,4);ctx.stroke();
+    ctx.fillStyle="#e6cda5";for(const x of [-8,11]){ctx.beginPath();ctx.arc(x,-4,3.7,0,Math.PI*2);ctx.fill();}ctx.restore();
+    ctx.restore();
+  }
+  function frame(now){const dt=Math.min((now-last)/1000,.18);last=now;update(dt);draw();requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);
 })();
 </script>
 <script src="../immersive-bridge.js"></script>
