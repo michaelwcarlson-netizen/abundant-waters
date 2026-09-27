@@ -744,6 +744,7 @@
     setTools();
     toastQueue.length = 0; $('toast').innerHTML = '';
     $('end').hidden = false;
+    window.AbundantWaters.complete();
     $('again').focus();
   }
   const listJoin = (a) => (a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]);
@@ -1048,10 +1049,14 @@
   reset();
 
   let last = performance.now();
+  let paused = false;
+  window.addEventListener('abundant-waters:pause', () => { paused = true; });
+  window.addEventListener('abundant-waters:resume', () => { paused = false; last = performance.now(); });
+  document.addEventListener('visibilitychange', () => { paused = document.hidden; last = performance.now(); });
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000);
     last = now;
-    update(dt);
+    if (!paused) update(dt);
     draw();
     requestAnimationFrame(frame);
   }
