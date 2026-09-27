@@ -78,7 +78,7 @@
     <p class="intro" id="intro">Break camp, paddle north, cross the portage, and settle in before evening. Take your time; this is a trip, not a race.</p>
     <div class="progress-wrap" aria-label="Trip progress">
       <div class="progress-label"><span id="phase">Morning at camp</span><span id="count">Ready when you are</span></div>
-      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0"><div class="fill" id="fill"></div></div>
     </div>
     <section class="card" id="panel" aria-live="polite"></section>
     <div class="actions">
@@ -97,6 +97,7 @@
         tarp: { name: "Storm Tarp", path: "prototypes/tarp/index.html", description: "Pitch the tarp and tie it down before the weather moves in." },
         fishing: { name: "Fishing at Smoke Lake", path: "prototypes/fishing/index.html", description: "Read the shoreline, choose a spot, and try for smallmouth, pike, or walleye." },
         snorkeling: { name: "Snorkeling & Diving", path: "prototypes/snorkeling/index.html", description: "Stay near shore with your buddy and look for clear-water discoveries." },
+        storm: { name: "Storm Day", path: "prototypes/storm/index.html", description: "Read the changing weather, secure camp, and wait out the storm together." },
         bear: { name: "Bear Hang", path: "prototypes/bear-hang/index.html", description: "Hoist the food pack safely, then see what happens after dark." }
       };
       const steps = [
@@ -108,7 +109,8 @@
         { phase: "Free time", title: "Fish the shoreline", description: activities.fishing.description, activity: "fishing" },
         { phase: "Explore the water", title: "Snorkel with your buddy", description: activities.snorkeling.description, activity: "snorkeling" },
         { phase: "Evening at camp", title: "Hang the food", description: activities.bear.description, activity: "bear" },
-        { phase: "Day complete", title: "Camp is settled", description: "You read the shoreline, found the portage, explored the clear water, and settled in at Smoke Lake. Take a breath and look back on your first day.", activity: null }
+        { phase: "Next morning", title: "Wait out the storm", description: activities.storm.description, activity: "storm" },
+        { phase: "Day complete", title: "The storm has passed", description: "You read the weather, got off the water, and waited together under the tarp. The sky is clearing over Smoke Lake.", activity: null }
       ];
       let stepIndex = 0;
       let paddleChoice = "jstroke";
@@ -128,7 +130,7 @@
         document.getElementById("phase").textContent = step.phase;
         document.getElementById("count").textContent = stepIndex === 0 ? "Ready when you are" : "Part " + stepIndex + " of " + (steps.length - 1);
         document.getElementById("intro").textContent = stepIndex === 0
-          ? "Break camp, paddle north, read the shoreline, cross the portage, explore the clear water, and settle in before evening. Take your time; this is a trip, not a race."
+          ? "Break camp, paddle north, read the shoreline, cross the portage, and settle in before evening. The storm day comes next morning. Take your time; this is a trip, not a race."
           : "The day unfolds at your pace. Finish an activity when you’re ready, then continue the trip.";
         fill.style.width = (stepIndex / (steps.length - 1) * 100) + "%";
         progress.setAttribute("aria-valuenow", String(stepIndex));
@@ -155,7 +157,7 @@
             render();
           }));
         } else {
-          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good first day</h2><p class="intro">You made it to Smoke Lake together. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Read the map and found the landing</li><li>Traveled from Sawbill to Smoke</li><li>Made camp and explored the lake</li><li>Hung the food for the night</li><li>Ready for tomorrow’s adventure</li></ul>';
+          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good couple of days</h2><p class="intro">You made it to Smoke Lake together and rode out the storm. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Read the map and found the landing</li><li>Traveled from Sawbill to Smoke</li><li>Made camp and explored the lake</li><li>Hung the food for the night</li><li>Got off the water and waited out the storm</li><li>Ready to paddle on when the weather clears</li></ul>';
         }
       }
 

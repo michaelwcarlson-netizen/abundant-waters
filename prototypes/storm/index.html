@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storm Day at Smoke Lake</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --canoe:#c0452b; --muted:#5b6662; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#faf7ef; color:var(--ink); font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+  .eyebrow { margin:0 0 5px; color:var(--canoe); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { margin:0; font-family:Georgia,serif; }
+  h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+  h2 { font-size:1.2rem; }
+  .lead { margin:8px 0 16px; color:#465556; }
+  #rainbow { transition:opacity .7s; }
+  .scene { overflow:hidden; border:1px solid #a6b9b9; border-radius:14px; background:#dce6df; }
+  svg { display:block; width:100%; height:auto; }
+  .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
+  .note { padding:11px 13px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
+  .tasks { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:13px 0; }
+  button { min-height:48px; padding:10px 13px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; }
+  button:hover:not(:disabled) { background:#e8eee8; }
+  button:focus-visible { outline:3px solid var(--canoe); outline-offset:2px; }
+  button.primary { background:var(--pine); color:white; }
+  button:disabled { opacity:.55; cursor:default; }
+  button.done { background:#e3efe3; border-color:#6a936c; }
+  .status { min-height:52px; margin-top:12px; padding:12px 14px; border-radius:9px; background:#edf3ef; color:#29433b; }
+  .action { display:flex; justify-content:flex-end; margin-top:12px; }
+  iframe { display:block; width:100%; height:min(68vh,690px); min-height:470px; margin-top:12px; border:1px solid var(--line); border-radius:10px; background:var(--paper); }
+  .story-choices { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:12px 0; }
+  [hidden] { display:none !important; }
+  @media(max-width:650px) { .tasks,.story-choices { grid-template-columns:1fr; } iframe { height:62vh; min-height:430px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Smoke Lake · Day two</p>
+  <h1>Storm day</h1>
+  <p class="lead">The weather gives you a warning. You get off the water early, make camp secure, and spend the afternoon together under the tarp.</p>
+  <div class="scene">
+    <svg viewBox="0 0 900 290" role="img" aria-labelledby="storm-title storm-desc">
+      <title id="storm-title">A storm building over a Boundary Waters lake</title>
+      <desc id="storm-desc">Dark clouds gather over a lake and wooded shore. After the storm, a rainbow appears.</desc>
+      <defs>
+        <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#879da1"/><stop offset="1" stop-color="#d7d8c8"/></linearGradient>
+        <linearGradient id="water" x2="0" y2="1"><stop stop-color="#517c87"/><stop offset="1" stop-color="#244d5e"/></linearGradient>
+      </defs>
+      <rect width="900" height="160" fill="url(#sky)"/>
+      <path d="M0 152 55 75 108 151 160 54 215 152 273 88 332 156 392 64 447 154 509 78 562 156 627 47 686 153 750 83 802 152 853 56 900 124 900 184 0 184Z" fill="#334e42"/>
+      <path d="M0 160 Q150 145 290 166 T580 157 T900 164 L900 290 0 290Z" fill="url(#water)"/>
+      <g fill="#53676a" opacity=".97">
+        <ellipse cx="318" cy="79" rx="105" ry="39"/><ellipse cx="404" cy="65" rx="84" ry="50"/><ellipse cx="478" cy="86" rx="112" ry="36"/>
+        <ellipse cx="559" cy="68" rx="88" ry="45"/><ellipse cx="250" cy="97" rx="63" ry="34"/>
+      </g>
+      <g stroke="#d9e0d8" stroke-width="4" stroke-linecap="round" opacity=".7">
+        <path d="M280 180l-7 27m38-27-7 27m37-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27m38-27-7 27"/>
+      </g>
+      <g id="rainbow" fill="none" stroke-linecap="round" opacity="0">
+        <path d="M188 192 A260 190 0 0 1 712 192" stroke="#c8574f" stroke-width="13"/>
+        <path d="M211 192 A237 168 0 0 1 689 192" stroke="#e29b49" stroke-width="12"/>
+        <path d="M234 192 A214 146 0 0 1 666 192" stroke="#e8d16c" stroke-width="11"/>
+        <path d="M257 192 A191 124 0 0 1 643 192" stroke="#6b9a63" stroke-width="10"/>
+        <path d="M280 192 A168 102 0 0 1 620 192" stroke="#5785a0" stroke-width="9"/>
+      </g>
+      <path d="M0 222 Q180 210 340 226 T650 217 T900 225" fill="none" stroke="#a3b8b3" stroke-width="3" opacity=".6"/>
+    </svg>
+  </div>
+  <section class="panel" id="forecast" aria-live="polite">
+    <p class="note"><strong>Read the sky:</strong> the wind shifts, clouds stack up, and the lake darkens. A storm is coming.</p>
+    <p class="status">The family spots the change before launching. Lightning means no paddling—head for shore early.</p>
+    <div class="action"><button class="primary" id="shore">Get off the water</button></div>
+  </section>
+  <section class="panel" id="secure" hidden aria-live="polite">
+    <h2>Make camp storm-ready</h2>
+    <p class="lead">Pull the canoe well above the waterline and stash loose gear before the wind arrives.</p>
+    <div class="tasks">
+      <button id="canoe">Secure the canoe high on shore</button>
+      <button id="gear">Stash loose gear and food</button>
+    </div>
+    <p class="status" id="secure-status">Two quick camp jobs, then you can get the tarp up.</p>
+    <div class="action"><button class="primary" id="pitch" disabled>Finish securing camp first</button></div>
+  </section>
+  <section class="panel" id="tarp-step" hidden>
+    <h2>Pitch the tarp before the rain</h2>
+    <p class="lead">Use the tarp and knot activity to get a dry place ready. Take your time; the storm waits for your family.</p>
+    <iframe title="Storm tarp activity" src="../tarp/index.html" sandbox="allow-scripts allow-same-origin"></iframe>
+    <div class="action"><button class="primary" id="wait">The tarp is up — wait together</button></div>
+  </section>
+  <section class="panel" id="wait-step" hidden aria-live="polite">
+    <h2>Rain on the tarp</h2>
+    <p class="lead">You’re off the water, the canoe is tied high, and everyone is dry. The storm passes while the family rests.</p>
+    <p><strong>What story do you tell?</strong></p>
+    <div class="story-choices">
+      <button data-story="fish">The one about the fish that got away</button>
+      <button data-story="portage">The muddy portage adventure</button>
+      <button data-story="stars">A favorite night under the stars</button>
+    </div>
+    <p class="status" id="story-status">Pick a story, grab a snack, and enjoy the pause.</p>
+    <div class="action"><button class="primary" id="pass" disabled>Stay together under the tarp</button></div>
+  </section>
+  <section class="panel" id="finish" hidden aria-live="polite">
+    <h2>The storm passes</h2>
+    <p class="lead">The rain eases, the clouds lift, and a rainbow stretches across a glass-calm Smoke Lake. The family has nowhere else to be.</p>
+    <p class="note">You read the weather, got off the water, and waited it out together. The trip can continue when the sky clears.</p>
+  </section>
+</main>
+<script>
+(() => {
+  const forecast=document.getElementById("forecast"),secure=document.getElementById("secure");
+  const tarp=document.getElementById("tarp-step"),wait=document.getElementById("wait-step");
+  const finish=document.getElementById("finish"),canoe=document.getElementById("canoe");
+  const gear=document.getElementById("gear"),pitch=document.getElementById("pitch");
+  let canoeSafe=false,gearStashed=false,storyChosen=false;
+  function updateCamp(){
+    canoe.classList.toggle("done",canoeSafe);canoe.textContent=canoeSafe?"Canoe secured high on shore ✓":"Secure the canoe high on shore";
+    gear.classList.toggle("done",gearStashed);gear.textContent=gearStashed?"Loose gear stashed ✓":"Stash loose gear and food";
+    pitch.disabled=!(canoeSafe&&gearStashed);
+    pitch.textContent=pitch.disabled?"Finish securing camp first":"Pitch the tarp";
+    document.getElementById("secure-status").textContent=canoeSafe&&gearStashed
+      ?"Camp is secure. Get the tarp up before the rain arrives."
+      :"The wind is picking up. Finish both jobs before you pitch the tarp.";
+  }
+  document.getElementById("shore").addEventListener("click",()=>{forecast.hidden=true;secure.hidden=false;});
+  canoe.addEventListener("click",()=>{canoeSafe=true;updateCamp();});
+  gear.addEventListener("click",()=>{gearStashed=true;updateCamp();});
+  pitch.addEventListener("click",()=>{if(canoeSafe&&gearStashed){secure.hidden=true;tarp.hidden=false;}});
+  document.getElementById("wait").addEventListener("click",()=>{tarp.hidden=true;wait.hidden=false;});
+  document.querySelectorAll("[data-story]").forEach(button=>button.addEventListener("click",()=>{
+    document.querySelectorAll("[data-story]").forEach(item=>item.setAttribute("aria-pressed",String(item===button)));
+    const stories={
+      fish:"Everyone laughs about the fish that made one last jump back into the lake.",
+      portage:"The muddy portage story gets better every time it’s told.",
+      stars:"You remember lying under the stars after a long day on the water."
+    };
+    document.getElementById("story-status").textContent=stories[button.dataset.story];
+    storyChosen=true;document.getElementById("pass").disabled=false;
+  }));
+  document.getElementById("pass").addEventListener("click",()=>{
+    if(!storyChosen)return;
+    wait.hidden=true;finish.hidden=false;
+    document.getElementById("rainbow").setAttribute("opacity","1");
+  });
+})();
+</script>
+</body>
+</html>
