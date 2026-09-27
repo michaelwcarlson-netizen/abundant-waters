@@ -78,7 +78,7 @@
     <p class="intro" id="intro">Break camp, paddle north, cross the portage, and settle in before evening. Take your time; this is a trip, not a race.</p>
     <div class="progress-wrap" aria-label="Trip progress">
       <div class="progress-label"><span id="phase">Morning at camp</span><span id="count">Ready when you are</span></div>
-      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+      <div class="track" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0"><div class="fill" id="fill"></div></div>
     </div>
     <section class="card" id="panel" aria-live="polite"></section>
     <div class="actions">
@@ -96,6 +96,7 @@
         portage: { name: "Portage Trail", path: "prototypes/portage/index.html", description: "Choose your load, balance the canoe, and make the trail to Smoke." },
         tarp: { name: "Storm Tarp", path: "prototypes/tarp/index.html", description: "Pitch the tarp and tie it down before the weather moves in." },
         fishing: { name: "Fishing at Smoke Lake", path: "prototypes/fishing/index.html", description: "Read the shoreline, choose a spot, and try for smallmouth, pike, or walleye." },
+        campfire: { name: "Campfire & Dinner", path: "prototypes/campfire/index.html", description: "Find dry wood, build a small fire, and make supper by the lake." },
         snorkeling: { name: "Snorkeling & Diving", path: "prototypes/snorkeling/index.html", description: "Stay near shore with your buddy and look for clear-water discoveries." },
         night: { name: "Night Sky", path: "prototypes/night-sky/index.html", description: "Trace the Big Dipper, follow its outer stars to Polaris, and listen to the lake settle." },
         storm: { name: "Storm Day", path: "prototypes/storm/index.html", description: "Read the changing weather, secure camp, and wait out the storm together." },
@@ -109,6 +110,7 @@
         { phase: "Make camp", title: "Get the tarp ready", description: activities.tarp.description, activity: "tarp" },
         { phase: "Free time", title: "Fish the shoreline", description: activities.fishing.description, activity: "fishing" },
         { phase: "Explore the water", title: "Snorkel with your buddy", description: activities.snorkeling.description, activity: "snorkeling" },
+        { phase: "Supper time", title: "Make dinner together", description: activities.campfire.description, activity: "campfire" },
         { phase: "Evening at camp", title: "Hang the food", description: activities.bear.description, activity: "bear" },
         { phase: "Night at camp", title: "Look up for a while", description: activities.night.description, activity: "night" },
         { phase: "Next morning", title: "Wait out the storm", description: activities.storm.description, activity: "storm" },
@@ -116,11 +118,18 @@
       ];
       let stepIndex = 0;
       let paddleChoice = "jstroke";
+      let dinnerFish = null;
       const panel = document.getElementById("panel");
       const next = document.getElementById("next");
       const back = document.getElementById("back");
       const fill = document.getElementById("fill");
       const progress = document.querySelector('[role="progressbar"]');
+      window.addEventListener("message", (event) => {
+        if (event.origin !== location.origin || steps[stepIndex].activity !== "fishing" ||
+            event.source !== panel.querySelector("iframe")?.contentWindow ||
+            event.data?.type !== "abundant-waters:fish-landed") return;
+        if (["Smallmouth bass", "Northern pike", "Walleye"].includes(event.data.fish)) dinnerFish = event.data.fish;
+      });
 
       function button(label, value, selected) {
         return '<button type="button" class="button secondary" data-paddle="' + value + '" aria-pressed="' + selected + '">' + label + '</button>';
@@ -152,19 +161,19 @@
               button("Bow & Stern", "bowstern", paddleChoice === "bowstern") + '</div>';
           }
           panel.innerHTML = '<div class="activity-heading"><div><p class="eyebrow">Trip activity</p><h2>' + activity.name + '</h2><p>' + activity.description + '</p></div></div>' + choices +
-            '<div class="activity"><iframe title="' + activity.name + ' game" src="' + activity.path + '" sandbox="allow-scripts allow-same-origin"></iframe></div>' +
+            '<div class="activity"><iframe title="' + activity.name + ' game" src="' + activity.path + (activityKey === "campfire" && dinnerFish ? "?fish=" + encodeURIComponent(dinnerFish) : "") + '" sandbox="allow-scripts allow-same-origin"></iframe></div>' +
             '<p class="activity-note">Use the controls inside the game. This trip guide stays here above it.</p>';
           panel.querySelectorAll("[data-paddle]").forEach((choice) => choice.addEventListener("click", () => {
             paddleChoice = choice.dataset.paddle;
             render();
           }));
         } else {
-          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good couple of days</h2><p class="intro">You made it to Smoke Lake together and rode out the storm. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Read the map and found the landing</li><li>Traveled from Sawbill to Smoke</li><li>Made camp and explored the lake</li><li>Hung the food and found north by starlight</li><li>Got off the water and waited out the storm</li><li>Ready to paddle on when the weather clears</li></ul>';
+          panel.innerHTML = '<div class="camp-art" role="img" aria-label="Camp settled for the night"><span>Smoke Lake · Camp settled</span></div><h2>A good couple of days</h2><p class="intro">You made it to Smoke Lake together and rode out the storm. The best parts of a trip are often the quiet moments around camp.</p><ul class="checklist"><li>Read the map and found the landing</li><li>Traveled from Sawbill to Smoke</li><li>Made camp, explored the lake, and cooked dinner</li><li>Hung the food and found north by starlight</li><li>Got off the water and waited out the storm</li><li>Ready to paddle on when the weather clears</li></ul>';
         }
       }
 
       next.addEventListener("click", () => {
-        if (stepIndex === steps.length - 1) stepIndex = 0;
+        if (stepIndex === steps.length - 1) { stepIndex = 0; dinnerFish = null; }
         else stepIndex = Math.min(stepIndex + 1, steps.length - 1);
         render();
         window.scrollTo({ top: 0, behavior: "smooth" });

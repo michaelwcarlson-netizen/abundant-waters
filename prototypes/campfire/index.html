@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#223d2c">
+<title>Campfire & Dinner at Smoke Lake — Abundant Waters</title>
+<style>
+  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; --muted:#5b6662; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--ink); background:#faf7ef; font:16px/1.45 "Atkinson Hyperlegible",system-ui,sans-serif; }
+  main { width:min(920px,100%); margin:auto; padding:clamp(14px,3vw,28px); }
+  .eyebrow { margin:0 0 5px; color:var(--clay); font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  h1,h2 { margin:0; font-family:Georgia,serif; }
+  h1 { font-size:clamp(1.7rem,4vw,2.5rem); }
+  h2 { font-size:1.2rem; }
+  .lead { margin:8px 0 16px; color:#465556; }
+  .scene { overflow:hidden; border:1px solid #9caa9c; border-radius:14px; background:#a4aaa0; }
+  svg { display:block; width:100%; height:auto; }
+  #ember, #flame-small, #flame-high, #pot { transition:opacity .45s; }
+  .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
+  .choices { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0; }
+  button { min-height:52px; padding:10px 13px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; text-align:left; }
+  button:hover { background:#e8eee8; }
+  button:focus-visible { outline:3px solid var(--clay); outline-offset:2px; }
+  button.primary { background:var(--pine); color:white; text-align:center; }
+  button.primary:hover { background:#345744; }
+  button:disabled { opacity:.55; cursor:default; }
+  button small { display:block; margin-top:4px; color:var(--muted); font-weight:400; line-height:1.35; }
+  button[aria-pressed="true"] { background:#e3eee2; border-color:#426b50; }
+  .status { min-height:56px; margin:12px 0; padding:12px 14px; border-left:4px solid var(--lake); background:#edf3ef; color:#29433b; }
+  .note { color:var(--muted); font-size:.89rem; }
+  .action { display:flex; justify-content:flex-end; margin-top:12px; }
+  [hidden] { display:none !important; }
+  @media(max-width:650px) { .choices { grid-template-columns:1fr; } button { min-height:48px; } }
+  @media(prefers-reduced-motion:reduce) { #ember, #flame-small, #flame-high, #pot { transition:none; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Smoke Lake · Supper time</p>
+  <h1>Fire, then dinner</h1>
+  <p class="lead">The last light catches the pines. Dad sets a pot of water by the fire grate and asks you to find the wood that will actually burn.</p>
+  <div class="scene">
+    <svg viewBox="0 0 900 300" role="img" aria-labelledby="scene-title scene-desc">
+      <title id="scene-title">A family campsite at dusk</title>
+      <desc id="scene-desc">A fire grate by the lake beneath pine trees. The fire grows as you prepare it, and goes out before night.</desc>
+      <defs>
+        <linearGradient id="dusk" x2="0" y2="1"><stop stop-color="#9da89c"/><stop offset="1" stop-color="#d2c6a6"/></linearGradient>
+      </defs>
+      <rect width="900" height="300" fill="url(#dusk)"/>
+      <path d="M0 162 55 75 103 170 160 65 217 170 267 90 327 172 375 59 430 170 486 82 539 172 603 61 659 170 716 77 768 170 830 65 900 157 900 300 0 300Z" fill="#344f3d"/>
+      <path d="M0 190 Q150 173 306 194 T621 187 T900 192 L900 300 0 300Z" fill="#335b65"/>
+      <path d="M0 249 Q180 228 308 247 T610 232 T900 238 L900 300 0 300Z" fill="#6d7459"/>
+      <path d="M0 258 Q175 244 328 257 T612 248 T900 252" fill="none" stroke="#a0a98c" stroke-width="3"/>
+      <g fill="#3c4839">
+        <path d="M45 245 82 70 117 244Z M94 248 131 109 165 247Z M768 250 814 56 852 250Z M827 250 865 108 900 251Z"/>
+      </g>
+      <g fill="none" stroke="#293b33" stroke-width="4" stroke-linecap="round">
+        <path d="M81 190H31m48-27H47m52 33h42m-9-28h33M814 176h-47m47-36h28m0 53h45"/>
+      </g>
+      <ellipse cx="455" cy="258" rx="110" ry="25" fill="#353c32" opacity=".6"/>
+      <g fill="#847f72" stroke="#625d53" stroke-width="2">
+        <ellipse cx="388" cy="251" rx="21" ry="11"/><ellipse cx="420" cy="266" rx="22" ry="9"/>
+        <ellipse cx="473" cy="265" rx="22" ry="10"/><ellipse cx="518" cy="251" rx="25" ry="10"/>
+      </g>
+      <path d="M401 242 509 258 M504 239 406 261" stroke="#583f2d" stroke-width="13" stroke-linecap="round"/>
+      <g id="ember" opacity="0"><ellipse cx="454" cy="244" rx="38" ry="10" fill="#bd613c"/></g>
+      <g id="flame-small" opacity="0" fill="#e3a552">
+        <path d="M426 241Q420 219 438 204Q434 221 453 218Q448 238 426 241Z"/>
+        <path d="M452 241Q445 214 463 196Q463 218 480 224Q478 241 452 241Z"/>
+      </g>
+      <g id="flame-high" opacity="0" fill="#efc375">
+        <path d="M439 240Q424 209 448 175Q440 201 466 207Q469 230 439 240Z"/>
+        <path d="M463 238Q457 214 483 191Q476 219 494 227Q483 241 463 238Z"/>
+      </g>
+      <g id="pot" opacity="0" fill="#283b3c" stroke="#283b3c">
+        <path d="M418 205h74l-8 25h-58Z"/><path d="M416 204h78" stroke-width="5"/>
+        <path d="M434 205q18-30 41 0" fill="none" stroke-width="4"/>
+      </g>
+      <path d="M374 237h159" stroke="#273a37" stroke-width="5"/>
+      <path d="M389 236v26m127-26v26" stroke="#273a37" stroke-width="5"/>
+    </svg>
+  </div>
+  <section class="panel" id="wood-step">
+    <h2>What wood do you bring back?</h2>
+    <p class="lead">A fire catches on dry tinder and small sticks. Look around the campsite; leave living trees alone.</p>
+    <div class="choices">
+      <button type="button" data-wood="dry">Dry fallen twigs<small>Dead wood off the ground, where permitted.</small></button>
+      <button type="button" data-wood="wet">Wood at the water’s edge<small>Plenty of it, but soaked through.</small></button>
+      <button type="button" data-wood="live">Fresh cedar branches<small>Still growing beside the tent.</small></button>
+    </div>
+    <p class="status" id="wood-status" role="status">Dad has a small bundle of birch bark tinder ready.</p>
+  </section>
+  <section class="panel" id="build-step" hidden>
+    <h2>Give the fire room to breathe</h2>
+    <p class="lead">Build it small in the established grate. Keep water nearby.</p>
+    <div class="choices">
+      <button type="button" data-fuel="tinder">Tinder<small>Gets the first spark.</small></button>
+      <button type="button" data-fuel="kindling">Small dry sticks<small>Catch from the tinder.</small></button>
+      <button type="button" data-fuel="logs">Larger wood<small>Waits until the smaller fire is steady.</small></button>
+    </div>
+    <p class="status" id="build-status" role="status">Start with the tinder Dad set aside.</p>
+  </section>
+  <section class="panel" id="meal-step" hidden>
+    <h2>Supper by the lake</h2>
+    <p class="lead">The small fire holds steady. The water is heating, and it’s time to decide what goes in the pan.</p>
+    <div class="choices" id="meals">
+      <button type="button" id="fish-meal" hidden>Cook the fish<small id="fish-label"></small></button>
+      <button type="button" id="pack-meal">Make supper from the food pack<small>A warm pot of rice and beans for everyone.</small></button>
+    </div>
+    <p class="status" id="meal-status" role="status">Pick dinner, then tend the pan.</p>
+    <div class="action"><button type="button" class="primary" id="serve" disabled>Serve dinner</button></div>
+  </section>
+  <section class="panel" id="end-step" hidden>
+    <h2>Last light</h2>
+    <p class="lead" id="ending"></p>
+    <p class="status" id="end-status" role="status">The plates are empty. Before bed, the fire needs to be completely out.</p>
+    <div class="action"><button type="button" class="primary" id="douse">Douse, stir, and check for heat</button></div>
+    <p class="note" id="done" hidden>The grate is cool. Dad lifts the kettle; the lake has gone dark enough for stars.</p>
+  </section>
+</main>
+<script>
+(() => {
+  const allowedFish=["Smallmouth bass","Northern pike","Walleye"];
+  const fish=new URLSearchParams(location.search).get("fish");
+  const catchName=allowedFish.includes(fish)?fish:null;
+  let fuelStep=0,meal=null;
+  const wood=document.getElementById("wood-step"),build=document.getElementById("build-step");
+  const mealStep=document.getElementById("meal-step"),end=document.getElementById("end-step");
+  if(catchName){
+    document.getElementById("fish-meal").hidden=false;
+    document.getElementById("fish-label").textContent=catchName+" from this afternoon.";
+  }
+  document.querySelectorAll("[data-wood]").forEach(button=>button.addEventListener("click",()=>{
+    const choice=button.dataset.wood;
+    if(choice==="dry"){
+      wood.hidden=true;build.hidden=false;
+      document.getElementById("build-status").textContent="A handful of dry twigs, a little tinder, and a clear spot in the grate. Start small.";
+    }else{
+      document.getElementById("wood-status").textContent=choice==="wet"
+        ?"That wood is waterlogged. Look for dry, fallen sticks off the ground."
+        :"Leave the living cedar standing. Look for dry, fallen sticks nearby.";
+    }
+  }));
+  const order=["tinder","kindling","logs"];
+  document.querySelectorAll("[data-fuel]").forEach(button=>button.addEventListener("click",()=>{
+    if(button.dataset.fuel!==order[fuelStep]){
+      document.getElementById("build-status").textContent=fuelStep===0
+        ?"Tinder first. The larger wood will need a flame to catch."
+        :fuelStep===1?"Give the tinder some small dry sticks before the larger wood.":"The small sticks are going. Now add a little larger wood.";
+      return;
+    }
+    button.disabled=true;fuelStep++;
+    if(fuelStep===1){
+      document.getElementById("ember").setAttribute("opacity","1");
+      document.getElementById("build-status").textContent="A spark catches in the tinder. Feed it small dry sticks.";
+    }else if(fuelStep===2){
+      document.getElementById("flame-small").setAttribute("opacity","1");
+      document.getElementById("build-status").textContent="The kindling crackles. Add larger wood a piece at a time.";
+    }else{
+      document.getElementById("flame-high").setAttribute("opacity","1");
+      document.getElementById("pot").setAttribute("opacity","1");
+      build.hidden=true;mealStep.hidden=false;
+      document.getElementById("meal-status").textContent=catchName
+        ?"The pan is warm. Cook the "+catchName.toLowerCase()+" or save it and use the food pack."
+        :"The pan is warm. There’s plenty in the food pack.";
+    }
+  }));
+  document.querySelectorAll("#meals button").forEach(button=>button.addEventListener("click",()=>{
+    meal=button.id==="fish-meal"?"fish":"pack";
+    document.querySelectorAll("#meals button").forEach(item=>item.setAttribute("aria-pressed",String(item===button)));
+    document.getElementById("meal-status").textContent=meal==="fish"
+      ?"Dad tends the pan while you portion the fish. Cook it through, then call everyone in."
+      :"You stir the pot while Dad sets out six bowls. Call everyone in.";
+    document.getElementById("serve").disabled=false;
+  }));
+  document.getElementById("serve").addEventListener("click",()=>{
+    if(!meal)return;
+    mealStep.hidden=true;end.hidden=false;
+    document.getElementById("ending").textContent=meal==="fish"
+      ?"Six plates pass around the fire. Dad saves you the last piece of fish, crisp at the edges. Across the lake, a loon starts calling."
+      :"Six bowls pass around the fire. Dad hands you the warmest one, and everyone eats with their feet toward the lake.";
+  });
+  document.getElementById("douse").addEventListener("click",()=>{
+    ["ember","flame-small","flame-high","pot"].forEach(id=>document.getElementById(id).setAttribute("opacity","0"));
+    document.getElementById("end-status").textContent="You pour on water, stir the ashes, and check again. Nothing is warm enough to restart.";
+    document.getElementById("douse").hidden=true;
+    document.getElementById("done").hidden=false;
+  });
+})();
+</script>
+</body>
+</html>
