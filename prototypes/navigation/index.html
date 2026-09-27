@@ -125,7 +125,7 @@
       checkpoint.textContent = "Route complete";
       question.textContent = "You found the portage landing";
       clue.textContent = "You matched the sheltered bay, read the narrows, and spotted the portage trail. A wrong turn would only have led to another little discovery.";
-      choices.hidden = true; continueButton.hidden = false; continueButton.textContent = "Finish navigation";
+      choices.hidden = true; continueButton.hidden = true;
       status.textContent = "The portage landing is just ahead. Your family is ready to carry across.";
       drawProgress(); return;
     }
@@ -155,7 +155,7 @@
     }
   });
   continueButton.addEventListener("click", () => {
-    if (complete) { continueButton.disabled = true; continueButton.textContent = "Navigation complete"; return; }
+    if (complete) return;
     index++;
     if (index >= checkpoints.length) { complete = true; window.AbundantWaters.complete(); }
     render();
