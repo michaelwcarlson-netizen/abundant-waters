@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>J-Stroke Wobble Meter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -175,7 +180,9 @@
     .hint { transition: none; }
   }
 </style>
-
+<link rel="stylesheet" href="../immersive.css">
+</head>
+<body>
 <div id="app">
   <canvas id="c" aria-label="Top-down view of a canoe on Sawbill Lake. Drag down on either side to paddle." role="img"></canvas>
 
@@ -954,3 +961,7 @@
   requestAnimationFrame(frame);
 })();
 </script>
+
+<script src="../immersive-bridge.js"></script>
+</body>
+</html>
