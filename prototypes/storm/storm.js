@@ -145,7 +145,7 @@
     $('weather-fill').style.width=game.time+'%';document.querySelector('.weather-track').setAttribute('aria-valuenow',String(Math.round(game.time)));
     $('canoe-tools').hidden=selected!=='canoe';$('edge-tools').hidden=side===null;$('gear-help').hidden=side!==null||selected==='canoe';
     $('selected').textContent=side!==null?(side?'Right tarp edge':'Left tarp edge'):g.name;
-    if(side!==null){const e=game.edges[side];$('condition').textContent=`Height ${Math.round(e.height)} · Tension ${Math.round(e.tension*100)}%`;}
+    if(side!==null){const e=game.edges[side];$('condition').textContent=`${e.height<45?'Low':e.height<78?'Mid-height':'High'} · Tension ${Math.round(e.tension*100)}%`;}
     else if(g.id==='canoe'){$('condition').textContent=`Line ${Math.round(g.tie*100)}% · ${g.strain>.7?'straining':g.moving>2?'sliding':'steady'}`;}
     else $('condition').textContent=`${g.wet<25?'Dry':g.wet<60?'Damp':'Soaked'} · ${Math.round((1-g.exposure)*100)}% covered`;
     if(game.time>feedbackUntil){

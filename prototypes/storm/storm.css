@@ -33,3 +33,10 @@ dl { display:grid; grid-template-columns:1fr auto; gap:6px; font-size:14px; bord
 @media (max-width:480px) { .weather-bar { gap:8px; }.wind { max-width:92px; font-size:10px; gap:3px; } #wind-arrow { font-size:21px; } .weather-bar button { padding-inline:9px; } .selection { gap:7px; } #selected { font-size:15px; } #condition { max-width:38%; font-size:11px; } #select-next { font-size:11px; padding-inline:8px; } #feedback { font-size:12px; } .paper { padding:18px; } .paper h2 { font-size:25px; } #cue { font-size:13px; } }
 @media (max-height:500px) and (min-width:550px) { #storm { padding-right:225px; } #tools { position:absolute; inset:0 0 0 auto; width:225px; padding:8px; border-top:0; border-left:1px solid var(--line); } .selection { flex-wrap:wrap; } #condition { max-width:100%; margin:0; text-align:left; width:100%; } .actions { flex-wrap:wrap; }.actions button { flex:1 1 40%; } #cue { font-size:12px; }.weather-bar { min-height:49px; padding-block:3px; }.eyebrow { font-size:9px; } .paper { padding:14px; } h2 { font-size:23px; } }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto; } }
+/* Keep the playfield stationary when selection or feedback changes. */
+#storm .weather-bar > div:first-child { flex:1; min-width:0; }
+#storm h1 { font:600 clamp(17px,2vw,23px)/1.15 Georgia,serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#feedback { height:3.9em; min-height:3.9em; overflow:hidden; line-height:1.3; }
+@media(max-width:480px) { #storm h1 { font-size:17px; } .weather-bar { min-height:61px; } }
+#tools button { min-height:48px; }
+#gear-help { height:48px; min-height:48px; }
