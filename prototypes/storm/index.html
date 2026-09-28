@@ -10,48 +10,41 @@
 <body>
 <main id="storm">
   <header class="weather-bar">
-    <div><span class="eyebrow">Smoke Lake · Day two</span><h1 id="phase">A change in the air</h1></div>
-    <div class="wind"><span id="wind-arrow" aria-hidden="true">➜</span><span id="wind-label">Wind crossing camp</span></div>
+    <div><span class="eyebrow">Smoke Lake · Day two</span><h1 id="phase">Wind on the water</h1></div>
+    <div class="wind"><span id="wind-arrow" aria-hidden="true">➜</span><span id="wind-label">Light breeze</span></div>
     <button id="pause" type="button" aria-label="Pause and controls">Pause</button>
   </header>
   <div class="weather-track" role="progressbar" aria-label="Weather passing through camp" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="weather-fill"></span></div>
-  <section id="field" aria-label="Campsite">
-    <canvas id="camp" tabindex="0" aria-label="Storm campsite. Drag equipment to move it. Tab through equipment with Select next. Arrow keys move selected gear; Q and E rotate the canoe; Space secures it. For tarp edges, Up and Down change height, Left and Right change tension." aria-describedby="feedback"></canvas>
-    <p id="cue">Watch the lake. The wind is on its way.</p>
+  <section id="field" aria-label="Smoke Lake campsite">
+    <canvas id="camp" tabindex="0" aria-label="Walk through camp with WASD or arrows. Press E or Space to pick up or put down nearby gear, take a canoe bow, or take a tarp guyline. Hold E or Space while towing to tie the canoe. While holding a guyline, use movement to change tension and edge height." aria-describedby="feedback"></canvas>
+    <p id="cue">A breeze, a loose jacket, and a little room to explore.</p>
     <div id="intro" class="sheet">
-      <div class="paper">
-        <span class="eyebrow">Storm Day</span><h2>That wind has plans.</h2>
-        <p>Keep camp together as the rain moves in.</p>
-        <p><b>Drag</b> the canoe and loose gear. Turn and secure the canoe. Pull a tarp edge <b>down</b> to lower it, <b>out</b> to tighten it.</p>
-        <p class="quiet">There’s no set order. Watch what moves and where the rain gets in.</p>
-        <button id="begin" type="button">Get camp ready</button>
+      <div class="paper"><span class="eyebrow">Storm Day</span><h2>A breeze with ideas.</h2>
+        <p>Your jacket is loose. The tarp is waiting. Wander over and take a look.</p>
+        <p class="quiet">Walk with the thumb pad or WASD / arrows. Use the camp action to pick things up and put them down.</p>
+        <button id="begin" type="button">Step into camp</button>
       </div>
     </div>
     <div id="pause-sheet" class="sheet" hidden>
       <div class="paper"><span class="eyebrow">Take your time</span><h2>Camp is paused.</h2>
-        <p>Drag gear anywhere on the ground. Tap it to select. For the canoe, turn it and hold <b>Secure line</b>. Moving it releases its line.</p>
-        <p>Drag either round tarp handle down to lower the edge; pull outward to tighten. Watch rain fall past the edges.</p>
-        <p class="quiet">Keyboard: select with Tab / Select next. Arrows move gear or adjust a tarp edge. Q/E turn the canoe. Hold Space to secure it. P pauses.</p>
+        <p>Walk with the thumb pad or WASD / arrows. Tap the camp action, or E / Space, to pick up, put down, or take a nearby guyline.</p>
+        <p>Tow the canoe by its bow. Walking turns the hull; hold the camp action to tie its line where it rests.</p>
+        <p>With a guyline in hand, lean sideways to change tension and down to lower the tarp edge. Let go with the camp action.</p>
+        <p class="quiet">There is no right order. Rain can blow under the edges. You can recover things while it rains. P pauses.</p>
         <button id="resume" type="button">Back to camp</button>
       </div>
     </div>
-    <div id="result" class="sheet" hidden>
-      <div class="paper"><span class="eyebrow">After the shower</span><h2 id="result-title">Rain dripping from the pines.</h2>
-        <p id="story"></p><dl id="results"></dl><p id="comparison" class="quiet"></p>
-        <div class="replay"><button id="retry" type="button">Try this weather again</button><button id="new-wind" type="button">A different wind</button></div>
-      </div>
+    <div id="controls" aria-label="Camp controls">
+      <div id="joystick" role="group" aria-label="Thumb movement pad"><span class="pad-mark" aria-hidden="true">✣</span><span id="thumb" aria-hidden="true"></span><span class="pad-label">Walk</span></div>
+      <div class="interaction"><span id="context">Rain jacket</span><button id="interact" type="button"><span id="action-label">Pick up</span><span id="action-hint">E / Space</span><span id="tie-fill" aria-hidden="true"></span></button></div>
     </div>
+    <p id="feedback" role="status" aria-live="polite">You have a little time before the rain.</p>
+    <div id="replay" hidden><p id="ending-note">A little corner of camp, kept together.</p><button id="retry" type="button">Same wind again</button></div>
   </section>
-  <footer id="tools">
-    <div class="selection"><button id="select-next" type="button" aria-label="Select next equipment or tarp edge">Select next</button><strong id="selected">Canoe</strong><span id="condition">Drag inland; turn into the wind.</span></div>
-    <div class="actions" id="canoe-tools"><button data-hold="turn-left" type="button" aria-label="Turn canoe counterclockwise">↶ Turn</button><button data-hold="turn-right" type="button" aria-label="Turn canoe clockwise">Turn ↷</button><button data-hold="secure" id="secure" type="button" aria-label="Hold to secure canoe line">Secure line</button></div>
-    <div class="actions" id="edge-tools" hidden><button data-hold="lower" type="button">Lower edge</button><button data-hold="raise" type="button">Raise edge</button><button data-hold="tighten" type="button">Pull tight</button></div>
-    <p id="gear-help" hidden>Drag to move. Leave room between things; watch the dripping edge.</p>
-    <p id="feedback" role="status" aria-live="polite">The loose jacket catches the breeze. Where will you start?</p>
-  </footer>
 </main>
 <script src="../immersive-bridge.js"></script>
 <script src="storm-physics.js"></script>
+<script src="storm-adventure.js"></script>
 <script src="storm.js"></script>
 </body>
 </html>
