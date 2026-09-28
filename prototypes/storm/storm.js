@@ -66,7 +66,9 @@
     if(g)game.held=g.id;
   });
   canvas.addEventListener('pointermove',e=>{if(drag?.id===e.pointerId)drag.point=screenPoint(e);});
-  const release=e=>{if(drag?.id===e.pointerId){drag=null;game.held=null;}};
+  const release=e=>{if(drag?.id===e.pointerId){
+    if(e.type==='pointerup' && drag.side===null){const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,10);}
+    drag=null;game.held=null;}};
   canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('lostpointercapture',release);
   $('select-next').addEventListener('click',()=>{select(ids[(ids.indexOf(selected)+1)%ids.length]);canvas.focus({preventScroll:true});});
   document.querySelectorAll('[data-hold]').forEach(b=>{
@@ -92,7 +94,7 @@
       if(drag.side!==null){
         const d=drag,sign=d.side?1:-1;
         game.adjustEdge(d.side,d.edge.height-(d.point.y-d.start.y)/(.65*unit),d.edge.tension+sign*(d.point.x-d.start.x)/(90*unit));
-      }else{const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,dt);}
+      }else{const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,10);}
     }
     if(hold)applyAction(hold,dt);
     const side=sideOf(selected);
