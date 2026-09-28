@@ -14,3 +14,17 @@
 - [Portage Trail](prototypes/portage/index.html): choose your load, then balance packs and tilt the canoe from Sawbill to Smoke ([hosted prototype](https://claude.ai/artifact/68tMZjVatSB8xAbWd9ANBi))
 - [Bear Hang](prototypes/bear-hang/index.html): throw a rope over a branch, hoist the food pack 12 ft up and 6 ft out, then see what the bear does at 2 a.m. ([hosted prototype](https://claude.ai/artifact/BD5rvMKzuT4XWdhxjcCx1L))
 - [Storm Tarp](prototypes/tarp/index.html): pitch the tarp and tie your knots before the storm, then see who stays dry ([hosted prototype](https://claude.ai/artifact/3WH33nuCWfrb9iwnyyQ2dk))
+
+## Local run and health checks
+
+This is a static HTML game. There is no compile/build step or application dependency installation.
+From this directory, run `python3 -m http.server 8765 --bind 127.0.0.1`, then open
+`http://127.0.0.1:8765` in a browser.
+
+The optional browser regression check requires Node.js, Playwright (resolvable by Node),
+and a Playwright Chromium installation: `node tests/health-check.cjs`.
+To use an existing Chrome installation instead, set `BROWSER_PATH` to its executable.
+Set `GAME_URL` if the server uses another address. The check covers trip navigation,
+activity completion/replay, DOM references, runtime errors, and phone viewport loading.
+Completion checks use test-only injected state to reach the exits; they do not replace
+normal-paced human playtesting. See [the post-merge report](docs/health-check.md).

@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>J-Stroke Wobble Meter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -906,7 +910,7 @@
     $('end').hidden = false;
     $('again').focus();
   }
-  $('again').addEventListener('click', () => { $('end').hidden = true; reset(); });
+  $('again').addEventListener('click', () => { $('end').hidden = true; reset(); $('again').blur(); });
 
   // ---------- Tuning panel ----------
   const knobs = [

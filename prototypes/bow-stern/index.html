@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bow and Stern</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -336,11 +340,13 @@
   let stillT, finished, started, t0, tFin, shake, cam, needle, lastLabel, bonkCd, windF;
   let inReeds, wakeT, lastSternT, offRun, underRun, fresh;
   let tNow = 0;
+  let endTimer = 0;
   const keys = { space: false, j: false, f: false };
 
   const newPaddler = (side) => ({ side, st: null, switchT: 0, pd: { x: side * 19, y: 0, r: 0 }, next: 0, drawT: 0, sameSide: 0 });
 
   function reset() {
+    clearTimeout(endTimer);
     c = { x: START.x, y: START.y, th: 0, vx: 0, vy: 0, om: 0 };
     pad = { bow: newPaddler(-1), stern: newPaddler(1) };
     stats = { strokes: 0, synced: 0, syncStreak: 0, bestSync: 0, clean: 0, huts: 0, draws: 0, dodges: 0, bonks: 0 };
@@ -547,8 +553,8 @@
     say(b.side < 0 ? 'Drawing left!' : 'Drawing right!', 1.3);
     if (!started) { started = true; t0 = tNow; }
   }
-  $('hutBtn').addEventListener('click', hut);
-  $('drawBtn').addEventListener('click', callDraw);
+  $('hutBtn').addEventListener('click', () => { hut(); $('hutBtn').blur(); });
+  $('drawBtn').addEventListener('click', () => { callDraw(); $('drawBtn').blur(); });
 
   // ---------- Input ----------
   const pointers = new Map();
@@ -797,7 +803,7 @@
       if (fresh && !coop) award('fresh');
       award('cross');
       say('We made it!', 2.5);
-      setTimeout(showEnd, 1500);
+      endTimer = setTimeout(showEnd, 1500);
     }
 
     const k = 1 - Math.exp(-dt * 3.5);
@@ -1192,7 +1198,7 @@
     $('end').hidden = false;
     $('again').focus();
   }
-  $('again').addEventListener('click', () => { $('end').hidden = true; reset(); startHint(); });
+  $('again').addEventListener('click', () => { $('end').hidden = true; reset(); startHint(); $('again').blur(); });
 
   // ---------- Controls in the header ----------
   $('coopBtn').addEventListener('click', () => {
@@ -1201,6 +1207,7 @@
     $('end').hidden = true;
     reset();
     startHint();
+    $('coopBtn').blur();
   });
   const knobs = [
     ['tThrust', 'oThrust', 'thrust', (v) => v.toFixed(0)],
