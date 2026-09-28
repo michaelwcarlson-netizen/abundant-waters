@@ -4,7 +4,7 @@
 
 ## Play
 
-- [Start the connected day-one trip](index.html): break camp, paddle Sawbill, read the shoreline, cross the portage, paddle to a campsite, choose a tent spot, make camp, fish, snorkel, cook dinner, hang the food, find Polaris under the night sky, then ride out a storm the next morning at Smoke Lake. Progress lasts only while the page is open; refreshing starts over.
+- [Start the connected day-one trip](index.html): break camp, paddle Sawbill, read the shoreline, cross the portage, land and unload at a campsite, make camp, fish, snorkel, cook dinner, hang the food, find Polaris under the night sky, then ride out a storm the next morning at Smoke Lake. Progress lasts only while the page is open; refreshing starts over.
 
 ## Playing a level
 
@@ -21,7 +21,7 @@ Choose an activity in the trip guide, then tap **Start Level** (or **Full Screen
 - [Snorkeling and Diving](prototypes/snorkeling/index.html): explore the rocks, a sunken log, and the sandy bottom with your buddy nearby.
 - [Campfire & Dinner](prototypes/campfire/index.html): choose dry wood, build the fire from tinder up, cook a catch or camp meal, and put the fire out.
 - [Night Sky](prototypes/night-sky/index.html): connect the Big Dipper, find Polaris, and linger by the quiet lake.
-- [Arriving at Smoke Lake](prototypes/arrival/index.html): paddle past an occupied site, land at an open designated campsite, and find existing bare ground for the tent.
+- [Arriving at Smoke Lake](prototypes/arrival/index.html): steer through crosswind and rocks, beach the canoe, unload gear, and pull or tether the hull above the waterline.
 - [Storm Day](prototypes/storm/index.html): read the weather, get off the water, secure camp, pitch the tarp, and wait together for the rainbow.
 - [Bear Hang](prototypes/bear-hang/index.html): throw a rope over a branch, hoist the food pack 12 ft up and 6 ft out, then see what the bear does at 2 a.m. ([hosted prototype](https://claude.ai/artifact/BD5rvMKzuT4XWdhxjcCx1L))
 - [Storm Tarp](prototypes/tarp/index.html): pitch the tarp and tie your knots before the storm, then see who stays dry ([hosted prototype](https://claude.ai/artifact/3WH33nuCWfrb9iwnyyQ2dk))
