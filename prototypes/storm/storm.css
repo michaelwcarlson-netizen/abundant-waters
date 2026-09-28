@@ -39,4 +39,5 @@ dl { display:grid; grid-template-columns:1fr auto; gap:6px; font-size:14px; bord
 #feedback { height:3.9em; min-height:3.9em; overflow:hidden; line-height:1.3; }
 @media(max-width:480px) { #storm h1 { font-size:17px; } .weather-bar { min-height:61px; } }
 #tools button { min-height:48px; }
+.actions button { height:48px; padding:6px 8px; font-size:12px; }
 #gear-help { height:48px; min-height:48px; }

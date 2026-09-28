@@ -65,17 +65,17 @@
       edge:side!==null?{...game.edges[side]}:null};
     if(g)game.held=g.id;
   });
-  canvas.addEventListener('pointermove',e=>{if(drag?.id===e.pointerId)drag.point=screenPoint(e);});
+  canvas.addEventListener('pointermove',e=>{if(drag?.id===e.pointerId){drag.point=screenPoint(e);applyDrag();}});
   const release=e=>{if(drag?.id===e.pointerId){
-    if(e.type==='pointerup' && drag.side===null){const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,10);}
-    drag=null;game.held=null;}};
+    if(e.type==='pointerup'){drag.point=screenPoint(e);applyDrag();}
+    drag=null;game.held=null;updateUi(true);}};
   canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('lostpointercapture',release);
   $('select-next').addEventListener('click',()=>{select(ids[(ids.indexOf(selected)+1)%ids.length]);canvas.focus({preventScroll:true});});
   document.querySelectorAll('[data-hold]').forEach(b=>{
     b.addEventListener('pointerdown',e=>{if(!active())return;e.preventDefault();cancelInput();hold=b.dataset.hold;b.classList.add('pressed');b.setPointerCapture(e.pointerId);});
     for(const name of ['pointerup','pointercancel','lostpointercapture']) b.addEventListener(name,()=>{hold=null;b.classList.remove('pressed');});
     // Assistive technology activation, separate from held pointer input.
-    b.addEventListener('click',e=>{if(e.detail===0&&active())applyAction(b.dataset.hold,.22);});
+    b.addEventListener('click',e=>{if(e.detail===0&&active()){applyAction(b.dataset.hold,.22);updateUi(true);}});
   });
   function applyAction(action,dt){
     const side=sideOf(selected);
@@ -89,13 +89,15 @@
         edge.tension+(action==='tighten'?.6:action==='loosen'?-.6:0)*dt);
     }
   }
+  function applyDrag(){
+    if(!drag||!active())return;
+    if(drag.side!==null){
+      const d=drag,sign=d.side?1:-1;
+      game.adjustEdge(d.side,d.edge.height-(d.point.y-d.start.y)/(.65*unit),d.edge.tension+sign*(d.point.x-d.start.x)/(90*unit));
+    }else{const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,10);}
+  }
   function inputs(dt){
-    if(drag){
-      if(drag.side!==null){
-        const d=drag,sign=d.side?1:-1;
-        game.adjustEdge(d.side,d.edge.height-(d.point.y-d.start.y)/(.65*unit),d.edge.tension+sign*(d.point.x-d.start.x)/(90*unit));
-      }else{const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,10);}
-    }
+    applyDrag();
     if(hold)applyAction(hold,dt);
     const side=sideOf(selected);
     if(side!==null){
@@ -121,7 +123,7 @@
   window.addEventListener('keyup',e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key));
   function togglePause(){
     if(!started||game.done)return;
-    manualPause=!manualPause;cancelInput();$('pause-sheet').hidden=!manualPause;
+    manualPause=!manualPause;cancelInput();updateUi(true);$('pause-sheet').hidden=!manualPause;
     if(manualPause)$('resume').focus();else canvas.focus({preventScroll:true});
   }
   $('pause').addEventListener('click',togglePause);$('resume').addEventListener('click',togglePause);
@@ -139,7 +141,7 @@
   function updateUi(force=false){
     if(!force&&game.time-lastUi<.2)return;lastUi=game.time;
     const w=game.weather,side=sideOf(selected),g=item();
-    $('phase').textContent=w.phase==='approach'?'Wind on the water':w.phase==='rain'?'Rain through the pines':w.phase==='easing'?'The far shore returns':'Camp held together';
+    $('phase').textContent=w.phase==='approach'?'Wind on the water':w.phase==='rain'?'Rain through the pines':w.phase==='easing'?'The far shore returns':'Rain leaving camp';
     $('wind-arrow').style.transform=`rotate(${w.angle}rad)`;
     $('wind-label').textContent=w.strength>.75?'Strong gusts':w.strength>.4?'Wind building':'Light breeze';
     $('weather-fill').style.width=game.time+'%';document.querySelector('.weather-track').setAttribute('aria-valuenow',String(Math.round(game.time)));
@@ -161,6 +163,7 @@
   }
   function finish(){
     if(reported)return;reported=true;
+    updateUi(true);
     const r=game.result(),previous=history.get(game.scenario);history.set(game.scenario,r);
     $('result-title').textContent=r.dryness>=80?'A dry corner of the woods.':r.dryness>=50?'A little damp. Still together.':'Well, that was a shower.';
     $('story').textContent=r.dryness>=80?'Dad settles beside the packs. “Remember that trip when the rain found my boots?” He turns one over, just to check.':r.dumps>0?'Dad tips water out of a mug. “The tarp filled that one for us.” You can already see how you would pitch it next time.':'Dad drapes the damp things out. “Next time, we’ll see that wind coming.” The lake is in no hurry.';
@@ -264,11 +267,12 @@
   }
   function drawRain(){
     const w=game.weather;if(w.rain<=0)return;
+    const roof=game.projectedRoof();
     const count=Math.floor(w.rain*(reduced?35:140)),time=reduced?game.time*.25:game.time;
     ctx.strokeStyle='#d3dfd076';ctx.lineWidth=1;
     for(let i=0;i<count;i++){
       const x=((i*131+time*w.x*155)%660+660)%660-10,y=140+((i*73+time*300)%420);
-      if(game.shelteredAt(x,y)&&y>CAMP.back)continue;
+      if(game.shelteredAt(x,y,roof)&&y>CAMP.back)continue;
       const p=P(x,y);line({x:p.x-w.x*8*w.strength,y:p.y-13},{x:p.x,y:p.y},'#d7e4d477');
     }
     for(const splash of game.splashes){const p=P(splash.x,splash.y);ellipse(p.x,p.y,(1-splash.life)*45*unit,8*unit,`rgba(192,213,199,${splash.life*.5})`);}

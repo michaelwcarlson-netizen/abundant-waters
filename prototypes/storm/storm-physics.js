@@ -73,9 +73,8 @@
       return this.cloth.map(n => ({ x: n.x + n.h * w.x * lean,
         back: CAMP.back + n.h * w.y * lean, front: CAMP.front + n.h * w.y * lean }));
     }
-    shelteredAt(x, y) {
+    shelteredAt(x, y, roof = this.projectedRoof()) {
       // Parallel rain rays projected from the actual cloth onto the ground.
-      const roof = this.projectedRoof();
       for (let i = 0; i < N - 1; i++) {
         const a = roof[i], b = roof[i + 1];
         const u = (x - a.x) / (b.x - a.x || .0001);
@@ -83,10 +82,10 @@
       }
       return false;
     }
-    coverage(g) {
+    coverage(g, roof = this.projectedRoof()) {
       let sheltered = 0;
       for (const [dx, dy] of [[0, 0], [-g.r, 0], [g.r, 0], [0, -g.r], [0, g.r]]) {
-        if (this.shelteredAt(g.x + dx, g.y + dy)) sheltered++;
+        if (this.shelteredAt(g.x + dx, g.y + dy, roof)) sheltered++;
       }
       return sheltered / 5;
     }
@@ -150,11 +149,11 @@
     tick(dt) {
       this.time += dt; this.weather = weatherAt(this.time, this.scenario);
       this.clothStep(dt);
-      const w = this.weather;
+      const w = this.weather, roof = this.projectedRoof();
       // Loaded adjustable lines stretch, rather than selecting a right/wrong knot.
       for (const e of this.edges) e.tension = Math.max(0, e.tension - w.rain * w.strength * .0018 * dt);
       for (const g of this.items) {
-        const cover = this.coverage(g); g.exposure = 1 - cover;
+        const cover = this.coverage(g, roof); g.exposure = 1 - cover;
         const shore = clamp((g.y - 465) / 55, 0, 1);
         let runoff = 0;
         for (let side = 0; side < 2; side++) if (Math.abs(g.x - this.edgeX(side)) < g.r + 10 && g.y > CAMP.back && g.y < CAMP.front) runoff += this.drain[side] * .9;
