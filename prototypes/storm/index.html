@@ -2,245 +2,56 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#223d2c">
-<title>Storm Day at Smoke Lake — Abundant Waters</title>
-<style>
-  :root { --ink:#1c2a2e; --paper:#f1ebdd; --line:#c9bc9f; --pine:#223d2c; --lake:#2d6a80; --clay:#c0452b; }
-  * { box-sizing:border-box; }
-  [hidden] { display:none !important; }
-  body { margin:0; background:#eee9dd; color:var(--ink); font:16px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif; }
-  main { width:min(1150px,100%); margin:auto; padding:clamp(10px,2vw,24px); padding-bottom:max(18px,env(safe-area-inset-bottom)); }
-  header { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:0 0 12px; }
-  .eyebrow { margin:0; color:#9b432b; font-size:.75rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
-  h1,h2 { font-family:Georgia,serif; } h1 { margin:0; font-size:clamp(1.5rem,3vw,2.2rem); }
-  header p:last-child { margin:0; color:#455653; }
-  .game { border:1px solid #a7aaa0; background:#f7f4e9; box-shadow:0 10px 30px #223d2c12; }
-  .scene { position:relative; height:clamp(390px,58svh,610px); overflow:hidden; isolation:isolate; background:#69868a; touch-action:none; }
-  .landscape { position:absolute; inset:0; width:100%; height:100%; }
-  .dim { position:absolute; inset:0; pointer-events:none; background:#182c3a35; opacity:0; transition:opacity 1s; }
-  .rain { position:absolute; inset:0; opacity:0; pointer-events:none; background:repeating-linear-gradient(108deg,transparent 0 18px,#e4eded80 19px,#e4eded80 20px,transparent 21px 36px); background-size:180px 180px; animation:rain 1.4s linear infinite; transition:opacity 1s; }
-  @keyframes rain { to { background-position:-70px 130px; } }
-  .game[data-phase="rain"] .rain { opacity:.44; }
-  .game[data-phase="rain"] .dim { opacity:1; }
-  .game[data-phase="clear"] .dim,.game[data-phase="clear"] .rain { opacity:0; }
-  .glow { position:absolute; inset:0; pointer-events:none; background:linear-gradient(110deg,#ffdeb244,transparent 60%); opacity:0; transition:opacity 1.7s; }
-  .game[data-phase="clear"] .glow { opacity:1; }
-  .tarp { position:absolute; left:28%; top:29%; width:43%; height:22%; pointer-events:none; filter:drop-shadow(2px 9px 3px #21332770); transform-origin:90% 10%; transition:transform .25s; }
-  .tarp svg,.item svg { width:100%; height:100%; display:block; }
-  .tarp.low { transform:skewY(7deg) scaleY(.8); }
-  button { font:inherit; cursor:pointer; }
-  button:focus-visible,input:focus-visible { outline:3px solid #f2b86b; outline-offset:3px; }
-  .target { position:absolute; z-index:2; border:2px dashed #f3e9ca; border-radius:8px; background:#233e35aa; color:#fff7e5; min-width:88px; min-height:56px; padding:5px 9px; font-size:.78rem; font-weight:750; line-height:1.13; text-align:center; }
-  .target.ready { border-style:solid; background:#2c543d; }
-  .target.over { background:#d5b878; color:#172d24; }
-  #high-ground { left:8%; top:58%; }
-  #under-cover { left:39%; top:46%; }
-  .item { position:absolute; z-index:3; border:0; padding:0; color:#fff; background:transparent; touch-action:none; user-select:none; -webkit-user-select:none; filter:drop-shadow(1px 5px 4px #1c2a2e9a); }
-  .item svg { pointer-events:none; }
-  .item span { display:block; width:max-content; max-width:125px; margin:2px auto 0; padding:2px 6px; border-radius:3px; background:#233e35e6; font-size:.78rem; font-weight:750; }
-  .item.dragging { opacity:.35; }
-  #canoe { left:70%; top:73%; width:25%; height:64px; }
-  #gear { left:62%; top:54%; width:68px; height:66px; }
-  #canoe.placed { left:8%; top:72%; }
-  #gear.placed { left:49%; top:49%; }
-  .drag-ghost { position:fixed; z-index:999; width:100px; height:65px; pointer-events:none; filter:drop-shadow(2px 7px 4px #132021a8); transform:translate(-50%,-50%); }
-  .drag-ghost svg { width:100%; height:100%; }
-  .wind { position:absolute; z-index:4; left:57%; top:58%; width:min(39%,270px); padding:9px 12px 11px; border:1px solid #d6c9ab; background:#f7f1dfed; color:#1d342c; box-shadow:0 3px 8px #152d3455; }
-  .wind label { display:block; font-size:.79rem; font-weight:800; }
-  .wind input { width:100%; height:35px; margin:0; accent-color:#a14e32; touch-action:auto; }
-  .wind small { display:block; font-size:.7rem; }
-  .memory { position:absolute; z-index:4; left:11%; top:62%; border:1px solid #e7ddbc; background:#f3e9d2; color:#263e32; padding:8px 10px; min-height:48px; font-weight:750; }
-  .memory:after { content:""; display:block; width:32px; height:2px; margin:3px auto 0; background:#ad7350; }
-  .scene-action { position:absolute; z-index:4; right:max(12px,env(safe-area-inset-right)); bottom:max(13px,env(safe-area-inset-bottom)); min-height:48px; padding:9px 14px; border:1px solid #ecdfbd; border-radius:4px; background:#f4ebd8; color:#263e32; font-weight:800; }
-  .scene-action:hover,.memory:hover { background:white; }
-  .caption { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 16px; border-top:1px solid #b7baa9; }
-  .caption p { margin:0; max-width:65ch; }
-  .caption strong { color:#244536; }
-  .steps { flex:none; color:#5d6257; font-size:.79rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
-  .help { padding:0 16px 12px; margin:0; color:#5a6158; font-size:.81rem; }
-  @media(max-width:650px) {
-    main { padding:8px 0 max(8px,env(safe-area-inset-bottom)); }
-    header { padding:0 max(12px,env(safe-area-inset-left)); margin-bottom:7px; gap:4px 10px; }
-    header p:last-child { width:100%; font-size:.84rem; }
-    .scene { height:clamp(470px,70svh,720px); }
-    .landscape { width:150%; left:-25%; }
-    .tarp { left:17%; top:27%; width:66%; height:20%; }
-    #high-ground { left:5%; top:62%; }
-    #under-cover { left:30%; top:45%; }
-    #canoe { left:61%; top:77%; width:35%; }
-    #gear { left:70%; top:55%; }
-    #canoe.placed { left:7%; top:75%; }
-    #gear.placed { left:42%; top:50%; }
-    .wind { left:33%; top:63%; width:62%; }
-    .memory { left:8%; top:62%; }
-    .caption { align-items:flex-start; flex-direction:column; gap:3px; padding:10px 12px; font-size:.88rem; }
-    .help { padding:0 12px 10px; }
-  }
-  @media(prefers-reduced-motion:reduce) { .rain { animation:none; } *,*:before,*:after { scroll-behavior:auto !important; transition-duration:.01ms !important; } }
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Storm Day · Abundant Waters</title>
 <link rel="stylesheet" href="../immersive.css">
+<link rel="stylesheet" href="storm.css">
 </head>
 <body>
-<main>
-  <header><p class="eyebrow">Smoke Lake · Day two</p><h1>Storm day</h1><p>The wind turns cold. Dad looks across the lake. “Let’s get camp ready.”</p></header>
-  <div class="game" id="game" data-phase="setup">
-    <div class="scene" id="scene" aria-label="Campsite at Smoke Lake, with a canoe at the waterline and loose gear on shore">
-      <svg class="landscape" viewBox="0 0 900 530" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Granite shore, pines, tarp and darkening lake">
-        <defs>
-          <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#687f89"/><stop offset="1" stop-color="#d0c5a8"/></linearGradient>
-          <linearGradient id="lake" x2="0" y2="1"><stop stop-color="#577e84"/><stop offset="1" stop-color="#224b5a"/></linearGradient>
-          <pattern id="topo" width="90" height="50" patternUnits="userSpaceOnUse"><path d="M-30 38 Q12 1 48 35 T125 32" fill="none" stroke="#d5d5bd" stroke-opacity=".21"/></pattern>
-        </defs>
-        <rect width="900" height="530" fill="url(#sky)"/>
-        <g fill="#4a6063"><ellipse cx="500" cy="72" rx="195" ry="39"/><ellipse cx="641" cy="58" rx="150" ry="48"/><ellipse cx="353" cy="79" rx="90" ry="31"/></g>
-        <path d="M0 242 80 180 140 240 235 146 320 245 390 182 468 246 555 152 636 250 752 155 850 240 900 190 900 530 0 530Z" fill="#3d564c"/>
-        <path d="M0 291 Q165 268 310 280 T620 265 T900 280 V530 H0Z" fill="url(#lake)"/>
-        <path d="M0 299 Q100 304 205 280 Q356 261 468 281 T900 289 L900 371 Q756 372 625 359 Q461 351 324 376 Q159 391 0 363Z" fill="#617b6d"/>
-        <path d="M0 368 Q150 350 266 369 T460 365 Q630 353 900 374 L900 530 H0Z" fill="#a59d87"/>
-        <path d="M0 398 Q136 373 250 389 T460 390 Q607 371 900 408" fill="none" stroke="#dfd2b9" stroke-width="5" opacity=".55"/>
-        <path d="M0 422 Q145 406 265 418 T560 418 T900 425" fill="none" stroke="#d2d1bb" stroke-width="3" opacity=".5"/>
-        <path d="M0 360 Q70 385 143 359 T305 357 M570 353 Q675 376 774 351 T900 351" fill="none" stroke="#315862" stroke-width="4" opacity=".58"/>
-        <path d="M0 370 Q130 342 260 368 L290 530 H0Z" fill="#898e7d"/>
-        <path d="M0 370 Q130 342 260 368 L290 530 H0Z" fill="url(#topo)"/>
-        <g fill="#25473a" stroke="#284337" stroke-width="5">
-          <path d="M68 330V110 M68 140l-64 113 64-28 65 28Z M68 105 20 193l48-20 48 20Z"/>
-          <path d="M826 348V124 M826 156l-64 108 64-25 67 28Z M826 115l-45 89 45-22 47 22Z"/>
-          <path d="M885 390V190 M885 221l-44 85 44-18 47 18Z"/>
-          <path d="M210 293V186 M210 208l-32 77 32-14 36 14Z"/>
-        </g>
-        <g fill="#6b7564"><path d="M38 422q40-30 92 1l-20 24H27Z"/><path d="M725 413q52-32 91 2l-11 25h-91Z"/></g>
-        <path d="M278 226 410 144 646 216" fill="none" stroke="#3d3429" stroke-width="5"/>
-        <path d="M409 145v145m236-72v65" stroke="#493b31" stroke-width="5"/>
-        <path d="M302 378q56-14 108-4" fill="none" stroke="#eee2c7" stroke-width="4" opacity=".7"/>
-      </svg>
-      <div class="tarp" id="tarp" aria-hidden="true"><svg viewBox="0 0 390 115" preserveAspectRatio="none"><path d="M9 78 130 5 381 72 198 106Z" fill="#626e58" stroke="#313f34" stroke-width="5"/><path d="M130 5 198 106" stroke="#a4a686" stroke-width="3"/><path d="M9 78 198 106 381 72" fill="none" stroke="#283e35" stroke-width="3"/></svg></div>
-      <div class="dim"></div><div class="rain"></div><div class="glow"></div>
-      <button type="button" class="target" id="high-ground" data-accept="canoe" aria-label="High ground above the waterline">High ground<br>above the water</button>
-      <button type="button" class="target" id="under-cover" data-accept="gear" aria-label="Dry ground under the tarp">Dry ground<br>under the tarp</button>
-      <button type="button" class="item" id="canoe" data-item="canoe" aria-label="Drag canoe to high ground; or select it then select high ground">
-        <svg viewBox="0 0 180 47" aria-hidden="true"><path d="M4 17q88 24 172 0l-16 23Q91 51 22 40Z" fill="#a34e36" stroke="#5a342b" stroke-width="4"/><path d="M8 18q83-17 164 0" fill="none" stroke="#e2aa75" stroke-width="6"/><path d="M55 17v22m68-22v22" stroke="#553e30" stroke-width="5"/></svg><span>Canoe</span>
-      </button>
-      <button type="button" class="item" id="gear" data-item="gear" aria-label="Drag loose gear to dry ground; or select it then select dry ground">
-        <svg viewBox="0 0 70 65" aria-hidden="true"><path d="M14 12h43l8 46H5Z" fill="#936b44" stroke="#493d30" stroke-width="4"/><path d="M14 19 5 5h38l14 14" fill="#c2a675" stroke="#493d30" stroke-width="3"/><path d="M26 16v36m19-32v33" stroke="#413c30" stroke-width="4"/></svg><span>Gear</span>
-      </button>
-      <div class="wind" id="wind" hidden>
-        <label for="edge">Wind from the lake · lower the tarp edge</label>
-        <input id="edge" type="range" min="0" max="100" value="100" aria-label="Lower the tarp edge toward the ground">
-        <small id="edge-hint">Drag the line left until the edge sits low.</small>
+<main id="storm">
+  <header class="weather-bar">
+    <div><span class="eyebrow">Smoke Lake · Day two</span><h1 id="phase">A change in the air</h1></div>
+    <div class="wind"><span id="wind-arrow" aria-hidden="true">➜</span><span id="wind-label">Wind crossing camp</span></div>
+    <button id="pause" type="button" aria-label="Pause and controls">Pause</button>
+  </header>
+  <div class="weather-track" role="progressbar" aria-label="Weather passing through camp" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="weather-fill"></span></div>
+  <section id="field" aria-label="Campsite">
+    <canvas id="camp" tabindex="0" aria-label="Storm campsite. Drag equipment to move it. Tab through equipment with Select next. Arrow keys move selected gear; Q and E rotate the canoe; Space secures it. For tarp edges, Up and Down change height, Left and Right change tension." aria-describedby="feedback"></canvas>
+    <p id="cue">Watch the lake. The wind is on its way.</p>
+    <div id="intro" class="sheet">
+      <div class="paper">
+        <span class="eyebrow">Storm Day</span><h2>That wind has plans.</h2>
+        <p>Keep camp together as the rain moves in.</p>
+        <p><b>Drag</b> the canoe and loose gear. Turn and secure the canoe. Pull a tarp edge <b>down</b> to lower it, <b>out</b> to tighten it.</p>
+        <p class="quiet">There’s no set order. Watch what moves and where the rain gets in.</p>
+        <button id="begin" type="button">Get camp ready</button>
       </div>
-      <button type="button" class="memory" id="memory" hidden>Dad’s story</button>
-      <button type="button" class="scene-action" id="next" hidden>Look across the lake</button>
     </div>
-    <div class="caption"><p id="status" role="status" aria-live="polite"><strong>Two things before the rain.</strong> Drag the canoe to high ground and the loose gear under the tarp.</p><span class="steps" id="steps">Camp · 0 of 3</span></div>
-    <p class="help" id="help">On a keyboard, select an item, then select its destination. The tarp line uses arrow keys.</p>
-  </div>
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="paper"><span class="eyebrow">Take your time</span><h2>Camp is paused.</h2>
+        <p>Drag gear anywhere on the ground. Tap it to select. For the canoe, turn it and hold <b>Secure line</b>. Moving it releases its line.</p>
+        <p>Drag either round tarp handle down to lower the edge; pull outward to tighten. Watch rain fall past the edges.</p>
+        <p class="quiet">Keyboard: select with Tab / Select next. Arrows move gear or adjust a tarp edge. Q/E turn the canoe. Hold Space to secure it. P pauses.</p>
+        <button id="resume" type="button">Back to camp</button>
+      </div>
+    </div>
+    <div id="result" class="sheet" hidden>
+      <div class="paper"><span class="eyebrow">After the shower</span><h2 id="result-title">Rain dripping from the pines.</h2>
+        <p id="story"></p><dl id="results"></dl><p id="comparison" class="quiet"></p>
+        <div class="replay"><button id="retry" type="button">Try this weather again</button><button id="new-wind" type="button">A different wind</button></div>
+      </div>
+    </div>
+  </section>
+  <footer id="tools">
+    <div class="selection"><button id="select-next" type="button" aria-label="Select next equipment or tarp edge">Select next</button><strong id="selected">Canoe</strong><span id="condition">Drag inland; turn into the wind.</span></div>
+    <div class="actions" id="canoe-tools"><button data-hold="turn-left" type="button" aria-label="Turn canoe counterclockwise">↶ Turn</button><button data-hold="turn-right" type="button" aria-label="Turn canoe clockwise">Turn ↷</button><button data-hold="secure" id="secure" type="button">Hold · Secure line</button></div>
+    <div class="actions" id="edge-tools" hidden><button data-hold="lower" type="button">Lower edge</button><button data-hold="raise" type="button">Raise edge</button><button data-hold="tighten" type="button">Pull tight</button></div>
+    <p id="gear-help" hidden>Drag to move. Leave room between things; watch the dripping edge.</p>
+    <p id="feedback" role="status" aria-live="polite">The loose jacket catches the breeze. Where will you start?</p>
+  </footer>
 </main>
-<script>
-(() => {
-  const game=document.getElementById("game"),scene=document.getElementById("scene");
-  const status=document.getElementById("status"),steps=document.getElementById("steps");
-  const canoe=document.getElementById("canoe"),gear=document.getElementById("gear");
-  const targets=[...document.querySelectorAll(".target")],wind=document.getElementById("wind");
-  const edge=document.getElementById("edge"),next=document.getElementById("next");
-  const memory=document.getElementById("memory"),help=document.getElementById("help");
-  let selected=null,drag=null,placed=new Set(),phase="setup",heardStory=false,suppressClick=false;
-  const trip=new URLSearchParams(location.search),tent=trip.get("tent"),dry=Number(trip.get("dry"));
-  function say(message){ status.textContent=message; }
-  function update(){
-    steps.textContent=phase==="setup" ? "Camp · "+placed.size+" of 3" : phase==="rain" ? "Shelter · wait together" : "Storm · passed";
-    if(placed.size===2 && phase==="setup"){
-      wind.hidden=false;
-      say("The canoe and gear are safe. Pull the windward tarp edge lower before the rain reaches camp.");
-    }
-  }
-  function place(item,target){
-    if(phase!=="setup" || placed.has(item))return;
-    if(target!==item){
-      say(item==="canoe" ? "That leaves the canoe exposed. Pull it well above the changing waterline." : "The pack will get soaked there. Tuck it beneath the tarp, off the wet ground.");
-      return;
-    }
-    placed.add(item);const element=item==="canoe"?canoe:gear;
-    element.classList.add("placed");element.setAttribute("aria-label",item==="canoe"?"Canoe secured high on shore":"Gear stashed under the tarp");
-    element.disabled=true;
-    document.querySelector('[data-accept="'+item+'"]').classList.add("ready");
-    say(item==="canoe"?"The canoe is well above the waterline. Now get the loose gear beneath the tarp.":"The gear is tucked into a dry spot. Pull the canoe up from the waterline.");
-    selected=null;targets.forEach(t=>t.classList.remove("over"));update();
-  }
-  document.querySelectorAll(".item").forEach(item=>{
-    item.addEventListener("click",()=>{
-      if(suppressClick){suppressClick=false;return;}
-      if(phase!=="setup" || item.disabled)return;
-      selected=item.dataset.item;
-      targets.forEach(t=>t.classList.toggle("over",t.dataset.accept===selected));
-      say(selected==="canoe"?"Canoe selected. Choose high ground above the water.":"Gear selected. Choose dry ground under the tarp.");
-    });
-    item.addEventListener("pointerdown",e=>{
-      if(phase!=="setup" || item.disabled)return;
-      drag={item:item.dataset.item,originX:e.clientX,originY:e.clientY,moved:false};
-      item.setPointerCapture(e.pointerId);
-    });
-    item.addEventListener("pointermove",e=>{
-      if(!drag || drag.item!==item.dataset.item)return;
-      if(!drag.moved && Math.hypot(e.clientX-drag.originX,e.clientY-drag.originY)<7)return;
-      if(!drag.moved){
-        drag.moved=true;item.classList.add("dragging");
-        const ghost=document.createElement("div");ghost.className="drag-ghost";ghost.innerHTML=item.querySelector("svg").outerHTML;
-        document.body.append(ghost);drag.ghost=ghost;
-      }
-      drag.ghost.style.left=e.clientX+"px";drag.ghost.style.top=e.clientY+"px";
-      const hit=document.elementFromPoint(e.clientX,e.clientY)?.closest("[data-accept]");
-      targets.forEach(t=>t.classList.toggle("over",t===hit));
-    });
-    function end(e){
-      if(!drag || drag.item!==item.dataset.item)return;
-      if(drag.moved){
-        const hit=document.elementFromPoint(e.clientX,e.clientY)?.closest("[data-accept]");
-        drag.ghost.remove();item.classList.remove("dragging");targets.forEach(t=>t.classList.remove("over"));
-        if(hit)place(drag.item,hit.dataset.accept);
-        else say("Try dropping it on a marked place in camp.");
-        suppressClick=true;setTimeout(()=>{suppressClick=false;},0);
-      }
-      drag=null;
-    }
-    item.addEventListener("pointerup",end);
-    item.addEventListener("pointercancel",e=>{if(drag?.ghost)drag.ghost.remove();item.classList.remove("dragging");targets.forEach(t=>t.classList.remove("over"));drag=null;});
-  });
-  targets.forEach(t=>t.addEventListener("click",()=>{
-    if(phase!=="setup")return;
-    if(!selected){say("Choose the canoe or the gear first, then choose where to put it.");return;}
-    place(selected,t.dataset.accept);
-  }));
-  edge.addEventListener("input",()=>{
-    if(phase!=="setup"||placed.size!==2)return;
-    document.getElementById("tarp").classList.toggle("low",Number(edge.value)<=32);
-    if(Number(edge.value)>32){ document.getElementById("edge-hint").textContent="Keep pulling the line toward the ground.";return; }
-    phase="rain";wind.hidden=true;targets.forEach(t=>t.hidden=true);canoe.hidden=true;gear.hidden=true;
-    game.dataset.phase="rain";steps.textContent="Shelter · wait together";
-    memory.hidden=false;next.hidden=false;next.textContent="Look across the lake";
-    say("Rain drums on the tarp over the gear. You and Dad wait inland, away from the exposed shore. Tap Dad’s story while the storm passes.");
-    help.textContent="A tarp sheds rain; it is not lightning shelter. Stay away from the shore and exposed rock during thunder.";
-  });
-  memory.addEventListener("click",()=>{
-    if(phase!=="rain")return;
-    heardStory=true;memory.textContent="That’s the story";
-    let line="Dad remembers the muddy portage and the way everyone laughed when a boot stayed behind.";
-    if(trip.has("dry") && Number.isInteger(dry) && dry>=0 && dry<6)line="Dad points to the dry spot under the tarp. “Yesterday taught us where the rain blows in.”";
-    else if(tent==="moved"||tent==="level")line="Dad points toward the tent. Rain pools in the hollow you skipped. Your sleeping bags stay dry.";
-    say(line+" The rain softens; you listen for thunder.");
-    next.textContent="Check the sky";
-  });
-  next.addEventListener("click",()=>{
-    if(phase!=="rain")return;
-    if(!heardStory){say("Stay a moment. Dad has a story while you wait for the weather to pass.");return;}
-    phase="clear";game.dataset.phase="clear";memory.hidden=true;next.hidden=true;
-    steps.textContent="Storm · passed";
-    say("A strip of light reaches the far shore. Dad listens once more. The lake can wait until thunder has been quiet for at least 30 minutes.");
-    help.textContent="Canoe high. Gear dry. Family together.";
-    window.AbundantWaters.complete();
-  });
-})();
-</script>
 <script src="../immersive-bridge.js"></script>
+<script src="storm-physics.js"></script>
+<script src="storm.js"></script>
 </body>
 </html>
