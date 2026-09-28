@@ -1,245 +1,208 @@
-/* UI and drawing for Storm Day. All coordinates entering physics are camp units. */
+/* Storm Day's campsite renderer and controls. No changes to the shared level player. */
 (() => {
   'use strict';
-  const { Storm, SCENARIOS, CAMP, clamp } = window.StormPhysics;
-  const $ = id => document.getElementById(id);
-  const canvas = $('camp'), ctx = canvas.getContext('2d');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let game = new Storm(0), started = false, manualPause = false, shellPause = false;
-  let selected = 'canoe', drag = null, hold = null, keys = new Set(), last = 0, ending = 0, reported = false;
-  let width = 1, height = 1, mapWidth = 1, sx = 1, sy = 1, ox = 0, oy = 0, unit = 1;
-  let lastUi = -1, feedbackUntil = 0, notices = new Set(), history = new Map(), selectionDirty = true;
-  const ids = ['canoe', 'pack', 'jacket', 'wood', 'paddle', 'left-edge', 'right-edge'];
-  const trees = Array.from({length:38}, (_, i) => ({ x:(i*173+29)%640, y:70+(i*47)%105, size:25+(i*13)%35 }));
-  const sideOf = id => id === 'left-edge' ? 0 : id === 'right-edge' ? 1 : null;
-  const item = () => game.items.find(g => g.id === selected);
-  const active = () => started && !manualPause && !shellPause && !document.hidden && !game.done;
-  const P = (x,y,h=0) => ({x:ox+x*sx, y:oy+(y-100)*sy-h*.42*unit});
-  const U = (x,y) => ({x:(x-ox)/sx, y:(y-oy)/sy+100});
-  function resize() {
-    const r = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
-    width = r.width; height = r.height;
-    canvas.width = Math.round(width*dpr); canvas.height = Math.round(height*dpr);
+  const {Campsite}=window.StormAdventure, {CAMP,clamp}=window.StormPhysics;
+  const $=id=>document.getElementById(id),canvas=$('camp'),ctx=canvas.getContext('2d');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let camp=new Campsite(),game=camp.storm,started=false,manualPause=false,shellPause=false,reported=false;
+  let width=1,height=1,unit=1,baseUnit=1,vertical=1,camera={x:240,y:335},last=0,uiTime=-1;
+  let keys=new Set(),stick={x:0,y:0},stickId=null,actionId=null,stickOrigin=null;
+  const active=()=>started&&!manualPause&&!shellPause&&!document.hidden&&!camp.complete;
+  const P=(x,y,h=0)=>({x:width/2+(x-camera.x)*unit,y:height*.5+(y-camera.y)*vertical-h*.62*unit});
+  const trees=Array.from({length:50},(_,i)=>({x:(i*173+29)%720-40,y:65+(i*47)%120,size:48+(i*13)%44}));
+  function resize(){
+    const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
+    width=r.width;height=r.height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    // Portrait spreads the ground vertically; equipment itself stays undistorted.
-    mapWidth = width >= 900 ? width-350 : width;
-    sx = Math.min(mapWidth/640,1.65); sy = Math.max(.1,(height-20)/480);
-    ox = (mapWidth-640*sx)/2; oy = 10; unit = Math.min(sx,sy);
+    unit=height<350?clamp(height/350,.72,1.05):clamp(Math.min(width/760,height/500),1.04,1.55);
+    baseUnit=unit; vertical=unit*(width<550?.98:.76);
     cancelInput();
   }
   new ResizeObserver(resize).observe(canvas);
-  function say(text,seconds=4) { $('feedback').textContent=text; feedbackUntil=game.time+seconds; }
-  function notice(key,text) { if (!notices.has(key) && game.time>feedbackUntil) {notices.add(key);say(text,5);} }
-  function select(id) {
-    selected=id; selectionDirty=true;
-    const side=sideOf(id);
-    if(side!==null) say('Pull the round handle down to lower this edge, outward to tighten. Watch the cloth change.');
-    else if(id==='canoe') say('Drag inland. Turn the long hull into the wind, then hold Secure line.');
-    else say('Move it wherever you like. Watch for blowing rain and water dripping off the tarp.');
-    updateUi(true);
+  function cancelInput(){
+    keys.clear();stick={x:0,y:0};stickId=null;actionId=null;
+    camp.cancelInput();$('thumb').style.transform='';$('interact').classList.remove('pressed');
   }
-  function cancelInput() { drag=null; hold=null; keys.clear(); game.held=null; document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed')); }
-  function edgeHandle(side) { return P(game.edgeX(side),CAMP.front,game.edges[side].height); }
-  function hitTest(x,y) {
-    // Handles and equipment have at least a 44 CSS-pixel touch diameter.
-    let best=null,bestD=Infinity;
-    for (const side of [0,1]) {
-      const p=edgeHandle(side),d=Math.hypot(x-p.x,y-p.y);
-      if(d<25 && d<bestD){best=side?'right-edge':'left-edge';bestD=d;}
-    }
-    for(const g of game.items){
-      const p=P(g.x,g.y),dx=x-p.x,dy=y-p.y;
-      const a=g.angle,localX=dx*Math.cos(a)+dy*Math.sin(a),localY=-dx*Math.sin(a)+dy*Math.cos(a);
-      const dist=g.id==='canoe'?Math.hypot(Math.max(0,Math.abs(localX)-45*unit),localY):Math.hypot(dx,dy);
-      if(dist<Math.max(24,g.r*unit+5)&&dist<bestD){best=g.id;bestD=dist;}
-    }
-    return best;
-  }
-  function screenPoint(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
-  canvas.addEventListener('pointerdown',e=>{
-    if(!active()||drag)return;
-    const p=screenPoint(e),id=hitTest(p.x,p.y);if(!id)return;
-    e.preventDefault();canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);select(id);
-    const side=sideOf(id),g=item(),u=U(p.x,p.y);
-    drag={id:e.pointerId,start:p,point:p,side,dx:g?g.x-u.x:0,dy:g?g.y-u.y:0,
-      edge:side!==null?{...game.edges[side]}:null};
-    if(g)game.held=g.id;
-  });
-  canvas.addEventListener('pointermove',e=>{if(drag?.id===e.pointerId){drag.point=screenPoint(e);applyDrag();}});
-  const release=e=>{if(drag?.id===e.pointerId){
-    if(e.type==='pointerup'){drag.point=screenPoint(e);applyDrag();}
-    drag=null;game.held=null;updateUi(true);}};
-  canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('lostpointercapture',release);
-  $('select-next').addEventListener('click',()=>{select(ids[(ids.indexOf(selected)+1)%ids.length]);canvas.focus({preventScroll:true});});
-  document.querySelectorAll('[data-hold]').forEach(b=>{
-    b.addEventListener('pointerdown',e=>{if(!active())return;e.preventDefault();cancelInput();hold=b.dataset.hold;b.classList.add('pressed');b.setPointerCapture(e.pointerId);});
-    for(const name of ['pointerup','pointercancel','lostpointercapture']) b.addEventListener(name,()=>{hold=null;b.classList.remove('pressed');});
-    // Assistive technology activation, separate from held pointer input.
-    b.addEventListener('click',e=>{if(e.detail===0&&active()){applyAction(b.dataset.hold,.22);updateUi(true);}});
-  });
-  function applyAction(action,dt){
-    const side=sideOf(selected);
-    if(selected==='canoe'){
-      if(action==='turn-left')game.turn(-dt*1.15);
-      if(action==='turn-right')game.turn(dt*1.15);
-      if(action==='secure')game.secure(dt);
-    }
-    if(side!==null){const edge=game.edges[side];
-      game.adjustEdge(side,edge.height+(action==='lower'?-38:action==='raise'?38:0)*dt,
-        edge.tension+(action==='tighten'?.6:action==='loosen'?-.6:0)*dt);
-    }
-  }
-  function applyDrag(){
-    if(!drag||!active())return;
-    if(drag.side!==null){
-      const d=drag,sign=d.side?1:-1;
-      game.adjustEdge(d.side,d.edge.height-(d.point.y-d.start.y)/(.65*unit),d.edge.tension+sign*(d.point.x-d.start.x)/(90*unit));
-    }else{const p=U(drag.point.x,drag.point.y);game.move(selected,p.x+drag.dx,p.y+drag.dy,10);}
-  }
-  function inputs(dt){
-    applyDrag();
-    if(hold)applyAction(hold,dt);
-    const side=sideOf(selected);
-    if(side!==null){
-      if(keys.has('ArrowDown'))applyAction('lower',dt);
-      if(keys.has('ArrowUp'))applyAction('raise',dt);
-      if(keys.has('ArrowRight'))applyAction('tighten',dt);
-      if(keys.has('ArrowLeft'))applyAction('loosen',dt);
-    }else{
-      const g=item(),dx=Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft')),dy=Number(keys.has('ArrowDown'))-Number(keys.has('ArrowUp'));
-      if(g&&(dx||dy)){game.held=g.id;game.move(g.id,g.x+dx*180*dt,g.y+dy*180*dt,dt);}
-      else if(!drag)game.held=null;
-      if(keys.has('q'))applyAction('turn-left',dt);
-      if(keys.has('e'))applyAction('turn-right',dt);
-      if(keys.has(' '))applyAction('secure',dt);
-    }
-  }
-  window.addEventListener('keydown',e=>{
-    if(e.key.toLowerCase()==='p'&&!e.repeat){togglePause();return;}
-    const k=e.key.length===1?e.key.toLowerCase():e.key;
-    if(!active()||e.target!==canvas)return;
-    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','q','e',' '].includes(k)){e.preventDefault();keys.add(k);}
-  });
-  window.addEventListener('keyup',e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key));
+  function begin(){started=true;$('intro').hidden=true;canvas.focus({preventScroll:true});last=performance.now();updateUi(true);}
+  $('begin').addEventListener('click',begin);
   function togglePause(){
-    if(!started||game.done)return;
-    manualPause=!manualPause;cancelInput();updateUi(true);$('pause-sheet').hidden=!manualPause;
+    if(!started||camp.complete)return;
+    manualPause=!manualPause;cancelInput();$('pause-sheet').hidden=!manualPause;
     if(manualPause)$('resume').focus();else canvas.focus({preventScroll:true});
   }
   $('pause').addEventListener('click',togglePause);$('resume').addEventListener('click',togglePause);
+  function restart(){
+    cancelInput();camp=new Campsite(game.scenario);game=camp.storm;
+    camera={x:240,y:335};reported=false;manualPause=false;uiTime=-1;
+    $('replay').hidden=true;$('controls').hidden=false;$('pause').disabled=false;
+    started=true;last=performance.now();canvas.focus({preventScroll:true});updateUi(true);
+  }
+  $('retry').addEventListener('click',restart);
   window.addEventListener('blur',cancelInput);
   document.addEventListener('visibilitychange',()=>{cancelInput();last=performance.now();});
   window.addEventListener('abundant-waters:pause',()=>{shellPause=true;cancelInput();});
   window.addEventListener('abundant-waters:resume',()=>{shellPause=false;last=performance.now();});
-  $('begin').addEventListener('click',()=>{started=true;$('intro').hidden=true;canvas.focus({preventScroll:true});last=performance.now();});
-  function restart(next){
-    cancelInput();game=new Storm(next);started=true;manualPause=false;ending=0;reported=false;lastUi=-1;notices.clear();feedbackUntil=0;
-    $('result').hidden=true;$('pause').disabled=false;select('canoe');last=performance.now();canvas.focus({preventScroll:true});
+  const movement=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','KeyW','KeyA','KeyS','KeyD'];
+  window.addEventListener('keydown',e=>{
+    if(e.code==='KeyP'&&!e.repeat){togglePause();return;}
+    if(!active()||e.target.tagName==='BUTTON')return;
+    if(movement.includes(e.code)){e.preventDefault();keys.add(e.code);}
+    if((e.code==='KeyE'||e.code==='Space')&&!e.repeat){e.preventDefault();camp.press();}
+  });
+  window.addEventListener('keyup',e=>{
+    keys.delete(e.code);
+    if(e.code==='KeyE'||e.code==='Space')camp.release(!active());
+  });
+  canvas.addEventListener('pointerdown',()=>canvas.focus({preventScroll:true}));
+  // One thumb can keep moving while the other handles gear.
+  const pad=$('joystick');
+  function moveStick(e){
+    if(e.pointerId!==stickId)return;
+    const dx=e.clientX-stickOrigin.x,dy=e.clientY-stickOrigin.y,d=Math.hypot(dx,dy),max=38;
+    const k=d>max?max/d:1;
+    stick={x:d<6?0:dx*k/max,y:d<6?0:dy*k/max};
+    $('thumb').style.transform=`translate(${dx*k}px,${dy*k}px)`;
   }
-  $('retry').addEventListener('click',()=>restart(game.scenario));
-  $('new-wind').addEventListener('click',()=>restart((game.scenario+1)%SCENARIOS.length));
+  pad.addEventListener('pointerdown',e=>{
+    if(!active()||stickId!==null)return;e.preventDefault();
+    const r=pad.getBoundingClientRect();stickOrigin={x:r.left+r.width/2,y:r.top+r.height/2};
+    stickId=e.pointerId;pad.setPointerCapture(e.pointerId);moveStick(e);
+  });
+  pad.addEventListener('pointermove',moveStick);
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(type,e=>{
+    if(e.pointerId===stickId){stickId=null;stick={x:0,y:0};$('thumb').style.transform='';}
+  });
+  const action=$('interact');
+  action.addEventListener('pointerdown',e=>{
+    if(!active()||actionId!==null)return;e.preventDefault();actionId=e.pointerId;
+    action.setPointerCapture(e.pointerId);action.classList.add('pressed');camp.press();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])action.addEventListener(type,e=>{
+    if(e.pointerId===actionId){camp.release(type!=='pointerup'||!active());actionId=null;action.classList.remove('pressed');updateUi(true);}
+  });
+  action.addEventListener('click',e=>{
+    if(e.detail===0&&active()){camp.interact();canvas.focus({preventScroll:true});updateUi(true);}
+  });
+  function input(){return {x:stick.x+Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA')),
+    y:stick.y+Number(keys.has('ArrowDown')||keys.has('KeyS'))-Number(keys.has('ArrowUp')||keys.has('KeyW'))};}
   function updateUi(force=false){
-    if(!force&&game.time-lastUi<.2)return;lastUi=game.time;
-    const w=game.weather,side=sideOf(selected),g=item();
-    $('phase').textContent=w.phase==='approach'?'Wind on the water':w.phase==='rain'?'Rain through the pines':w.phase==='easing'?'The far shore returns':'Rain leaving camp';
+    if(!force&&!(camp.complete&&!reported)&&game.time+camp.after-uiTime<.15)return;uiTime=game.time+camp.after;
+    const w=game.weather,c=camp.context();
+    $('phase').textContent=w.phase==='approach'?'Wind on the water':w.phase==='rain'?'Rain through the pines':w.phase==='easing'?'The far shore returns':'A quiet corner of camp';
     $('wind-arrow').style.transform=`rotate(${w.angle}rad)`;
     $('wind-label').textContent=w.strength>.75?'Strong gusts':w.strength>.4?'Wind building':'Light breeze';
     $('weather-fill').style.width=game.time+'%';document.querySelector('.weather-track').setAttribute('aria-valuenow',String(Math.round(game.time)));
-    $('canoe-tools').hidden=selected!=='canoe';$('edge-tools').hidden=side===null;$('gear-help').hidden=side!==null||selected==='canoe';
-    $('selected').textContent=side!==null?(side?'Right tarp edge':'Left tarp edge'):g.name;
-    if(side!==null){const e=game.edges[side];$('condition').textContent=`${e.height<45?'Low':e.height<78?'Mid-height':'High'} · Tension ${Math.round(e.tension*100)}%`;}
-    else if(g.id==='canoe'){$('condition').textContent=`Line ${Math.round(g.tie*100)}% · ${g.strain>.7?'straining':g.moving>2?'sliding':'steady'}`;}
-    else $('condition').textContent=`${g.wet<25?'Dry':g.wet<60?'Damp':'Soaked'} · ${Math.round((1-g.exposure)*100)}% covered`;
-    if(game.time>feedbackUntil){
-      const moving=game.items.find(g=>g.moving>3),wet=game.items.slice(1).find(g=>g.wet>15&&g.exposure>.4);
-      if(game.events.some(e=>e.type==='dump')){say('A belly of water spilled. Lower an edge and pull the cloth taut so it can drain.');game.events=[];}
-      else if(moving)notice('moving-'+moving.id,`${moving.name} is sliding in the gusts. Move it into the lee or secure the canoe.`);
-      else if(wet)notice('wet-'+wet.id,`${wet.name} is getting wet. Rain blows under a high edge; the dripping edge is wet too.`);
-      else if(game.time>54)notice('shift','The wind is turning. Look at the rain angle and check the far edge.');
-      else if(game.time>32)notice('rain','Here comes the rain. You can still move things and adjust the tarp.');
+    $('action-label').textContent=c.label;$('action-hint').textContent=camp.carry==='canoe'?'Hold to tie · E / Space':camp.edge!==null?'Move to pull · tap to release':'E / Space';
+    $('context').textContent=c.hint;action.disabled=camp.complete||(!camp.near&&!camp.carry&&camp.edge===null);
+    $('tie-fill').style.width=camp.actionUsed&&camp.carry==='canoe'?game.items[0].tie*100+'%':'0%';
+    $('feedback').textContent=camp.messageTime>0?camp.message:game.time<9?'Walk over to the jacket. The wind has noticed it too.':'';
+    $('cue').textContent=game.done?'Rain ticking from the cedar.':game.time<15?'A breeze, a loose jacket, and a little room to explore.':game.time<32?'The far shore darkens.':game.time<55?'Rain finds the loose corners.':game.time<82?'The wind turns around the point.':'Light returns to Smoke Lake.';
+    if(camp.complete&&!reported){
+      reported=true;cancelInput();$('controls').hidden=true;$('feedback').textContent='';$('pause').disabled=true;
+      const r=game.result();$('ending-note').textContent=r.dryness>80?'Dry packs, rain on the roof. A good place to sit.':r.dumps>0?'A tarp spill, some damp gear, and a story for next time.':'A few damp things. Still a good place to sit.';
+      $('replay').hidden=false;
+      window.AbundantWaters.complete({dryness:r.dryness,canoeDrift:r.canoeDrift,tarpSpills:r.dumps});
     }
-    $('cue').textContent=game.done?'The rain moves on. Water ticks from the cedar.':game.time<15?'A dark line crosses Smoke Lake.':game.time<32?'The pine tops start to lean.':game.time<52?'Rain rattles on the tarp.':game.time<76?'The wind swings around the point.':'Light returns to the far shore.';
-    selectionDirty=false;
   }
-  function finish(){
-    if(reported)return;reported=true;
-    updateUi(true);
-    const r=game.result(),previous=history.get(game.scenario);history.set(game.scenario,r);
-    $('result-title').textContent=r.dryness>=80?'A dry corner of the woods.':r.dryness>=50?'A little damp. Still together.':'Well, that was a shower.';
-    $('story').textContent=r.dryness>=80?'Dad settles beside the packs. “Remember that trip when the rain found my boots?” He turns one over, just to check.':r.dumps>0?'Dad tips water out of a mug. “The tarp filled that one for us.” You can already see how you would pitch it next time.':'Dad drapes the damp things out. “Next time, we’ll see that wind coming.” The lake is in no hurry.';
-    $('results').replaceChildren();
-    for(const [label,value] of [['Gear dryness',r.dryness+'%'],['Dry items',r.dryGear+' of 4'],['Canoe drift',(r.canoeDrift/32).toFixed(1)+' m'],['Tarp spills',String(r.dumps)]]){
-      const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;$('results').append(dt,dd);
-    }
-    $('comparison').textContent=previous?`Same weather, last attempt: ${previous.dryness}% dry. This time: ${r.dryness}%. Canoe drift ${(previous.canoeDrift/32).toFixed(1)} → ${(r.canoeDrift/32).toFixed(1)} m.`:'Try the same weather again to compare your arrangement, or read a different wind.';
-    $('result').hidden=false;$('pause').disabled=true;$('retry').focus();
-    window.AbundantWaters.complete({dryness:r.dryness, canoeDrift:r.canoeDrift, tarpSpills:r.dumps});
-  }
-  // Drawing: the ground is laid out to fit the viewport; objects retain their proportions.
   function path(points,fill,stroke,width=1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke();}}
-  function ellipse(x,y,rx,ry,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
+  function ellipse(x,y,rx,ry,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2);ctx.fill();}
   function text(txt,x,y,color='#eee8d8',size=12){ctx.fillStyle=color;ctx.font=`${size}px system-ui,sans-serif`;ctx.textAlign='center';ctx.fillText(txt,x,y);}
   function line(a,b,col,width=1){ctx.strokeStyle=col;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-  function drawGround(){
-    const rain=game.weather.rain;
-    ctx.fillStyle=rain>.5?'#5c7168':'#70856e';ctx.fillRect(0,0,width,height);
-    // Birch-paper contour lines and exposed granite, restrained and geographically legible.
-    for(let k=0;k<8;k++){
-      ctx.beginPath();for(let x=0;x<=640;x+=12){const p=P(x,180+k*47+10*Math.sin(x/80+k));if(!x)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}
-      ctx.strokeStyle=k>4?'#a2a28a55':'#b4b99d38';ctx.lineWidth=1;ctx.stroke();
+  function pine(t){
+    const p=P(t.x,t.y),u=unit,size=t.size*u,sway=reduced?0:Math.sin(game.time*2+t.x)*game.weather.strength*6*u;
+    ellipse(p.x,p.y+3,20*u,7*u,'#253d2d35');line(p,{x:p.x+sway,y:p.y-size},'#665b41',5*u);
+    for(let j=0;j<4;j++){const top=p.y-size+j*size*.18;
+      path([{x:p.x+sway,y:top},{x:p.x-size*.30,y:top+size*.49},{x:p.x-size*.12,y:top+size*.44},{x:p.x+size*.33,y:top+size*.50}],j%2?'#304e3b':'#3c5940','#213f3233');
     }
-    path([P(60,250),P(174,176),P(380,172),P(546,238),P(603,438),P(538,519),P(81,534),P(31,423)],rain>.5?'#898e7d':'#b5ad94','#d2c7a5',2);
-    for(const [x,y,rx,ry] of [[120,458,80,18],[506,478,99,24],[70,373,40,24],[573,248,48,20]]){const p=P(x,y);ellipse(p.x,p.y,rx*sx,ry*sy,rain>.5?'#969c8e':'#c4bdab');}
-    for(const [x,y] of [[93,461],[455,465],[537,223]]){const p=P(x,y);line(p,P(x+65,y+9),'#646f6055',1);}
-    // Waterline climbs and retreats with the wave run-up; anything here gets splash exposure.
-    const wave=game.weather.strength*(reduced?0:Math.sin(game.time*2)*7);
-    const shore=[];for(let x=0;x<=640;x+=10)shore.push(P(x,538+Math.sin(x/73)*9-wave));
-    path([...shore,{x:width,y:height},{x:0,y:height}],rain>.5?'#395e66':'#527984');
-    ctx.beginPath();shore.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#c1ccba';ctx.lineWidth=2;ctx.stroke();
-    for(let j=0;j<5;j++){const p=P(150+j*65,555+j*10);line(p,{x:p.x+60*sx,y:p.y},'#b5c7be66',1);}
-    const low=P(520,523);text('wave-washed rock',low.x,low.y,'#43584f',Math.max(10,12*unit));
-    const lake=P(340,572);text('S M O K E   L A K E',lake.x,lake.y,'#d4ded1',Math.max(10,13*unit));
-    // Far pines sway in the same wind that moves equipment.
-    for(const t of trees){const p=P(t.x,t.y),size=t.size*Math.max(.55,unit),sway=reduced?0:Math.sin(game.time*2+t.x)*game.weather.strength*4;
-      line(p,{x:p.x+sway,y:p.y-size},'#4d4937',3*unit);
-      for(let j=0;j<3;j++){const top=p.y-size+j*size*.2;path([{x:p.x+sway,y:top},{x:p.x-size*.3,y:top+size*.52},{x:p.x+size*.3,y:top+size*.52}],j%2?'#29463a':'#34513d');}
-    }
-    const front=clamp(game.time/32,0,1),cloudY=50+front*60;
-    ctx.fillStyle=`rgba(43,60,60,${.05+game.weather.rain*.18})`;ctx.fillRect(0,0,width,height);
-    // Moving cloud shadows precede the rain, rather than a binary scene swap.
-    for(let i=0;i<5;i++){const p=P(i*160-40+front*100,cloudY);ellipse(p.x,p.y,130*sx,30*sy,`rgba(48,65,66,${.18+front*.1})`);}
-    // A tent and quiet family silhouettes anchor the scene without adding tasks.
-    const t=P(100,200);path([{x:t.x-32*unit,y:t.y+10*unit},{x:t.x,y:t.y-26*unit},{x:t.x+40*unit,y:t.y+10*unit}],'#b39769','#6e7257');
-    line({x:t.x,y:t.y-26*unit},{x:t.x+6*unit,y:t.y+10*unit},'#e6d5ad');
   }
-  function drawShelter(){
-    // Roof is translucent so hands and equipment stay visible underneath it.
-    const cloth=game.cloth;
-    const roof=game.projectedRoof();
-    const dry=[...roof.map(n=>P(n.x,n.back)),...roof.slice().reverse().map(n=>P(n.x,n.front))];
-    path(dry,'#e6d6aa28');
+  function ground(){
+    const w=game.weather,rain=w.rain;
+    const sky=ctx.createLinearGradient(0,0,0,height);sky.addColorStop(0,rain>.3?'#697b72':'#9daca0');sky.addColorStop(1,rain>.3?'#536c66':'#77938d');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    const shore=[];for(let x=-500;x<=1200;x+=20)shore.push(P(x,540+Math.sin(x/73)*9+(reduced?0:Math.sin(game.time*2+x/70)*w.strength*4)));
+    path([...shore,{x:width,y:height},{x:0,y:height}],rain>.5?'#355861':'#527984');
+    for(let j=0;j<24;j++){
+      const q=P((j*89+game.time*w.x*8)%950-120,558+(j*31)%280);
+      line(q,{x:q.x+(28+(j%4)*18)*unit,y:q.y-3},rain>.3?'#77989066':'#b5c7be88',1.4);
+    }
+    path([P(-200,120),P(900,120),P(900,508),...shore.slice().reverse(),P(-200,500)],rain>.5?'#657a60':'#7d8d65');
+    path([P(50,252),P(130,185),P(262,184),P(403,210),P(548,205),P(600,393),P(540,510),P(270,523),P(44,470)],rain>.3?'#919381':'#b9af91','#c9bda2',2);
+    for(let i=0;i<100;i++){
+      const x=50+(i*83)%548,y=210+(i*47)%305,p=P(x,y);
+      ellipse(p.x,p.y,1+(i%3)*unit,.65*unit,i%2?'#64735f35':'#dfcdae38');
+    }
+    for(const [x,y,rx,ry]of [[85,460,76,20],[520,484,69,19],[563,249,40,24],[460,219,25,14]]){
+      const p=P(x,y);ellipse(p.x,p.y,rx*unit,ry*vertical,rain>.3?'#a1a496':'#c5bfaa');
+      line(P(x-rx*.5,y),P(x+rx*.7,y+6),'#7b85726b',1.4);
+    }
+    for(const t of trees)pine(t);
+    // Scattered ferns and roots, off the walking routes.
+    for(let i=0;i<28;i++){
+      const x=i%2?38:608,y=190+i*12,p=P(x,y);
+      for(let j=-2;j<=2;j++)line(p,{x:p.x+j*6*unit,y:p.y-12*unit+Math.abs(j)*2},'#456148',2*unit);
+    }
+    const tent=P(112,222);path([{x:tent.x-47*unit,y:tent.y},{x:tent.x-14*unit,y:tent.y-55*unit},{x:tent.x+41*unit,y:tent.y-15*unit},{x:tent.x+55*unit,y:tent.y+9*unit}],'#af8c53','#d9c28e',2);
+    path([{x:tent.x-47*unit,y:tent.y},{x:tent.x-14*unit,y:tent.y-55*unit},{x:tent.x+9*unit,y:tent.y+6*unit}],'#bfa56e','#dbc795',1.5);
+    path([{x:tent.x-33*unit,y:tent.y},{x:tent.x-13*unit,y:tent.y-33*unit},{x:tent.x+2*unit,y:tent.y+2*unit}],'#48594b');
+    const fire=P(470,432);ellipse(fire.x,fire.y,25*unit,14*vertical,'#596150');
+    for(let i=0;i<9;i++)ellipse(fire.x+Math.cos(i*.7)*22*unit,fire.y+Math.sin(i*.7)*11*vertical,7*unit,5*unit,'#9b9f8e');
+    line({x:fire.x-13*unit,y:fire.y+4},{x:fire.x+11*unit,y:fire.y-4},'#695b43',5*unit);
+    // Darkening moves across the campsite before any rain falls.
+    const dark=clamp((game.time-12)/25,0,1)*(game.done?.04:.16+rain*.14);
+    ctx.fillStyle=`rgba(30,49,49,${dark})`;ctx.fillRect(0,0,width,height);
+  }
+  function shelter(){
+    const cloth=game.cloth,roof=game.projectedRoof();
+    path([...roof.map(n=>P(n.x,n.back)),...roof.slice().reverse().map(n=>P(n.x,n.front))],'#293f3538');
+    for(const y of [CAMP.back-27,CAMP.front+30]){
+      const base=P(CAMP.ridgeX,y),top=P(CAMP.ridgeX,y,135);
+      line(base,top,'#705a3c',9*unit);line({x:base.x-2*unit,y:base.y},{x:top.x-2*unit,y:top.y},'#a28a56',2*unit);
+    }
+    line(P(CAMP.ridgeX,CAMP.back-27,116),P(CAMP.ridgeX,CAMP.front+30,116),'#e3c795',2);
     for(let i=0;i<cloth.length-1;i++){
-      const a=cloth[i],b=cloth[i+1],pts=[P(a.x,CAMP.back,a.h),P(b.x,CAMP.back,b.h),P(b.x,CAMP.front,b.h),P(a.x,CAMP.front,a.h)];
-      path(pts,i<8?'#bbac7290':'#8c976d9c','#d0c39355',.6);
-      if(a.water>.15){const p=P(a.x,326,a.h);ellipse(p.x,p.y,Math.min(12,a.water*8)*unit,32*sy,'#41636e78');}
+      const a=cloth[i],b=cloth[i+1],flutter=reduced?0:Math.sin(game.time*9+i)*game.weather.strength*3;
+      path([P(a.x,CAMP.back,a.h),P(b.x,CAMP.back,b.h),P(b.x,CAMP.front,b.h+flutter),P(a.x,CAMP.front,a.h+flutter)],i<8?'#a99b6db5':'#7f967bc2','#d5d0a351',.8);
+      if(a.water>.14){const p=P(a.x,330,a.h);ellipse(p.x,p.y,Math.min(12,a.water*8)*unit,25*vertical,'#456c7477');}
     }
-    const front=cloth.map(n=>P(n.x,CAMP.front,n.h));
-    for(let i=0;i<front.length-1;i++)line(front[i],front[i+1],'#e1d5a5',2);
     for(const side of [0,1]){
-      const e=game.edges[side],p=edgeHandle(side),stake=P(game.edgeX(side)+(side?27:-27),CAMP.front+24);
-      line(p,stake,e.tension<.35?'#a69067':'#e0d0a6',1.6);
-      line(stake,{x:stake.x+3,y:stake.y-8},'#4b4b37',3);
-      if(game.drain[side]>.01){for(let j=0;j<5;j++){const q=P(game.edgeX(side),CAMP.back+j*32);line({x:q.x,y:q.y-e.height*.42*unit},{x:q.x+game.weather.x*4,y:q.y},'#c8d9d076',1);}}
-      ellipse(p.x,p.y,Math.max(13,16*unit),Math.max(13,16*unit),selected===(side?'right-edge':'left-edge')?'#f0d49c':'#e1d8b5');
-      ctx.strokeStyle='#5b6850';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,7,0,Math.PI*2);ctx.stroke();
-      text(side?'R':'L',p.x,p.y+4,'#354d3a',11);
+      const e=game.edges[side],x=game.edgeX(side),hem=P(x,CAMP.front,e.height),stake=P(x+(side?27:-27),CAMP.front+24);
+      if(e.tension<.35){ctx.strokeStyle='#e1c99d';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hem.x,hem.y);ctx.quadraticCurveTo((hem.x+stake.x)/2,(hem.y+stake.y)/2+14*unit,stake.x,stake.y);ctx.stroke();}
+      else line(hem,stake,'#e1c99d',2);
+      line(stake,{x:stake.x+3,y:stake.y-12*unit},'#624d36',4);
+      if(camp.near?.type==='edge'&&camp.near.side===side){ellipse(stake.x,stake.y-8*unit,11*unit,11*unit,'#f3d295bb');text('line',stake.x,stake.y+18*unit,'#283f34',12);}
+      if(game.drain[side]>.01)for(let j=0;j<5;j++){
+        const q=P(x,CAMP.back+j*32);line({x:q.x,y:q.y-e.height*.62*unit},{x:q.x+game.weather.x*5,y:q.y},'#cfddd6b3',1);
+      }
     }
-    for(const y of [CAMP.back-27,CAMP.front+30]){const base=P(CAMP.ridgeX,y),top=P(CAMP.ridgeX,y,115);line(base,top,'#66563f',3);}
-    line(P(CAMP.ridgeX,CAMP.back-27,115),P(CAMP.ridgeX,CAMP.front+30,115),'#dbcb99',2);
-    const label=P(CAMP.ridgeX,CAMP.back-20,115);text('TARP',label.x,label.y-6,'#eee4c7',Math.max(10,12*unit));
+  }
+  function person(who,dad=false){
+    const p=P(who.x,who.y),u=unit,walk=Math.sin(who.step||camp.after*5)*(dad?camp.dad.arrived?0:3:Math.hypot(who.vx,who.vy)>2?4:0);
+    if(dad&&who.arrived){
+      ellipse(p.x,p.y+2,18*u,6*u,'#253d2c50');
+      line({x:p.x-3*u,y:p.y-7*u},{x:p.x-18*u,y:p.y},'#405846',7*u);
+      line({x:p.x+3*u,y:p.y-7*u},{x:p.x+18*u,y:p.y},'#405846',7*u);
+      ctx.fillStyle='#637755';ctx.fillRect(p.x-12*u,p.y-29*u,24*u,24*u);
+      ellipse(p.x,p.y-39*u,10*u,11*u,'#d5b281');ellipse(p.x-1*u,p.y-47*u,12*u,5*u,'#876b46');
+      line({x:p.x-12*u,y:p.y-25*u},{x:p.x-16*u,y:p.y-11*u},'#d5b281',6*u);
+      line({x:p.x+12*u,y:p.y-25*u},{x:p.x+16*u,y:p.y-11*u},'#d5b281',6*u);
+      return;
+    }
+    ctx.save();
+    ellipse(p.x,p.y+2,14*u,5*u,'#253d2c50');
+    line({x:p.x-5*u,y:p.y-13*u},{x:p.x-7*u+walk*u,y:p.y},'#405846',7*u);
+    line({x:p.x+5*u,y:p.y-13*u},{x:p.x+7*u-walk*u,y:p.y},'#405846',7*u);
+    ctx.fillStyle=dad?'#637755':'#be7045';ctx.fillRect(p.x-12*u,p.y-37*u,24*u,27*u);
+    ctx.fillStyle='#d5b281';ctx.fillRect(p.x-5*u,p.y-43*u,10*u,8*u);
+    ellipse(p.x,p.y-48*u,10*u,11*u,'#d5b281');
+    ellipse(p.x-1*u,p.y-55*u,12*u,5*u,dad?'#876b46':'#cead64');
+    line({x:p.x-12*u,y:p.y-30*u},{x:p.x-(camp.carry&&!dad?16:14)*u,y:p.y-(camp.carry&&!dad?28:17)*u},'#d5b281',6*u);
+    line({x:p.x+12*u,y:p.y-30*u},{x:p.x+16*u,y:p.y-(camp.carry&&!dad?28:17)*u},'#d5b281',6*u);
+    if(!dad){ctx.fillStyle='#314935';ctx.fillRect(p.x+(who.facing>0?3:-6)*u,p.y-49*u,3*u,3*u);}
+    if(camp.edge!==null&&!dad){const target=P(game.edgeX(camp.edge)+(camp.edge?27:-27),CAMP.front+24);line({x:p.x+14*u,y:p.y-27*u},target,'#d8caa3',2);}
+    ctx.restore();
   }
   function drawItem(g){
-    const p=P(g.x,g.y),u=Math.max(.65,unit),sel=selected===g.id;
+    const held=camp.carry===g.id, p=P(g.x,g.y,held&&g.id!=='canoe'?29:0),u=unit*(g.id==='canoe'?1:.8),sel=camp.near?.id===g.id;
     ellipse(p.x+3,p.y+7,g.id==='canoe'?63*u:26*u,10*u,'#354b3c35');
     if(sel){ctx.setLineDash([4,4]);ctx.strokeStyle='#f1deb0';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,g.id==='canoe'?73*u:33*u,g.id==='canoe'?36*u:33*u,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
     if(g.id==='canoe'&&g.tie>.01&&g.anchor){const anchor=P(g.anchor.x,g.anchor.y);line(p,anchor,g.strain>.7?'#b68b57':'#d9cca7',1+g.tie*2);ellipse(anchor.x,anchor.y,7*u,4*u,'#626a5d');}
@@ -262,33 +225,44 @@
     }
     if(g.wet>12){ctx.fillStyle='#345d7077';for(let j=0;j<Math.floor(g.wet/12);j++){ctx.beginPath();ctx.arc(-16+(j*13)%32,-12+(j*17)%28,3,0,Math.PI*2);ctx.fill();}}
     ctx.restore();
-    if(sel || (!started))text(g.name,p.x,p.y+Math.max(30,38*u),'#283f34',Math.max(11,12*unit));
+    if(sel && !held)text(g.name,p.x,p.y+Math.max(30,38*u),'#283f34',Math.max(11,12*unit));
     if(sel && g.id!=='canoe' && game.weather.rain>.05){const color=g.exposure>.3?'#caa16a':'#dee1b9';ctx.fillStyle='#354638';ctx.fillRect(p.x-22,p.y-37,44,4);ctx.fillStyle=color;ctx.fillRect(p.x-22,p.y-37,44*(1-g.exposure),4);}
   }
-  function drawRain(){
+  function rain(){
     const w=game.weather;if(w.rain<=0)return;
-    const roof=game.projectedRoof();
-    const count=Math.floor(w.rain*(reduced?35:140)),time=reduced?game.time*.25:game.time;
-    ctx.strokeStyle='#d3dfd076';ctx.lineWidth=1;
+    const roof=game.projectedRoof(),count=Math.floor(w.rain*(reduced?35:150)),time=reduced?game.time*.25:game.time;
     for(let i=0;i<count;i++){
-      const x=((i*131+time*w.x*155)%660+660)%660-10,y=140+((i*73+time*300)%420);
+      const x=((i*131+time*w.x*155)%850+850)%850-100,y=150+((i*73+time*300)%500);
       if(game.shelteredAt(x,y,roof)&&y>CAMP.back)continue;
-      const p=P(x,y);line({x:p.x-w.x*8*w.strength,y:p.y-13},{x:p.x,y:p.y},'#d7e4d477');
+      const p=P(x,y);line({x:p.x-w.x*8*w.strength,y:p.y-14},{x:p.x,y:p.y},'#dae6daa0',1.2);
     }
-    for(const splash of game.splashes){const p=P(splash.x,splash.y);ellipse(p.x,p.y,(1-splash.life)*45*unit,8*unit,`rgba(192,213,199,${splash.life*.5})`);}
+    for(const splash of game.splashes){const p=P(splash.x,splash.y);ellipse(p.x,p.y,(1-splash.life)*45*unit,8*unit,`rgba(200,220,205,${splash.life*.6})`);}
+  }
+  function story(){
+    if(!camp.story)return;
+    const p=P(camp.dad.x,camp.dad.y,100),max=Math.min(width-24,350),x=clamp(p.x-max/2,12,width-max-12),y=clamp(p.y-65,45,height-210);
+    ctx.fillStyle='#efe4cbf5';ctx.beginPath();ctx.roundRect(x,y,max,65,9);ctx.fill();
+    text('Dad: “Remember when the rain found my boots?”',x+max/2,y+23,'#344b38',max<300?11:13);
+    text('He checks one. Then sits beside the packs.',x+max/2,y+45,'#58654d',max<300?11:12);
   }
   function draw(){
-    ctx.clearRect(0,0,width,height);drawGround();drawShelter();
-    for(const g of game.items.slice().sort((a,b)=>a.y-b.y))drawItem(g);
-    drawRain();
-    if(!started)return;
-    if(!game.done&&game.weather.strength>.4){const p=P(590,185);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(game.weather.angle);line({x:-18,y:0},{x:18,y:0},'#e3dec5',2);path([{x:18,y:0},{x:9,y:-5},{x:9,y:5}],'#e3dec5');ctx.restore();}
+    ctx.clearRect(0,0,width,height);ground();shelter();
+    const actors=game.items.filter(g=>camp.carry!==g.id||g.id==='canoe').map(g=>({y:g.y,draw:()=>drawItem(g)}));
+    actors.push({y:camp.player.y,draw:()=>{person(camp.player);if(camp.carry&&camp.carry!=='canoe')drawItem(game.items.find(g=>g.id===camp.carry));}});
+    if(game.done)actors.push({y:camp.dad.y,draw:()=>person(camp.dad,true)});
+    actors.sort((a,b)=>a.y-b.y).forEach(a=>a.draw());rain();story();
   }
   function frame(now){
     const dt=Math.min(.05,Math.max(0,(now-(last||now))/1000));last=now;
-    if(active())game.advance(dt,inputs);
-    if(game.done&&!shellPause&&!document.hidden){ending+=dt;if(ending>3.5)finish();}
-    updateUi(selectionDirty);draw();requestAnimationFrame(frame);
+    game.paused=!active();
+    if(active())camp.advance(dt,input());
+    // Keep Dad and the camper together in the quiet shot, even at opposite sides of camp.
+    const endingUnit=game.done?Math.min(baseUnit,width/(Math.abs(camp.player.x-camp.dad.x)+80)):baseUnit;
+    unit+=(endingUnit-unit)*(1-Math.exp(-4*dt));vertical=unit*(width<550?.98:.76);
+    const span=width/(2*unit),targetX=game.done?(camp.player.x+camp.dad.x)/2:clamp(camp.player.x,Math.min(240,span-30),Math.max(400,640-span+30));
+    camera.x+=(targetX-camera.x)*(1-Math.exp(-7*dt));
+    const targetY=clamp(camp.player.y,305,385);camera.y+=(targetY-camera.y)*(1-Math.exp(-5*dt));
+    updateUi();draw();requestAnimationFrame(frame);
   }
   resize();updateUi(true);requestAnimationFrame(frame);
 })();
