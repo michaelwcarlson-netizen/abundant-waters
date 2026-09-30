@@ -15,11 +15,11 @@ Choose an activity in the trip guide, then tap **Start Level** (or **Full Screen
 - [Design notes (v3)](docs/design.md)
 - [J-stroke wobble meter](prototypes/j-stroke/index.html): paddle Sawbill Lake north to the portage ([hosted prototype](https://claude.ai/artifact/URx1GLySNc7zShbjRqmnim))
 - [Bow & stern partnership](prototypes/bow-stern/index.html): paddle in rhythm with the bow, call Hut! and Draw! through a rock garden, or play two-player ([hosted prototype](https://claude.ai/artifact/BTtJrFVShRSDhMmwC9ENtt))
-- [Map & Navigation](prototypes/navigation/index.html): match the shoreline to the paper map, find the narrows, and spot the portage landing.
+- [Map & Navigation](prototypes/navigation/index.html): steer the canoe through the bay and rocky narrows, then slow into the portage landing.
 - [Portage Trail](prototypes/portage/index.html): choose your load, then balance packs and tilt the canoe from Sawbill to Smoke ([hosted prototype](https://claude.ai/artifact/68tMZjVatSB8xAbWd9ANBi))
-- [Fishing at Smoke Lake](prototypes/fishing/index.html): read the shoreline, pick a fishing spot, and try for smallmouth, pike, or walleye.
+- [Fishing at Smoke Lake](prototypes/fishing/index.html): cast beside cover, set the hook, and manage line tension during the fight.
 - [Snorkeling and Diving](prototypes/snorkeling/index.html): explore the rocks, a sunken log, and the sandy bottom with your buddy nearby.
-- [Campfire & Dinner](prototypes/campfire/index.html): choose dry wood, build the fire from tinder up, cook a catch or camp meal, and put the fire out.
+- [Campfire & Dinner](prototypes/campfire/index.html): arrange fuel around the grate, tend the flame through supper, and put the fire out.
 - [Night Sky](prototypes/night-sky/index.html): connect the Big Dipper, find Polaris, and linger by the quiet lake.
 - [Arriving at Smoke Lake](prototypes/arrival/index.html): steer through crosswind and rocks, beach the canoe, unload gear, and pull or tether the hull above the waterline.
 - [Storm Day](prototypes/storm/index.html): read the weather, get off the water, secure camp, pitch the tarp, and wait together for the rainbow.

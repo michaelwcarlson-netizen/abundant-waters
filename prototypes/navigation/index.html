@@ -24,7 +24,10 @@
   .note { position:absolute; z-index:2; left:max(16px,env(safe-area-inset-left)); bottom:calc(18px + env(safe-area-inset-bottom)); max-width:min(480px,calc(100% - 32px)); margin:0; padding:11px 14px; border-left:3px solid #d9ad78; background:#1c2a2ee8; color:#f1ebdd; box-shadow:0 4px 20px #16231f55; }
   .hint { position:absolute; z-index:2; top:78px; left:max(16px,env(safe-area-inset-left)); padding:6px 10px; background:#f1ebdde8; color:#223d2c; font-size:12px; font-weight:700; }
   .paddle-controls { position:absolute; z-index:3; right:max(16px,env(safe-area-inset-right)); bottom:calc(18px + env(safe-area-inset-bottom)); display:flex; gap:7px; }
-  .paddle-controls button { min-width:90px; }
+  #joystick { position:relative; width:112px; height:112px; border:2px solid #f1e6cf99; border-radius:50%; background:#20382e88; touch-action:none; user-select:none; cursor:pointer; }
+  #thumb { position:absolute; left:30px; top:30px; width:48px; height:48px; border-radius:50%; background:#ecdbb9d9; pointer-events:none; }
+  .pad-label { position:absolute; top:112px; left:-25px; right:-25px; text-align:center; font-size:11px; color:#f1ebdd; text-shadow:0 2px 4px #20382e; pointer-events:none; }
+  .pad-label::after { content:"WASD / arrows"; }
   #land { position:absolute; z-index:4; right:max(16px,env(safe-area-inset-right)); bottom:calc(18px + env(safe-area-inset-bottom)); background:#e6c08a; }
   .map-sheet { position:absolute; z-index:5; inset:0; display:grid; place-items:center; padding:calc(24px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); background:#172c28bb; }
   .paper { position:relative; width:min(900px,100%); max-height:100%; overflow:auto; padding:18px; border:1px solid #907f61; background:#e9e1cb; box-shadow:0 16px 50px #09150e88; color:var(--ink); }
@@ -44,21 +47,24 @@
     .brand span { font-size:10px; }
     .hint { top:65px; font-size:11px; }
     .note { bottom:calc(79px + env(safe-area-inset-bottom)); left:10px; right:10px; max-width:none; padding:8px 10px; font-size:14px; }
-    .paddle-controls { left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
-    .paddle-controls button { min-width:0; padding:7px 4px; font-size:12px; }
+    .paddle-controls { left:16px; right:auto; bottom:calc(28px + env(safe-area-inset-bottom)); display:block; }
+    .pad-label::after { content:"Paddle / steer"; }
+    .hint { max-width:75%; }
+    .note { bottom:calc(153px + env(safe-area-inset-bottom)); }
     #land { left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); }
   }
+  @media(max-height:520px) { #joystick { width:88px;height:88px; } #thumb { left:18px;top:18px; } .pad-label { display:none; } .paddle-controls { bottom:calc(10px + env(safe-area-inset-bottom)); } .note { bottom:calc(112px + env(safe-area-inset-bottom)); } }
   @media(max-width:370px) { .brand span { display:none; } .hint { max-width:calc(100% - 20px); } }
 </style>
 <link rel="stylesheet" href="../immersive.css">
 </head>
 <body>
 <div id="app">
-  <canvas id="water" tabindex="0" aria-label="Steer the canoe along Sawbill Lake. Tap or drag on the lake to aim, or use the paddle controls."></canvas>
+  <canvas id="water" tabindex="0" aria-label="Steer the canoe along Sawbill Lake. Steer the canoe with the thumb pad or WASD and arrows. Up paddles, down back-paddles, left and right steer. Open the paper map to read the shoreline."></canvas>
   <header class="topbar"><div class="brand"><b>Read the shoreline</b><span>Sawbill Lake · toward the portage</span></div><button class="map-button" id="map-toggle" type="button" aria-expanded="false">Paper map</button></header>
-  <div class="hint" id="hint">Tap water ahead to steer · Arrow keys also work</div>
-  <p class="note" id="status" role="status">Dad steadies the map on the thwart. Follow the north shore and watch for a sheltered bay.</p>
-  <div class="paddle-controls" id="controls" aria-label="Canoe controls"><button type="button" id="north">North shore</button><button type="button" id="ahead">Paddle ahead</button><button type="button" id="south">South shore</button></div>
+  <div class="hint" id="hint">Up to paddle · Down to brake · Left / right to steer</div>
+  <p class="note" id="status" role="status">The map rests on the thwart. Reeds mark a quiet bay; granite narrows the water farther ahead.</p>
+  <div class="paddle-controls" id="controls" aria-label="Canoe controls"><div id="joystick" role="group" aria-label="Thumb steering and paddling pad"><span id="thumb" aria-hidden="true"></span><span class="pad-label" aria-hidden="true"></span></div></div>
   <button type="button" id="land" hidden>Beach the canoe</button>
   <div class="map-sheet" id="map-sheet" hidden role="dialog" aria-modal="true" aria-label="Paper map of Sawbill to Smoke">
     <div class="paper"><header><div><h2>Dad’s folded map</h2><p>Find the curve of the bay, the pinched channel, then the trail leaving Sawbill’s north shore.</p></div><button id="close-map" type="button">Close map</button></header>
@@ -66,6 +72,7 @@
         <rect width="880" height="340" fill="#e5dcc5"/>
         <g fill="none" stroke="#c7b99a" stroke-width="2" opacity=".7"><path d="M0 25Q180 2 360 30T700 25M0 47Q180 24 360 52T700 47M0 300Q160 270 330 303T700 295M0 322Q160 292 330 325T700 317"/></g>
         <path d="M30 210Q120 163 190 192Q252 216 299 122Q331 90 366 164Q407 209 469 199Q489 178 517 189Q544 206 568 192Q636 167 703 173L716 248Q626 274 564 248Q531 238 510 251Q489 268 467 252Q409 226 361 246Q297 273 256 233Q176 211 117 258L35 269Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
+        <ellipse cx="349" cy="207" rx="37" ry="13" fill="#b5aa8b" stroke="#927f63" stroke-width="2"/>
         <path d="M757 127Q778 67 823 69Q866 79 881 115L881 179Q843 163 813 170Q785 177 763 205L749 192Q753 160 757 127Z" fill="#7199a4" stroke="#315e69" stroke-width="5"/>
         <path d="M687 177Q709 144 727 121Q742 105 763 104" fill="none" stroke="#956444" stroke-width="6" stroke-dasharray="3 9" stroke-linecap="round"/>
         <path d="M0 0L0 340" stroke="#cfbfa0" stroke-width="2"/>
@@ -80,6 +87,7 @@
   </div>
   <div class="end" id="end" hidden><article><h2>There’s the landing</h2><p>The canoe noses into granite. Dad folds the map as you point to the worn trail between the pines. Smoke Lake waits on the other side.</p></article></div>
 </div>
+<script src="navigation-physics.js"></script>
 <script>
 (() => {
   const canvas=document.getElementById("water"),ctx=canvas.getContext("2d");
@@ -87,15 +95,10 @@
   const mapSheet=document.getElementById("map-sheet"),mapToggle=document.getElementById("map-toggle");
   const controls=document.getElementById("controls"),land=document.getElementById("land");
   const marker=document.getElementById("map-player");
-  const boat={x:115,y:300,angle:0},keys=new Set();
-  let target=null,paused=false,finished=false,last=performance.now(),scale=1,camX=0,camY=0,viewW=0,viewH=0;
-  let noticedBay=false,noticedNarrows=false,noticedLanding=false,overshot=false,landingReady=false,lastShoreMessage=0;
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  const center=x=>295+38*Math.sin(x/195)-17*Math.sin(x/410);
-  const bay=x=>x>330&&x<760?130*Math.sin(Math.PI*(x-330)/430)**2:0;
-  const width=x=>x>1040&&x<1310?96-37*Math.sin(Math.PI*(x-1040)/270)**2:96;
-  const north=x=>center(x)-width(x)-bay(x);
-  const south=x=>center(x)+width(x);
+  const {Route,center,north,south,island,rocks,clamp}=window.SawbillRoute;
+  const route=new Route(),boat=route.boat,keys=new Set();
+  let stick={x:0,y:0},stickId=null,stickOrigin=null,paused=false,finished=false,last=performance.now(),scale=1,camX=0,camY=0,viewW=0,viewH=0;
+  let noticedBay=false,noticedNarrows=false,noticedLanding=false,overshot=false,landingReady=false,lastBumps=0;
   const seeded=n=>((Math.sin(n*76.897+31.17)*43758.5453)%1+1)%1;
   function resize(){
     const dpr=Math.min(devicePixelRatio||1,2),rect=canvas.getBoundingClientRect();
@@ -104,54 +107,45 @@
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   window.addEventListener("resize",resize);resize();
-  function point(event){return {x:camX+event.clientX/scale,y:camY+event.clientY/scale};}
-  function setTarget(x,y){if(paused||finished||!mapSheet.hidden)return;target={x:clamp(x,35,2130),y:clamp(y,30,550)};hint.hidden=true;}
-  canvas.addEventListener("pointerdown",event=>{canvas.focus();canvas.setPointerCapture(event.pointerId);const p=point(event);setTarget(p.x,p.y);});
-  canvas.addEventListener("pointermove",event=>{if(event.buttons){const p=point(event);setTarget(p.x,p.y);}});
-  document.getElementById("north").addEventListener("click",()=>setTarget(boat.x+10,boat.y-78));
-  document.getElementById("ahead").addEventListener("click",()=>{const x=Math.min(2130,Math.max(boat.x,target?.x||boat.x)+115);setTarget(x,center(x));});
-  document.getElementById("south").addEventListener("click",()=>setTarget(boat.x+10,boat.y+78));
-  function showMap(open){mapSheet.hidden=!open;mapToggle.setAttribute("aria-expanded",String(open));if(open){target=null;document.getElementById("close-map").focus();}else mapToggle.focus();}
+  canvas.addEventListener("pointerdown",()=>canvas.focus({preventScroll:true}));
+  const pad=document.getElementById("joystick"),thumb=document.getElementById("thumb");
+  function moveStick(e){if(e.pointerId!==stickId)return;const dx=e.clientX-stickOrigin.x,dy=e.clientY-stickOrigin.y,d=Math.hypot(dx,dy),k=d>38?38/d:1;stick={x:d<6?0:dx*k/38,y:d<6?0:dy*k/38};thumb.style.transform=`translate(${dx*k}px,${dy*k}px)`;}
+  pad.addEventListener("pointerdown",e=>{if(paused||stickId!==null||finished)return;e.preventDefault();const r=pad.getBoundingClientRect();stickOrigin={x:r.left+r.width/2,y:r.top+r.height/2};stickId=e.pointerId;pad.setPointerCapture(e.pointerId);moveStick(e);});
+  pad.addEventListener("pointermove",moveStick);
+  for(const type of ["pointerup","pointercancel","lostpointercapture"])pad.addEventListener(type,e=>{if(e.pointerId===stickId){stickId=null;stick={x:0,y:0};thumb.style.transform="";}});
+  function input(){return {x:stick.x+Number(keys.has("ArrowRight")||keys.has("d"))-Number(keys.has("ArrowLeft")||keys.has("a")),
+    y:stick.y+Number(keys.has("ArrowDown")||keys.has("s"))-Number(keys.has("ArrowUp")||keys.has("w"))};}
+  function showMap(open){mapSheet.hidden=!open;mapToggle.setAttribute("aria-expanded",String(open));if(open){stick={x:0,y:0};thumb.style.transform="";document.getElementById("close-map").focus();}else canvas.focus({preventScroll:true});}
   mapToggle.addEventListener("click",()=>showMap(mapSheet.hidden));
   document.getElementById("close-map").addEventListener("click",()=>showMap(false));
   window.addEventListener("keydown",event=>{
     if(event.key==="Escape"&&!mapSheet.hidden){event.stopImmediatePropagation();showMap(false);return;}
     if(event.key.toLowerCase()==="m"&&!event.repeat){showMap(mapSheet.hidden);return;}
     if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d"].includes(event.key)){
-      if(event.target instanceof HTMLButtonElement)return;
+      if(!mapSheet.hidden)return;
       event.preventDefault();keys.add(event.key);hint.hidden=true;
     }
   });
   window.addEventListener("keyup",event=>keys.delete(event.key));
-  window.addEventListener("blur",()=>keys.clear());
-  window.addEventListener("abundant-waters:pause",()=>{paused=true;target=null;keys.clear();});
+  window.addEventListener("blur",()=>{keys.clear();stick={x:0,y:0};});
+  window.addEventListener("abundant-waters:pause",()=>{paused=true;keys.clear();stick={x:0,y:0};thumb.style.transform="";});
   window.addEventListener("abundant-waters:resume",()=>{paused=false;last=performance.now();});
-  function update(dt){
+  function update(){
     if(paused||finished||!mapSheet.hidden)return;
-    let vx=0,vy=0;
-    if(keys.size){vx=Number(keys.has("ArrowRight")||keys.has("d"))-Number(keys.has("ArrowLeft")||keys.has("a"));vy=Number(keys.has("ArrowDown")||keys.has("s"))-Number(keys.has("ArrowUp")||keys.has("w"));target=null;}
-    else if(target){const dx=target.x-boat.x,dy=target.y-boat.y,d=Math.hypot(dx,dy);if(d>9){vx=dx/d;vy=dy/d;}else target=null;}
-    const length=Math.hypot(vx,vy);
-    if(length){
-      const nextX=clamp(boat.x+vx/length*225*dt,38,2120),nextY=boat.y+vy/length*225*dt;
-      const edgeN=north(nextX)+14,edgeS=south(nextX)-14;
-      boat.x=nextX;boat.y=clamp(nextY,edgeN,edgeS);
-      boat.angle=Math.atan2(vy,vx)*.45;
-      if(nextY<edgeN||nextY>edgeS){target=null;if(performance.now()-lastShoreMessage>1800){status.textContent="The water shoals at the rocks. Turn back into the channel and read the shore again.";lastShoreMessage=performance.now();}}
-    }
-    if(!noticedBay&&boat.x>515){noticedBay=true;status.textContent="The north shore folds into a sheltered bay. A loon slips from the reeds as you paddle past.";}
-    if(!noticedNarrows&&boat.x>1135){noticedNarrows=true;status.textContent="Granite points pinch the lake into a narrow channel. The map shows it opening up beyond.";}
-    if(!noticedLanding&&boat.x>1710){noticedLanding=true;status.textContent="The dotted trail meets the north shore near pale granite. Look for the worn opening in the pines.";}
-    if(!overshot&&boat.x>2010){overshot=true;status.textContent="The granite landing is behind us. Turn back and aim for that opening on the north shore.";}
-    const close=boat.x>1790&&boat.x<1985&&boat.y<north(boat.x)+60;
-    if(close&&!landingReady){status.textContent="A worn opening breaks the pines above the granite. The dotted trail on the map begins here.";target=null;}
-    landingReady=close;land.hidden=!close;controls.hidden=close;
+    if(route.bumps>lastBumps){lastBumps=route.bumps;status.textContent="The hull scrapes stone. Let it settle, then take a wider line.";}
+    if(!noticedBay&&boat.x>515){noticedBay=true;status.textContent="The north shore folds into a sheltered bay. A loon slips from the reeds.";}
+    if(!noticedNarrows&&boat.x>1135){noticedNarrows=true;status.textContent="Granite points pinch the lake. A gap opens beyond them.";}
+    if(!noticedLanding&&boat.x>1710){noticedLanding=true;status.textContent="A worn path crosses pale granite on the north shore.";}
+    if(!overshot&&boat.x>2020){overshot=true;status.textContent="The path slips behind us. Turn the bow around and look for the granite opening.";}
+    landingReady=route.landingReady();land.hidden=!landingReady;controls.hidden=landingReady;
+    if(landingReady)status.textContent="The bow touches the granite. Pull in at your own pace.";
     marker.setAttribute("cx",String(clamp(60+boat.x*.304,60,704)));
     marker.setAttribute("cy",String(222+(boat.y-center(boat.x))*.34));
+    hint.textContent=`Wind ${route.wind>.2?"toward the south shore":route.wind<-.2?"toward the north shore":"light"} · ${route.speed()>85?"quick":route.speed()>32?"steady":"slow"} glide`;
   }
   land.addEventListener("click",()=>{
     if(!landingReady||finished)return;
-    finished=true;target=null;land.hidden=true;document.getElementById("end").hidden=false;
+    finished=true;route.finished=true;land.hidden=true;document.getElementById("end").hidden=false;
     window.AbundantWaters.complete();
   });
   function path(top){ctx.beginPath();for(let x=0;x<=2200;x+=15){const y=top?north(x):south(x);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
@@ -173,16 +167,24 @@
     const water=ctx.createLinearGradient(0,135,0,445);water.addColorStop(0,"#7ca5a7");water.addColorStop(.6,"#487e8b");water.addColorStop(1,"#315c70");ctx.fillStyle=water;ctx.fill();
     path(true);ctx.strokeStyle="#d6c7a3";ctx.lineWidth=8;ctx.stroke();path(false);ctx.stroke();
     ctx.strokeStyle="#a5c6bd";ctx.lineWidth=2;ctx.globalAlpha=.45;
-    for(let k=0;k<3;k++){ctx.beginPath();for(let x=0;x<=2200;x+=25){const y=center(x)+(k-1)*27+6*Math.sin(x/60+k);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}ctx.globalAlpha=1;
+    for(let k=0;k<3;k++){ctx.beginPath();for(let x=0;x<=2200;x+=25){const y=center(x)+(k-1)*27+6*Math.sin(x/60+k+route.time*.65);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}ctx.globalAlpha=1;
     // Reeds and a low beaver lodge distinguish the sheltered side bay.
     ctx.fillStyle="#7e6548";ctx.beginPath();ctx.ellipse(535,north(535)+23,32,12,-.25,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle="#947651";ctx.lineWidth=4;for(let j=0;j<7;j++){const x=475+j*16,y=north(x)+8;ctx.beginPath();ctx.moveTo(x,y+19);ctx.lineTo(x-4,y-16);ctx.stroke();}
+    // A wooded island divides the water into two navigable approaches.
+    ctx.fillStyle="#a8a185";ctx.beginPath();ctx.ellipse(island.x,island.y,island.rx,island.ry,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#d3c4a3";ctx.lineWidth=5;ctx.stroke();
+    for(let i=0;i<9;i++)pine(island.x-75+i*19,island.y-12+(i%3)*8,15+i%3*5);
+    for(const r of rocks){ctx.fillStyle="#a9a18a";ctx.beginPath();ctx.ellipse(r.x,r.y,r.r,r.r*.7,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#d2c5a5";ctx.lineWidth=3;ctx.stroke();}
     // The pinched shoreline is recognizable without a label or glowing target.
     ctx.fillStyle="#a89d7f";for(const x of [1085,1215]){ctx.beginPath();ctx.ellipse(x,north(x)-1,30,13,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(x,south(x)+1,35,14,0,0,Math.PI*2);ctx.fill();}
     // The worn path leaves Sawbill; Smoke lies beyond dry ground.
     ctx.strokeStyle="#8c6a45";ctx.lineWidth=10;ctx.setLineDash([4,11]);ctx.beginPath();ctx.moveTo(1880,north(1880)-8);ctx.bezierCurveTo(1900,92,1970,115,1990,52);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle="#b7a88a";ctx.beginPath();ctx.ellipse(1880,north(1880)-6,63,19,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#7e9fa0";ctx.beginPath();ctx.ellipse(2080,22,105,48,-.15,0,Math.PI*2);ctx.fill();
+    // Crosswind and hull momentum leave ripples downstream of the stern.
+    const speed=route.speed();if(speed>8){ctx.strokeStyle="#d4dfce8a";ctx.lineWidth=1.5;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(boat.x-Math.cos(boat.angle)*(32+i*17),boat.y-Math.sin(boat.angle)*(32+i*17),11+i*5,3+i,boat.angle,0,Math.PI*2);ctx.stroke();}}
+    if(route.spray>0){ctx.fillStyle="#e1ead0";for(let i=0;i<8;i++){ctx.beginPath();ctx.arc(boat.x+Math.cos(i*2.4)*(1-route.spray)*35,boat.y+Math.sin(i*2.4)*(1-route.spray)*20,2,0,Math.PI*2);ctx.fill();}}
     // The family canoe has two paddlers and one heading, like the other lake levels.
     ctx.save();ctx.translate(boat.x,boat.y);ctx.rotate(boat.angle);
     ctx.fillStyle="#9e4935";ctx.strokeStyle="#613829";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-23,-8);ctx.quadraticCurveTo(0,-17,25,-8);ctx.quadraticCurveTo(0,12,-23,-8);ctx.fill();ctx.stroke();
@@ -190,7 +192,7 @@
     ctx.fillStyle="#e6cda5";for(const x of [-8,11]){ctx.beginPath();ctx.arc(x,-4,3.7,0,Math.PI*2);ctx.fill();}ctx.restore();
     ctx.restore();
   }
-  function frame(now){const dt=Math.min((now-last)/1000,.18);last=now;update(dt);draw();requestAnimationFrame(frame);}
+  function frame(now){const dt=Math.min(Math.max(0,(now-last)/1000),.1);last=now;route.paused=paused||!mapSheet.hidden;if(!route.paused&&!finished)route.advance(dt,input());update();draw();requestAnimationFrame(frame);}
   requestAnimationFrame(frame);
 })();
 </script>

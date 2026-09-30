@@ -66,14 +66,14 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="water" tabindex="0" aria-label="Smoke Lake fishing water. Tap or drag to place a cast near the granite drop or weed edge. Arrow keys move the aim; Enter casts."></canvas>
+  <canvas id="water" tabindex="0" aria-label="Smoke Lake fishing water. Touch to aim and cast near granite or reeds. Retrieve steadily, set the hook on a tug, and manage line tension. Arrow keys aim; Enter casts."></canvas>
   <div class="top">
     <div class="title">Smoke Lake<small>A quiet cast · free time</small></div>
     <div class="right"><span class="count" id="count">Fish log · 0</span><button class="quiet-btn" type="button" id="reset">New cast</button></div>
   </div>
   <div class="hud"><b id="hudTitle">Read the water</b><span id="hudText">A dark seam runs past the granite. Reeds stir along the other shore.</span></div>
   <div class="bottom">
-    <div class="feedback" id="feedback" role="status" aria-live="polite">Touch the water to cast. Aim beside cover, not onto it.</div>
+    <div class="feedback" id="feedback" role="status" aria-live="polite">Cast beside the granite or reeds. Watch the line.</div>
     <div class="tension" id="tension" hidden role="group" aria-label="Line tension and fish distance">
       <div class="tension-head"><span>Line tension</span><span id="tensionLabel">Steady</span></div>
       <div class="track" role="meter" id="meter" aria-label="Line tension" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42"><div class="needle" id="needle"></div></div>
@@ -84,7 +84,7 @@
       <button class="reel" type="button" id="reel">Reel the lure</button>
       <button class="give" type="button" id="give" hidden>Give line</button>
     </div>
-    <span class="guide" id="guide">Tap or drag on the lake to cast · arrow keys and Enter also work</span>
+    <span class="guide" id="guide">Touch the water to aim and cast · hold Reel to retrieve</span>
   </div>
   <div class="result" id="result" hidden aria-live="polite">
     <h2 id="resultTitle"></h2><p id="resultText"></p><button id="again" type="button">Try another cast</button>
@@ -102,6 +102,7 @@
   let w=0,h=0,dpr=1,clock=0,last=0,paused=false,phase="aim",aim={x:.57,y:.53},lure={...aim};
   let landing={...aim},targetFish=null,retrieve=0,castFlight=0,pressing=false,giving=false,pressStart=0,burst=0;
   let tension=.42,progress=0,surge=0,slackTime=0,catches=0,failedAt=0,castNumber=0,dragging=false;
+  let biteAge=0,biteRequiresRelease=false,ignoreClick=false,snagged=false;
   const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
   function resize(){
     const r=canvas.getBoundingClientRect();w=r.width;h=r.height;dpr=Math.min(2,devicePixelRatio||1);
@@ -116,8 +117,8 @@
     if(detail)hudText.textContent=detail;
   }
   function ui(){
-    const hasLine=phase==="retrieve"||phase==="fight";
-    actions.hidden=!hasLine;give.hidden=phase!=="fight";tensionUI.hidden=phase!=="fight";
+    const hasLine=["retrieve","bite","fight","snag"].includes(phase);
+    actions.hidden=!hasLine;give.hidden=phase!=="fight"&&phase!=="snag";give.textContent=phase==="snag"?"Ease the line":"Give line";tensionUI.hidden=phase!=="fight";
     guide.hidden=hasLine||phase==="caught";
     reset.hidden=phase==="caught";
     needle.style.setProperty("--tension",Math.round(tension*100));
@@ -125,38 +126,46 @@
     progressFill.style.setProperty("--progress",Math.round(progress*100)+"%");
     distanceLabel.textContent=Math.round(progress*100)+"%";
     tensionLabel.textContent=tension<.24?"Slack — reel":tension>.77?"Hard pull — release":"Steady";
-    const reelLabel=phase==="fight"?"Reel in":"Reel the lure";
+    const reelLabel=phase==="bite"?"Set the hook":phase==="fight"?"Reel in":phase==="snag"?"Line caught":"Reel the lure";reel.disabled=phase==="snag";
     if(reel.textContent!==reelLabel)reel.textContent=reelLabel;
   }
   function stopReel(){pressing=false;reel.classList.remove("active");}
   function stopGive(){giving=false;give.classList.remove("active");}
   function ready(text="Touch the lake to cast. Aim beside the granite or reeds."){
-    stopReel();stopGive();phase="aim";targetFish=null;retrieve=0;progress=0;tension=.42;slackTime=0;burst=0;
+    stopReel();stopGive();phase="aim";targetFish=null;retrieve=0;progress=0;tension=.42;slackTime=0;burst=0;biteAge=0;biteRequiresRelease=false;ignoreClick=false;snagged=false;
     result.hidden=true;message(text,"Read the water","A dark seam runs past the granite. Reeds stir along the other shore.");ui();
+  }
+  function fishAt(kind){
+    const home=kind==="bass"?bass:pike;
+    return {x:home.x+Math.sin(clock*(kind==="bass"?.55:.38)+(kind==="bass"?0:2))*.043,
+      y:home.y+Math.cos(clock*(kind==="bass"?.72:.6)+(kind==="bass"?0:1))*.022};
+  }
+  function coverAt(x,y){
+    return x>.27&&x<.46&&y>.31&&y<.45 || x>.72&&x<.94&&y>.32&&y<.45;
   }
   function castAt(x,y){
     if(phase!=="aim")return;
-    aim={x,y};
-    if(y<.22 || y>.75 || x<.24 || x>.96){
-      message("Try the water beyond the rod tip, beside the shoreline cover.");return;
-    }
-    if((x>.3&&x<.55&&y<.37)||(x>.7&&y<.34)){
-      message("That lands in the rocks or reeds. Set it down beside them.");return;
-    }
-    landing={x,y};lure={...source};castFlight=0;retrieve=0;castNumber++;phase="flight";
-    const near=(point)=>Math.hypot((x-point.x)*1.0,(y-point.y)*1.35)<.18;
-    targetFish=near(bass)?"bass":near(pike)?"pike":null;
-    message("The lure sails over Smoke Lake…","A good cast","Watch where it touches down, then bring it past the edge.");
-    ui();
+    aim={x,y};landing={x:Math.max(.22,Math.min(.97,x)),y:Math.max(.24,Math.min(.76,y))};
+    lure={...source};castFlight=0;retrieve=0;castNumber++;phase="flight";
+    snagged=coverAt(landing.x,landing.y);
+    message("The lure sails over Smoke Lake…","Read the water","Watch where it touches down, then work it along the edge.");ui();
+  }
+  function bite(kind){
+    phase="bite";targetFish=kind;biteAge=0;biteRequiresRelease=pressing;pressing=false;burst=0;
+    message("A quick tug travels up the line.","A fish is taking it","Set the hook on the next pull.");ui();
   }
   function hook(){
+    if(phase!=="bite")return;
+    if(biteAge<.18){lost("early");return;}
+    if(biteAge>1.35){lost("missed");return;}
     phase="fight";tension=.42;progress=0;slackTime=0;surge=0;
-    message("Fish on! Reel in short pulls. Give line when it surges.","Fish on","Feel the pull through the rod; keep the line from going slack.");
-    ui();
+    message("The rod bends. Keep a steady line.","Fish on","Reel when it gives, ease off when it runs.");ui();
   }
   function lost(kind){
     phase="lost";failedAt=clock;stopReel();stopGive();ui();
-    message(kind==="snap"?"The line pulled too tight and the fish slipped away. Ease off when it surges.":"The line went slack and the fish shook free. Keep a gentle pull.","One got away","There is time for another cast.");
+    const texts={snap:"The line snaps under a hard pull.",slack:"Slack line gives the fish a way out.",
+      early:"The lure slips away before the fish has it.",missed:"The tug fades and the fish lets go."};
+    message(texts[kind]||texts.missed,"One got away","The lake is still here for another cast.");
   }
   function landed(){
     phase="caught";stopReel();stopGive();catches++;
@@ -194,20 +203,25 @@
     e.preventDefault();
   });
   reel.addEventListener("pointerdown",e=>{
+    if(phase==="bite"){
+      if(biteRequiresRelease)return;
+      ignoreClick=true;hook();return;
+    }
     if(phase!=="retrieve"&&phase!=="fight")return;
     reel.setPointerCapture(e.pointerId);pressStart=performance.now();pressing=true;reel.classList.add("active");
   });
-  reel.addEventListener("pointerup",stopReel);
+  reel.addEventListener("pointerup",()=>{if(biteRequiresRelease){biteRequiresRelease=false;ignoreClick=true;}stopReel();});
   reel.addEventListener("pointercancel",stopReel);
   reel.addEventListener("lostpointercapture",stopReel);
   reel.addEventListener("click",e=>{
+    if(ignoreClick&&e.detail!==0){ignoreClick=false;return;}
+    if(phase==="bite"){hook();return;}
     if(e.detail!==0 && performance.now()-pressStart>=700)return;
     if(phase==="retrieve"){
       retrieve=Math.min(1,retrieve+.09);
       lure.x=landing.x+(source.x-landing.x)*retrieve;
       lure.y=landing.y+(source.y-landing.y)*retrieve;
-      if(targetFish && retrieve>.16 && retrieve<.57)hook();
-      else if(retrieve>=.96)ready("The lure comes back without a strike. Try along the rocky drop or weed edge.");
+      if(retrieve>=.96)ready("The lure comes back without a strike. Try along the rocky drop or weed edge.");
       else message("The lure darts closer. Watch the edge for a follower.");
     } else if(phase==="fight"){
       tension=Math.min(1,tension+.095);
@@ -219,6 +233,7 @@
     }
   });
   give.addEventListener("pointerdown",e=>{
+    if(phase==="snag"){freeSnag();return;}
     if(phase!=="fight")return;
     give.setPointerCapture(e.pointerId);giving=true;stopReel();give.classList.add("active");
   });
@@ -226,16 +241,25 @@
   give.addEventListener("pointercancel",stopGive);
   give.addEventListener("lostpointercapture",stopGive);
   give.addEventListener("click",()=>{
+    if(phase==="snag"){freeSnag();return;}
     if(phase!=="fight")return;
     tension=Math.max(.16,tension-.16);
     progress=Math.max(0,progress-.012);
     setStatus("You let the fish run. Take up line when the pull softens.");
     ui();
   });
+  function freeSnag(){
+    if(phase!=="snag")return;
+    phase="retrieve";retrieve=Math.min(.95,retrieve+.11);
+    lure.x=landing.x+(source.x-landing.x)*retrieve;lure.y=landing.y+(source.y-landing.y)*retrieve;
+    message("A little slack frees the lure.","Off the cover","Bring it along the open edge.");ui();
+  }
   window.addEventListener("keydown",e=>{
+    if((e.key===" "||e.key.toLowerCase()==="r")&&phase==="bite"&&!e.repeat){e.preventDefault();hook();return;}
     if((e.key===" "||e.key.toLowerCase()==="r")&&(phase==="retrieve"||phase==="fight")){
       e.preventDefault();pressing=true;reel.classList.add("active");
     }
+    if(e.key.toLowerCase()==="g"&&phase==="snag"){e.preventDefault();freeSnag();return;}
     if(e.key.toLowerCase()==="g"&&phase==="fight"){e.preventDefault();giving=true;stopReel();give.classList.add("active");}
   });
   window.addEventListener("keyup",e=>{if(e.key===" "||e.key.toLowerCase()==="r")stopReel();if(e.key.toLowerCase()==="g")stopGive();});
@@ -254,8 +278,9 @@
       lure.x=source.x+(landing.x-source.x)*arc;
       lure.y=source.y+(landing.y-source.y)*arc-Math.sin(castFlight*Math.PI)*.18;
       if(castFlight>=1){
-        phase="retrieve";lure={...landing};
-        message("It lands with a small ring. Work it slowly past the edge.","Watch the lure","Hold or tap Reel. A fish may follow when the lure moves near cover.");ui();
+        phase=snagged?"snag":"retrieve";lure={...landing};
+        message(snagged?"The lure catches on cover. Ease the line to slip it free.":"It lands with a small ring. Work it slowly past the edge.",
+          snagged?"Line caught":"Watch the lure",snagged?"Give it slack, then retrieve along the edge.":"Move it steadily past structure.");ui();
       }
     }
     if(phase==="retrieve"){
@@ -265,9 +290,19 @@
         retrieve=Math.min(1,retrieve+dt*.15);
         lure.x=landing.x+(source.x-landing.x)*retrieve;
         lure.y=landing.y+(source.y-landing.y)*retrieve;
-        if(targetFish && retrieve>.16 && retrieve<.57){hook();return;}
-        if(retrieve>=.96){ready("The lure comes back without a strike. Try along the rocky drop or weed edge.");return;}
+        if(retrieve>.1&&retrieve<.85){
+          for(const kind of ["bass","pike"]){
+            const f=fishAt(kind),distance=Math.hypot(lure.x-f.x,(lure.y-f.y)*1.4);
+            if(distance<.12){bite(kind);return;}
+          }
+        }
+        if(retrieve>=.96){ready("The lure comes back without a strike. Read the water and try another angle.");return;}
       }
+    }
+    if(phase==="bite"){
+      biteAge+=dt;
+      lure.x+=Math.sin(clock*18)*.00045;lure.y+=Math.cos(clock*15)*.00035;
+      if(biteAge>1.5){lost("missed");return;}
     }
     if(phase==="fight"){
       const active=pressing||burst>0;
@@ -346,12 +381,21 @@
     path([[0,.67],[.08,.65],[.18,.68],[.22,.72],[.26,.82],[.2,1],[0,1]],"#767c70");
     path([[0,.7],[.08,.68],[.18,.71],[.22,.77],[.24,.84],[.17,1],[0,1]],"#a59e88","#d5c3a5",3);
     for(let i=0;i<7;i++)ellipse(.02+i*.03,.75+(i%3)*.04,.022,.007,"#c1b69d");
-    // A shallow canoe moored behind the player.
+    // A shallow canoe and the same young camper silhouette used in Storm Day.
     path([[.01,.9],[.13,.9],[.18,.94],[.16,.97],[.025,.97]],"#9f4c32","#e7ae74",3);
+    const kidX=.17*w,kidY=.78*h,u=Math.min(1.15,Math.max(.7,w/750));
+    ctx.save();ctx.translate(kidX,kidY);ctx.scale(u,u);
+    ctx.fillStyle="#263e3a55";ctx.beginPath();ctx.ellipse(0,4,19,6,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#405846";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-5,-13);ctx.lineTo(-9,0);ctx.moveTo(5,-13);ctx.lineTo(9,0);ctx.stroke();
+    ctx.fillStyle="#be7045";ctx.fillRect(-12,-36,24,27);
+    ctx.strokeStyle="#d5b281";ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(12,-30);ctx.lineTo(21,-24);ctx.moveTo(-12,-30);ctx.lineTo(-20,-15);ctx.stroke();
+    ctx.fillStyle="#d5b281";ctx.beginPath();ctx.arc(0,-47,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#cead64";ctx.beginPath();ctx.ellipse(-1,-55,12,5,0,0,Math.PI*2);ctx.fill();ctx.restore();
     ctx.strokeStyle="#a69370";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(source.x*w,source.y*h);ctx.lineTo(.21*w,.48*h);ctx.stroke();
     ctx.strokeStyle="#443c31";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.lineTo(.23*w,.46*h);ctx.stroke();
-    fish(bass.x+Math.sin(clock*.5)*.025,bass.y+Math.cos(clock*.7)*.01,"bass",.23);
-    fish(pike.x+Math.sin(clock*.35)*.025,pike.y+Math.cos(clock*.6)*.012,"pike",.2);
+    const bassNow=fishAt("bass"),pikeNow=fishAt("pike");
+    fish(bassNow.x,bassNow.y,"bass",.23);
+    fish(pikeNow.x,pikeNow.y,"pike",.2);
     ripple(.53,.48,.035+((clock*.12)%1)*.035,.25);
     ripple(.81,.52,.023+((clock*.1)%1)*.035,.2);
     if(phase==="aim"){
@@ -363,7 +407,7 @@
       label(.3,.295,"granite drop");
       label(w<460?.63:.73,.3,"weed edge");
     }
-    if(phase==="flight"||phase==="retrieve"||phase==="fight"||phase==="lost"){
+    if(["flight","retrieve","bite","fight","lost","snag"].includes(phase)){
       let lx=lure.x,ly=lure.y;
       if(phase==="fight"){
         lx=landing.x+(source.x-landing.x)*progress*.85+Math.sin(clock*5)*.014;
@@ -375,6 +419,8 @@
       ctx.beginPath();ctx.moveTo(.21*w,.48*h);ctx.quadraticCurveTo((.21+lx)*.5*w,(Math.min(.48,ly)-.045)*h,lx*w,ly*h);ctx.stroke();
       ellipse(lx,ly,.006,.006,phase==="fight"?"#f7d891":"#c45838");
       if(phase==="retrieve")ripple(lx,ly,.014+Math.sin(clock*9)*.005,.65);
+      if(phase==="bite"){ripple(lx,ly,.016+Math.abs(Math.sin(clock*15))*.024,.75);fish(lx+.018,ly+.01,targetFish,.55);}
+      if(phase==="snag")ripple(lx,ly,.012,.3);
     }
     if(phase==="caught"){
       ripple(.21,.7,.08,.6);
