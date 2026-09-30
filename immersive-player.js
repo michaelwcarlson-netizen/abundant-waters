@@ -76,7 +76,14 @@ window.createImmersivePlayer = function createImmersivePlayer(onClose) {
   });
   document.addEventListener("fullscreenchange", () => {
     if (document.fullscreenElement === shell) nativeActive = true;
-    else if (nativeActive && !shell.hidden) close();
+    else if (nativeActive && !shell.hidden) {
+      nativeActive = false;
+      // Safari can leave native fullscreen after a two-finger gesture. Keep the
+      // same live iframe in our viewport player; leaving native fullscreen is
+      // not an instruction to abandon a touchscreen activity.
+      const touchDevice = navigator.maxTouchPoints > 0 || window.matchMedia("(any-pointer: coarse)").matches;
+      if (!touchDevice) close();
+    }
   });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && !shell.hidden) close();
