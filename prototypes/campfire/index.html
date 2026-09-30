@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#223d2c">
 <title>Campfire & Dinner at Smoke Lake — Abundant Waters</title>
 <style>
@@ -22,10 +22,14 @@
   .pickup:active { cursor:grabbing; }
   .pickup:focus-visible { outline:3px solid #e3a552; }
   .pickup .hit { fill:transparent; }
+  .pickup { filter:drop-shadow(0 3px 2px #24342866); }
+  .smoke { opacity:0; transition:opacity .5s; }
+  .meter { height:8px; border-radius:9px; background:#b9c2ac; overflow:hidden; }
+  .meter span { display:block; height:100%; width:0; background:#b87946; transition:width .18s; }
   #grate-ring { pointer-events:none; transition:opacity .25s; }
   .scene svg { touch-action:none; }
   .panel { margin-top:14px; padding:clamp(14px,3vw,20px); border:1px solid var(--line); border-radius:14px; background:white; }
-  .choices { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0; }
+  .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0; }
   button { min-height:52px; padding:10px 13px; border:1px solid var(--pine); border-radius:9px; background:#f7f4eb; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; text-align:left; }
   button:hover { background:#e8eee8; }
   button:focus-visible { outline:3px solid var(--clay); outline-offset:2px; }
@@ -41,14 +45,17 @@
   @media(max-width:650px) {
     main { padding:12px 12px 120px; }
     main > .lead,.panel .lead { display:none; }
-    .scene { height:clamp(250px,46dvh,370px); border-radius:5px; }
+    .scene { height:clamp(250px,34dvh,290px); border-radius:5px; }
     .scene svg { height:100%; width:100%; }
     .panel { margin-top:10px; padding:0; border:0; background:transparent; }
     .choices { grid-template-columns:1fr; gap:8px; }
     button { min-height:48px; }
     .status { position:fixed; z-index:4; left:12px; right:12px; bottom:calc(10px + env(safe-area-inset-bottom,0px)); margin:0; min-height:0; padding:9px 11px; font-size:.9rem; box-shadow:0 -3px 12px #faf7ef; }
     #meal-step .status,#end-step .status { position:static; margin:8px 0; box-shadow:none; }
-    #meal-step .action,#end-step .action { position:fixed; z-index:5; left:12px; right:12px; bottom:calc(8px + env(safe-area-inset-bottom,0px)); margin:0; background:#faf7ef; }
+    #wood-step .status { position:static; margin:8px 0; box-shadow:none; }
+    main { padding-bottom:18px; }
+    .panel { padding:8px 4px; }
+    #meal-step .action,#end-step .action { position:static; margin:8px 0 0; background:#faf7ef; }
     #meal-step .action button,#end-step .action button { width:100%; }
   }
   @media(prefers-reduced-motion:reduce) { #ember, #flame-small, #flame-high, #pot { transition:none; } }
@@ -84,7 +91,8 @@
         <ellipse cx="473" cy="265" rx="22" ry="10"/><ellipse cx="518" cy="251" rx="25" ry="10"/>
       </g>
       <path d="M401 242 509 258 M504 239 406 261" stroke="#583f2d" stroke-width="13" stroke-linecap="round"/>
-      <g id="ember" opacity="0"><ellipse cx="454" cy="244" rx="38" ry="10" fill="#bd613c"/></g>
+      <g id="ember" opacity="1"><ellipse cx="454" cy="244" rx="38" ry="10" fill="#bd613c"/></g>
+      <g class="smoke" id="smoke" fill="none" stroke="#9ca49b" stroke-width="8" stroke-linecap="round"><path d="M433 199q-22-25 4-47t-2-43"/><path d="M470 193q25-30 0-55t8-43"/></g>
       <g id="flame-small" opacity="0" fill="#e3a552">
         <path d="M426 241Q420 219 438 204Q434 221 453 218Q448 238 426 241Z"/>
         <path d="M452 241Q445 214 463 196Q463 218 480 224Q478 241 452 241Z"/>
@@ -102,31 +110,27 @@
 
       <path d="M0 299H900V390H0Z" fill="#646e58"/>
       <path d="M0 307Q220 291 440 307T900 302" fill="none" stroke="#899577" stroke-width="3"/>
-      <ellipse id="grate-ring" cx="455" cy="238" rx="84" ry="45" fill="none" stroke="#cdb98f" stroke-width="4" stroke-dasharray="8 8" opacity="0"/>
-      <g class="pickup" data-wood="dry" role="button" tabindex="0" aria-label="Dry fallen twigs. Drag to the fire grate." transform="translate(320 335)">
+      <ellipse id="grate-ring" cx="455" cy="238" rx="84" ry="45" fill="none" stroke="#cdb98f" stroke-width="4" stroke-dasharray="8 8" opacity=".55"/>
+      <g class="pickup" data-wood="dry" role="button" tabindex="0" aria-label="Dry fallen twigs. Drag to the fire grate." transform="translate(340 335)">
         <path d="M-31 12 25-16M-24-16 31 13M-34 1 24 13" fill="none" stroke="#a87c4f" stroke-width="8" stroke-linecap="round"/>
         <path d="M-18-7l-9-17m34 5 8-19m-2 34 12 15" fill="none" stroke="#a87c4f" stroke-width="4"/>
         <rect class="hit" x="-46" y="-35" width="92" height="70"/>
       </g>
-      <g class="pickup" data-wood="wet" role="button" tabindex="0" aria-label="Waterlogged wood. Drag to the fire grate." transform="translate(455 335)">
+      <g class="pickup" data-wood="wet" role="button" tabindex="0" aria-label="Waterlogged wood. Drag to the fire grate." transform="translate(620 335)">
         <path d="M-36-12q28-9 71 1v23q-36 13-71 1Z" fill="#726b59" stroke="#4f5f5c" stroke-width="3"/>
         <path d="M-33 15q38 14 67 2" fill="none" stroke="#72a7ad" stroke-width="6"/>
         <rect class="hit" x="-46" y="-35" width="92" height="70"/>
       </g>
-      <g class="pickup" data-wood="live" role="button" tabindex="0" aria-label="Living cedar branch. Drag to the fire grate." transform="translate(590 335)">
+      <g class="pickup" data-wood="live" role="button" tabindex="0" aria-label="Living cedar branch. Drag to the fire grate." transform="translate(680 335)">
         <path d="M-35 18 34-16" stroke="#694f37" stroke-width="6"/>
         <g fill="#345b43"><path d="M-27 11-37-12-9 3Z M-12 4-12-23 10-7Z M3-2 8-27 26-15Z M19-10 33-32 39-14Z"/></g>
         <rect class="hit" x="-46" y="-35" width="92" height="70"/>
       </g>
-      <g class="pickup" data-fuel="tinder" role="button" tabindex="-1" aria-label="Birch bark tinder. Drag to the fire grate." transform="translate(320 335)" hidden>
+      <g class="pickup" data-fuel="tinder" role="button" tabindex="-1" aria-label="Birch bark tinder. Drag to the fire grate." transform="translate(250 335)">
         <path d="M-30 15q-16-26 5-39 21 15 12 34m9 10Q-18-16 4-22q23 9 12 40m6-2q-7-30 15-30" fill="#dfceb0" stroke="#8f8065" stroke-width="3"/>
         <rect class="hit" x="-46" y="-35" width="92" height="70"/>
       </g>
-      <g class="pickup" data-fuel="kindling" role="button" tabindex="-1" aria-label="Small dry sticks. Drag to the fire grate." transform="translate(455 335)" hidden>
-        <path d="M-34 17 32-17M-25-18 34 12M-39 1 20 21" fill="none" stroke="#b18a5c" stroke-width="6" stroke-linecap="round"/>
-        <rect class="hit" x="-46" y="-35" width="92" height="70"/>
-      </g>
-      <g class="pickup" data-fuel="logs" role="button" tabindex="-1" aria-label="Larger split wood. Drag to the fire grate." transform="translate(590 335)" hidden>
+      <g class="pickup" data-fuel="logs" role="button" tabindex="-1" aria-label="Larger split wood. Drag to the fire grate." transform="translate(530 335)">
         <path d="M-37-9 29-18l7 28-66 10Z" fill="#896a4a" stroke="#554a3b" stroke-width="3"/>
         <path d="M-23-8 30-14M-13 15l45-8" stroke="#b49870" stroke-width="3"/>
         <rect class="hit" x="-46" y="-35" width="92" height="70"/>
@@ -139,165 +143,124 @@
     </svg>
   </div>
   <section class="panel" id="wood-step">
-    <h2>Gather for a small fire</h2>
-    <p class="note">Drag what you find into the established grate. Leave living trees standing.</p>
-    <p class="status" id="wood-status" role="status">Dad has a small bundle of birch bark tinder ready.</p>
-  </section>
-  <section class="panel" id="build-step" hidden>
-    <h2>Build from the first spark</h2>
-    <p class="note">Tinder, small sticks, then a little larger wood. Drag each into the grate.</p>
-    <p class="status" id="build-status" role="status">Start with the tinder Dad set aside.</p>
+    <h2>Build a cooking fire</h2>
+    <p class="note">Move bark, fallen twigs, and split wood around the grate. Give the flame air; damp wood smokes. Pieces can be moved again.</p>
+    <div class="meter" role="meter" id="fire-meter" aria-label="Fire heat" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"><span id="fire-fill"></span></div>
+    <p class="status" id="wood-status" role="status">A coal glows under the grate. Birch bark, dry twigs, and a split log lie nearby.</p>
   </section>
   <section class="panel" id="meal-step" hidden>
     <h2>Supper by the lake</h2>
-    <p class="lead">The small fire holds steady. The water is heating, and it’s time to decide what goes in the pan.</p>
+    <p class="lead">The small fire holds steady. Dad sets the pan nearby; choose what to cook.</p>
     <div class="choices" id="meals">
       <button type="button" id="fish-meal" hidden>Cook the fish<small id="fish-label"></small></button>
       <button type="button" id="pack-meal">Make supper from the food pack<small>A warm pot of rice and beans for everyone.</small></button>
     </div>
-    <p class="status" id="meal-status" role="status">Pick dinner, then tend the pan.</p>
+    <p class="status" id="meal-status" role="status">Choose supper when the fire is steady.</p>
+    <div class="meter" role="meter" id="cook-meter" aria-label="Supper cooked" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="cook-fill"></span></div>
     <div class="action"><button type="button" class="primary" id="serve" disabled>Serve dinner</button></div>
   </section>
   <section class="panel" id="end-step" hidden>
     <h2>Last light</h2>
     <p class="lead" id="ending"></p>
-    <p class="status" id="end-status" role="status">The plates are empty. Before bed, the fire needs to be completely out.</p>
-    <div class="action"><button type="button" class="primary" id="douse">Pour water, stir, and check for heat</button></div>
+    <p class="status" id="end-status" role="status">The plates are empty. Bring the water kettle over the grate and stir until the coal is cool.</p>
     <p class="note" id="done" hidden>The grate is cool. Dad lifts the kettle; the lake has gone dark enough for stars.</p>
   </section>
 </main>
 <script>
 (() => {
   const allowedFish=["Smallmouth bass","Northern pike","Walleye"];
-  const fish=new URLSearchParams(location.search).get("fish");
-  const catchName=allowedFish.includes(fish)?fish:null;
-  const scene=document.querySelector(".scene svg"),ring=document.getElementById("grate-ring");
-  const wood=document.getElementById("wood-step"),build=document.getElementById("build-step");
-  const mealStep=document.getElementById("meal-step"),end=document.getElementById("end-step");
-  const items=[...document.querySelectorAll(".pickup")];
-  const order=["tinder","kindling","logs"];
-  const base={dry:320,wet:455,live:590,tinder:320,kindling:455,logs:590,kettle:590};
-  let stage="wood",fuelStep=0,meal=null,drag=null,finished=false;
-  if(catchName){
-    document.getElementById("fish-meal").hidden=false;
-    document.getElementById("fish-label").textContent=catchName+" from this afternoon.";
-  }
-  function local(event){
-    const p=scene.createSVGPoint();p.x=event.clientX;p.y=event.clientY;
-    return p.matrixTransform(scene.getScreenCTM().inverse());
-  }
-  function restore(item){
-    const key=item.id==="water-kettle"?"kettle":item.dataset.wood||item.dataset.fuel;
-    item.setAttribute("transform","translate("+base[key]+" 335)");
-  }
-  function setStage(next){
-    stage=next;
-    wood.hidden=next!=="wood";build.hidden=next!=="build";
-    mealStep.hidden=next!=="meal";end.hidden=next!=="end";
-    items.forEach(item=>{
-      const show=next==="wood"?!!item.dataset.wood
-        :next==="build"?!!item.dataset.fuel&&order.indexOf(item.dataset.fuel)>=fuelStep
-        :next==="end"?item.id==="water-kettle"&&!finished:false;
-      item.toggleAttribute("hidden",!show);item.setAttribute("tabindex",show?"0":"-1");
-      if(show)restore(item);
-    });
-    ring.setAttribute("opacity",!finished&&(next==="wood"||next==="build"||next==="end")?"1":"0");
-  }
-  function place(item){
-    if(finished)return;
-    if(stage==="wood"){
-      const choice=item.dataset.wood;
-      if(!choice)return;
-      if(choice!=="dry"){
-        document.getElementById("wood-status").textContent=choice==="wet"
-          ?"The shoreline wood is soaked. Look for small dry pieces already fallen nearby."
-          :"That cedar is alive. Leave it growing; find dead and down wood instead.";
-        restore(item);return;
-      }
-      document.getElementById("build-status").textContent="The fallen twigs are dry. Start with Dad’s small bundle of tinder.";
-      setStage("build");
-      return;
-    }
-    if(stage==="build"){
-      const choice=item.dataset.fuel;
-      if(!choice)return;
-      if(choice!==order[fuelStep]){
-        document.getElementById("build-status").textContent=fuelStep===0
-          ?"The larger sticks need a first spark. Try the thin tinder."
-          :fuelStep===1?"Feed the small flame with dry sticks before the bigger wood.":"The kindling is going. Add one larger piece.";
-        restore(item);return;
-      }
-      fuelStep++;item.setAttribute("hidden","");item.setAttribute("tabindex","-1");
-      if(fuelStep===1){
-        document.getElementById("ember").setAttribute("opacity","1");
-        document.getElementById("build-status").textContent="The tinder catches. Give it a few small sticks and room for air.";
-      }else if(fuelStep===2){
-        document.getElementById("flame-small").setAttribute("opacity","1");
-        document.getElementById("build-status").textContent="The kindling crackles. Add one piece of larger wood.";
-      }else{
-        document.getElementById("flame-high").setAttribute("opacity","1");
-        document.getElementById("pot").setAttribute("opacity","1");
-        setStage("meal");
-        document.getElementById("meal-status").textContent=catchName
-          ?"The pan is warm. Cook the "+catchName.toLowerCase()+" or save it and use the food pack."
-          :"The pan is warm. There’s plenty in the food pack.";
-      }
-      return;
-    }
-    if(stage==="end"&&item.id==="water-kettle")douse();
+  const fish=new URLSearchParams(location.search).get("fish"),catchName=allowedFish.includes(fish)?fish:null;
+  const scene=document.querySelector(".scene svg"),meter=document.getElementById("fire-meter"),fill=document.getElementById("fire-fill");
+  const cookMeter=document.getElementById("cook-meter"),cookFill=document.getElementById("cook-fill");
+  const woodStep=document.getElementById("wood-step"),mealStep=document.getElementById("meal-step"),endStep=document.getElementById("end-step");
+  const status=document.getElementById("wood-status"),mealStatus=document.getElementById("meal-status");
+  const items=[...document.querySelectorAll(".pickup")],positions={tinder:{x:250,y:335},dry:{x:340,y:335},logs:{x:530,y:335},wet:{x:620,y:335},live:{x:680,y:335},kettle:{x:650,y:335}};
+  let heat=.08,steady=0,cook=0,meal=null,stage="fire",drag=null,paused=false,finished=false,last=performance.now(),hintAt=0;
+  if(catchName){document.getElementById("fish-meal").hidden=false;document.getElementById("fish-label").textContent=catchName+" from this afternoon.";}
+  function key(item){return item.id==="water-kettle"?"kettle":item.dataset.wood||item.dataset.fuel;}
+  function local(event){const p=scene.createSVGPoint();p.x=event.clientX;p.y=event.clientY;return p.matrixTransform(scene.getScreenCTM().inverse());}
+  function setPosition(item,x,y){const k=key(item);positions[k]={x:Math.max(180,Math.min(750,x)),y:Math.max(205,Math.min(345,y))};item.setAttribute("transform",`translate(${positions[k].x} ${positions[k].y})`);}
+  function distance(k){const p=positions[k];return Math.hypot(p.x-455,(p.y-239)*1.2);}
+  function near(k,range){return distance(k)<range;}
+  function say(text){status.textContent=text;hintAt=performance.now();}
+  function drop(item){
+    const k=key(item);
+    if(k==="kettle"){if(stage==="end"&&near("kettle",100))douse();return;}
+    if(stage!=="fire"&&stage!=="meal")return;
+    if(near(k,92)){
+      const words={tinder:"The bark catches a coal's glow.",dry:"Dry twigs begin to crackle.",logs:"A heavier log settles near the heat.",wet:"Water hisses from the shoreline wood. Smoke curls up.",live:"The cedar branch is still green. Leave it growing."};
+      say(words[k]);
+    }else if(k==="wet"||k==="live")say("That piece rests away from the cooking fire.");
   }
   items.forEach(item=>{
-    item.addEventListener("pointerdown",event=>{
-      if(item.hasAttribute("hidden"))return;
-      const p=local(event);
-      const key=item.id==="water-kettle"?"kettle":item.dataset.wood||item.dataset.fuel;
-      drag={id:event.pointerId,item,x:event.clientX,y:event.clientY,dx:base[key]-p.x,dy:335-p.y};
-      item.setPointerCapture(event.pointerId);
+    const k=key(item);setPosition(item,positions[k].x,positions[k].y);
+    if(k==="kettle"){item.setAttribute("hidden","");item.tabIndex=-1;}else item.tabIndex=0;
+    item.addEventListener("pointerdown",e=>{
+      if(item.hasAttribute("hidden")||finished)return;e.preventDefault();const p=local(e),q=positions[k];drag={id:e.pointerId,item,dx:q.x-p.x,dy:q.y-p.y};item.setPointerCapture(e.pointerId);
     });
-    item.addEventListener("pointermove",event=>{
-      if(!drag||drag.id!==event.pointerId||drag.item!==item)return;
-      const p=local(event);
-      item.setAttribute("transform","translate("+(p.x+drag.dx)+" "+(p.y+drag.dy)+")");
-    });
-    item.addEventListener("pointerup",event=>{
-      if(!drag||drag.id!==event.pointerId||drag.item!==item)return;
-      const moved=Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>10;
-      const p=local(event);drag=null;
-      if(moved&&Math.hypot(p.x-455,p.y-236)<100)place(item);
-      else restore(item);
-    });
-    item.addEventListener("pointercancel",()=>{if(drag?.item===item){drag=null;restore(item);}});
-    item.addEventListener("keydown",event=>{
-      if(event.key==="Enter"||event.key===" "){event.preventDefault();place(item);}
+    item.addEventListener("pointermove",e=>{if(!drag||drag.id!==e.pointerId||drag.item!==item)return;const p=local(e);setPosition(item,p.x+drag.dx,p.y+drag.dy);});
+    item.addEventListener("pointerup",e=>{if(!drag||drag.id!==e.pointerId||drag.item!==item)return;drag=null;drop(item);});
+    item.addEventListener("pointercancel",()=>{if(drag?.item===item)drag=null;});
+    item.addEventListener("keydown",e=>{
+      const delta={ArrowLeft:[-15,0],ArrowRight:[15,0],ArrowUp:[0,-15],ArrowDown:[0,15]}[e.key];
+      if(delta){e.preventDefault();setPosition(item,positions[k].x+delta[0],positions[k].y+delta[1]);drop(item);}
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();setPosition(item,455,240);drop(item);}
     });
   });
+  function setStage(next){
+    stage=next;woodStep.hidden=next!=="fire";mealStep.hidden=next!=="meal";endStep.hidden=next!=="end";
+    if(next==="end"){
+      for(const item of items){const show=key(item)==="kettle";item.toggleAttribute("hidden",!show);item.tabIndex=show?0:-1;}
+      document.getElementById("pot").setAttribute("opacity","0");
+    }
+  }
   document.querySelectorAll("#meals button").forEach(button=>button.addEventListener("click",()=>{
     meal=button.id==="fish-meal"?"fish":"pack";
     document.querySelectorAll("#meals button").forEach(other=>other.setAttribute("aria-pressed",String(other===button)));
-    document.getElementById("meal-status").textContent=meal==="fish"
-      ?"Dad tends the pan while you portion the fish. Cook it through, then call everyone in."
-      :"You stir the pot while Dad sets out six bowls. Call everyone in.";
-    document.getElementById("serve").disabled=false;
+    mealStatus.textContent=meal==="fish"?"The fish warms in the pan. Keep the little fire steady.":"Rice and beans simmer in the pot. Keep the little fire steady.";
+    document.getElementById("pot").setAttribute("opacity","1");
   }));
   document.getElementById("serve").addEventListener("click",()=>{
-    if(!meal)return;
-    setStage("end");
-    document.getElementById("ending").textContent=meal==="fish"
+    if(!meal||cook<1)return;
+    setStage("end");document.getElementById("ending").textContent=meal==="fish"
       ?"Six plates pass around the fire. Dad saves you the last piece of fish, crisp at the edges. Across the lake, a loon starts calling."
       :"Six bowls pass around the fire. Dad hands you the warmest one, and everyone eats with their feet toward the lake.";
   });
   function douse(){
     if(finished||stage!=="end")return;
-    finished=true;
+    finished=true;heat=0;
     ["ember","flame-small","flame-high","pot"].forEach(id=>document.getElementById(id).setAttribute("opacity","0"));
-    document.getElementById("end-status").textContent="You pour on water, stir the ashes, and check again. The grate is cool.";
-    document.getElementById("douse").hidden=true;
+    document.getElementById("smoke").style.opacity="0";
+    document.getElementById("end-status").textContent="Water hisses through the coals. You stir and check again; the grate is cool.";
     document.getElementById("done").hidden=false;
-    setStage("end");
     window.AbundantWaters.complete();
   }
-  document.getElementById("douse").addEventListener("click",douse);
-  setStage("wood");
+  function frame(now){
+    const dt=Math.min(.1,Math.max(0,(now-last)/1000));last=now;
+    if(!paused&&!finished){
+      const tinder=near("tinder",74),dry=near("dry",84),logs=near("logs",91),wet=near("wet",90),live=near("live",90);
+      let target=.08+(tinder?.25:0)+(dry&&heat>.18?.35:0)+(logs&&heat>.46?.33:0)-(wet?.35:0)-(live?.25:0);
+      if(logs&&heat<.46)target-=.1;target=Math.max(.02,Math.min(1,target));
+      heat+=(target-heat)*Math.min(1,dt*(target>heat?1.3:.9));
+      const opacity=(id,v)=>document.getElementById(id).setAttribute("opacity",String(Math.max(0,Math.min(1,v))));
+      opacity("ember",heat/.18);opacity("flame-small",(heat-.2)*3.3);opacity("flame-high",(heat-.5)*2.4);
+      document.getElementById("smoke").style.opacity=String(wet||live?Math.min(.8,.2+heat):0);
+      fill.style.width=Math.round(heat*100)+"%";meter.setAttribute("aria-valuenow",String(Math.round(heat*100)));
+      if(stage==="fire"){
+        steady=heat>.72?steady+dt:Math.max(0,steady-dt*.5);
+        if(steady>2.5){setStage("meal");mealStatus.textContent="The fire holds. Choose supper, then keep the flame steady while it cooks.";}
+        else if(now-hintAt>4000){const next=wet||live?"Smoke slows the fire. Move the damp or green wood clear.":logs&&heat<.3?"The heavy log smothers the coal. Give the bark and twigs room first.":heat>.43?"The flame catches. Keep it breathing.":"A coal glows under the grate. Birch bark and dry twigs can wake it.";if(status.textContent!==next)status.textContent=next;}
+      }
+      if(stage==="meal"&&meal){cook=Math.min(1,cook+dt*Math.max(0,heat-.32)*.34);cookFill.style.width=Math.round(cook*100)+"%";cookMeter.setAttribute("aria-valuenow",String(Math.round(cook*100)));if(cook>=1){document.getElementById("serve").disabled=false;mealStatus.textContent="Supper is ready. Lift the pan while the fire settles.";}}
+    }
+    requestAnimationFrame(frame);
+  }
+  window.addEventListener("abundant-waters:pause",()=>paused=true);
+  window.addEventListener("abundant-waters:resume",()=>{paused=false;last=performance.now();});
+  const mobile=matchMedia("(max-width:650px)");
+  function adjustView(){scene.setAttribute("viewBox",mobile.matches?"180 42 550 348":"0 0 900 390");}
+  mobile.addEventListener("change",adjustView);adjustView();
+  requestAnimationFrame(frame);
 })();
 </script>
 <script src="../immersive-bridge.js"></script>
