@@ -27,7 +27,8 @@
   #joystick { position:relative; width:112px; height:112px; border:2px solid #f1e6cf99; border-radius:50%; background:#20382e88; touch-action:none; user-select:none; cursor:pointer; }
   #thumb { position:absolute; left:30px; top:30px; width:48px; height:48px; border-radius:50%; background:#ecdbb9d9; pointer-events:none; }
   .pad-label { position:absolute; top:112px; left:-25px; right:-25px; text-align:center; font-size:11px; color:#f1ebdd; text-shadow:0 2px 4px #20382e; pointer-events:none; }
-  .pad-label::after { content:"WASD / arrows"; }
+  .pad-label::after { content:"Paddle / steer"; }
+  @media (hover: hover) and (pointer: fine) { .pad-label::after { content:"WASD / arrows"; } }
   #land { position:absolute; z-index:4; right:max(16px,env(safe-area-inset-right)); bottom:calc(18px + env(safe-area-inset-bottom)); background:#e6c08a; }
   .map-sheet { position:absolute; z-index:5; inset:0; display:grid; place-items:center; padding:calc(24px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); background:#172c28bb; }
   .paper { position:relative; width:min(900px,100%); max-height:100%; overflow:auto; padding:18px; border:1px solid #907f61; background:#e9e1cb; box-shadow:0 16px 50px #09150e88; color:var(--ink); }

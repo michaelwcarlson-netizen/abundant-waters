@@ -4,6 +4,7 @@
   const {Campsite}=window.StormAdventure, {CAMP,clamp}=window.StormPhysics;
   const $=id=>document.getElementById(id),canvas=$('camp'),ctx=canvas.getContext('2d');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const keyboard=matchMedia('(hover: hover) and (pointer: fine)').matches; // show key hints only on computers
   let camp=new Campsite(),game=camp.storm,started=false,manualPause=false,shellPause=false,reported=false;
   let width=1,height=1,unit=1,baseUnit=1,vertical=1,camera={x:240,y:335},last=0,uiTime=-1;
   let keys=new Set(),stick={x:0,y:0},stickId=null,actionId=null,stickOrigin=null;
@@ -96,7 +97,7 @@
     $('wind-arrow').style.transform=`rotate(${w.angle}rad)`;
     $('wind-label').textContent=w.strength>.75?'Strong gusts':w.strength>.4?'Wind building':'Light breeze';
     $('weather-fill').style.width=game.time+'%';document.querySelector('.weather-track').setAttribute('aria-valuenow',String(Math.round(game.time)));
-    $('action-label').textContent=c.label;$('action-hint').textContent=camp.carry==='canoe'?'Hold to tie · E / Space':camp.edge!==null?'Move to pull · tap to release':'E / Space';
+    $('action-label').textContent=c.label;$('action-hint').textContent=camp.carry==='canoe'?(keyboard?'Hold to tie · E / Space':'Hold to tie'):camp.edge!==null?'Move to pull · tap to release':(keyboard?'E / Space':'');
     $('context').textContent=c.hint;action.disabled=camp.complete||(!camp.near&&!camp.carry&&camp.edge===null);
     $('tie-fill').style.width=camp.actionUsed&&camp.carry==='canoe'?game.items[0].tie*100+'%':'0%';
     $('feedback').textContent=camp.messageTime>0?camp.message:game.time<9?'Walk over to the jacket. The wind has noticed it too.':'';
