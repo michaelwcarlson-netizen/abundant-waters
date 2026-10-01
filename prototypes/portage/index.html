@@ -486,9 +486,9 @@
     const walkHintNew = !shownHints.has('walk');
     if (w >= 90) say('That looks really heavy…');
     else if (w <= 12) say('That’s it? Easy trip.');
-    hint('walk', 'Hold anywhere to walk. While holding, drag left or right to lean against your load. Let go to stop and steady yourself.' +
+    hint('walk', 'Hold to walk. Drag sideways to keep your balance.' +
       (finePointer ? ' Keys: hold <kbd>Space</kbd> to walk, <kbd>←</kbd><kbd>→</kbd> to lean.' : ''), 9000);
-    if (hasCanoe()) setTimeout(() => hint('bow', 'You’re under the canoe. Drag up or down to tilt the bow: under branches, over your sibling, and clear of the ground.' +
+    if (hasCanoe()) setTimeout(() => hint('bow', 'Drag up or down to tilt the bow.' +
       (finePointer ? ' Keys: <kbd>↑</kbd><kbd>↓</kbd>.' : ''), 9000), walkHintNew ? 9200 : 0);
   });
 

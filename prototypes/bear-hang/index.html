@@ -249,8 +249,8 @@
     $('end').hidden = true;
     setTools();
     updateStats();
-    hint('start', 'Hang the food pack where a bear can’t reach it: at least <b>12 ft up</b> and <b>6 ft out</b> from the trunk. Drag back from anywhere and let go to throw the rock over a branch. Tap anything smelly around camp to pack it.' +
-      (finePointer ? ' Walk with <kbd>←</kbd><kbd>→</kbd>.' : ''), 12000, true);
+    hint('start', 'Throw the rope over a branch: drag back and let go.' +
+      (finePointer ? ' Walk with <kbd>←</kbd><kbd>→</kbd>.' : ''), 9000, true);
   }
 
   // ---------- Rope: a verlet chain from your hand to the rock ----------
@@ -375,6 +375,8 @@
     clearTimeout(hintTimer);
     if (ms) hintTimer = setTimeout(() => hintEl.classList.remove('on'), ms);
   }
+  // One idea at a time: the smelly-stuff hint waits until after the first throw.
+  function smellyHint() { if (smelly.some((s) => !s.stowed)) hint('smelly', 'Tap anything smelly around camp to pack it.', 7000); }
   function hideHint(id) { if (hintId === id) hintEl.classList.remove('on'); }
   function pop(text, x, y, life = 1.4) { pops.push({ text, x, y, life }); }
 
@@ -430,8 +432,9 @@
     packPos = { x: d.x, y: 0 };
     if (throws === 1) award('first');
     pop('It’s over!', d.x, d.y + 2, 1.6);
-    hint('haul', 'You tied the food pack on. Now pull: drag <b>down</b> over and over, hand over hand, to haul it up. Watch the numbers at the bottom.' +
-      (finePointer ? ' Or hold <kbd>↓</kbd>.' : ''), 9000);
+    hint('haul', 'Drag down, hand over hand, to haul the pack up.' +
+      (finePointer ? ' Or hold <kbd>↓</kbd>.' : ''), 7000);
+    setTimeout(smellyHint, 7500);
     setTools();
   }
   function haul(ft) {
@@ -623,7 +626,7 @@
       const h = hand();
       const k = 1 - Math.exp(-dt * 6);
       for (const p of rope) { p.x = lerp(p.x, h.x, k); p.y = lerp(p.y, Math.max(0.1, h.y * (1 - reelT)), k); p.px = p.x; p.py = p.y; }
-      if (reelT > 0.8) { resetRope(); mode = 'throw'; setTools(); }
+      if (reelT > 0.8) { resetRope(); mode = 'throw'; setTools(); smellyHint(); }
     } else if (mode === 'hoist') {
       if (keys.ArrowDown || keys.KeyS) haul(3.2 * P.haul * dt);
       if (keys.ArrowUp || keys.KeyW) haul(-3.2 * dt);

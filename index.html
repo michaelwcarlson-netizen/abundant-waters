@@ -167,6 +167,14 @@
       const player = window.createImmersivePlayer(() => {
         const start = panel.querySelector(".start-level");
         if (start && player.isCurrent(steps[stepIndex].activity)) start.textContent = "Resume Level";
+      }, () => {
+        // Continue trip from inside a level: go straight into the next stop without leaving the player.
+        stepIndex = Math.min(stepIndex + 1, steps.length - 1);
+        save();
+        render();
+        const key = steps[stepIndex].activity;
+        if (key) openActivity(key);
+        else player.dispose();
       });
       const onTripStep = () => !!steps[stepIndex].activity && player.isCurrent(steps[stepIndex].activity);
 

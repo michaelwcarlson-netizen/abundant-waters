@@ -38,8 +38,14 @@ const base = process.env.GAME_URL || 'http://127.0.0.1:8766';
       await frame.locator('body').waitFor();
       await page.evaluate(() => document.querySelector('#level-stage iframe').contentWindow.AbundantWaters.complete());
       await page.waitForSelector('#level-continue:not([hidden])');
+      const fullscreenBefore = await page.evaluate(() => document.fullscreenElement?.id || null);
       await page.click('#level-continue');
       assert.equal(await page.textContent('#title'), 'Cross to Smoke');
+      // Continue opens the next stop in place, and fullscreen (where granted) stays on.
+      await page.waitForFunction(() => document.querySelector('#level-stage iframe')?.src.includes('/portage/'));
+      assert.equal(await page.isVisible('#level-player'), true);
+      await page.waitForTimeout(150);
+      assert.equal(await page.evaluate(() => document.fullscreenElement?.id || null), fullscreenBefore);
       await page.reload();
       assert.equal(await page.textContent('#title'), 'Cross to Smoke', 'reload keeps your place');
 
