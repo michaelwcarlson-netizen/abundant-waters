@@ -73,6 +73,10 @@
     if(e.pointerId===stickId){stickId=null;stick={x:0,y:0};$('thumb').style.transform='';}
   });
   const action=$('interact');
+  // A tap or hold ends with a synthetic click (detail 0 on mobile). Remember the last pointer event so that
+  // click is not read as a second, keyboard press that would drop what was just picked up.
+  let actionPointerAt=-1e9;
+  for(const type of ['pointerdown','pointerup','pointercancel'])action.addEventListener(type,()=>{actionPointerAt=performance.now();},true);
   action.addEventListener('pointerdown',e=>{
     if(!active()||actionId!==null)return;e.preventDefault();actionId=e.pointerId;
     action.setPointerCapture(e.pointerId);action.classList.add('pressed');camp.press();
@@ -81,7 +85,7 @@
     if(e.pointerId===actionId){camp.release(type!=='pointerup'||!active());actionId=null;action.classList.remove('pressed');updateUi(true);}
   });
   action.addEventListener('click',e=>{
-    if(e.detail===0&&active()){camp.interact();canvas.focus({preventScroll:true});updateUi(true);}
+    if(e.detail===0&&performance.now()-actionPointerAt>600&&active()){camp.interact();canvas.focus({preventScroll:true});updateUi(true);}
   });
   function input(){return {x:stick.x+Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA')),
     y:stick.y+Number(keys.has('ArrowDown')||keys.has('KeyS'))-Number(keys.has('ArrowUp')||keys.has('KeyW'))};}
