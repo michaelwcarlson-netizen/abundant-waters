@@ -51,6 +51,8 @@ body.player-open { overflow: hidden; }
 
 .level-tools { display: flex; align-items: center; gap: 8px; }
 .level-tools .button[hidden] { display: none; }
+/* The way forward stands out once a stop is finished. */
+.level-toolbar #level-continue { background: #c0452b; border-color: #c0452b; color: #fff7ee; }
 @media (max-width: 480px) {
   .level-toolbar strong { max-width: 32vw; }
   .level-tools .button { font-size: 12px; padding-inline: 8px; }

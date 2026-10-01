@@ -1,5 +1,6 @@
 /* One player shell for all trip activities. The iframe survives closing the shell. */
-window.createImmersivePlayer = function createImmersivePlayer(onClose) {
+/* onContinue (optional) moves the trip on while the player stays open; without it, Continue closes and clicks Next. */
+window.createImmersivePlayer = function createImmersivePlayer(onClose, onContinue) {
   const shell = document.getElementById("level-player");
   const host = document.getElementById("level-stage");
   const heading = document.getElementById("level-title");
@@ -29,7 +30,7 @@ window.createImmersivePlayer = function createImmersivePlayer(onClose) {
   }
 
   function open({ key, name, url }) {
-    lastFocus = document.activeElement;
+    if (shell.hidden) lastFocus = document.activeElement;
     if (!frame || currentKey !== key || currentUrl !== url) {
       frame?.remove();
       frame = document.createElement("iframe");
@@ -54,7 +55,8 @@ window.createImmersivePlayer = function createImmersivePlayer(onClose) {
     exit.focus({ preventScroll: true });
     frame.contentWindow?.postMessage({ type: "abundant-waters:resume" }, location.origin);
     // This call stays in the user's click handler; rejected and unsupported requests keep the viewport overlay.
-    if (shell.requestFullscreen) {
+    // Already fullscreen when moving between stops: don't toggle out and back in.
+    if (shell.requestFullscreen && document.fullscreenElement !== shell) {
       try { shell.requestFullscreen().catch(() => {}); } catch (_) { /* viewport overlay remains open */ }
     }
     requestAnimationFrame(() => {
@@ -71,6 +73,7 @@ window.createImmersivePlayer = function createImmersivePlayer(onClose) {
 
   exit.addEventListener("click", close);
   continueTrip.addEventListener("click", () => {
+    if (onContinue) { onContinue(); return; }
     close();
     document.getElementById("next").click();
   });

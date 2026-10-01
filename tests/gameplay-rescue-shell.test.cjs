@@ -11,16 +11,20 @@ const base=process.env.GAME_URL||'http://127.0.0.1:8766';
   let frame=page.frames().find(f=>f.url().includes('/navigation/index.html'));assert.ok(frame);await frame.locator('#joystick').waitFor();
   await frame.evaluate(()=>window.AbundantWaters.complete());await page.locator('#level-continue').click();
   assert.equal(await page.locator('#title').textContent(),'Cross to Smoke');
-  await page.locator('#next').click();
+  // Continue goes straight into the next stop without leaving the player.
+  await page.waitForFunction(()=>document.querySelector('#level-stage iframe')?.src.includes('/portage/'));assert.equal(await page.locator('#level-player').isVisible(),true);
+  await page.locator('#level-exit').click();await page.locator('#next').click();
   assert.equal(await page.locator('#title').textContent(),'Fish the shoreline');await page.locator('.start-level').click();
   frame=page.frames().find(f=>f.url().includes('/fishing/index.html'));assert.ok(frame);await frame.locator('#water').waitFor();
   await frame.evaluate(()=>{window.parent.postMessage({type:'abundant-waters:fish-landed',fish:'Smallmouth bass'},location.origin);window.AbundantWaters.complete();});
   await page.locator('#level-continue').click();
-  assert.equal(await page.locator('#title').textContent(),'Make dinner together');await page.locator('.start-level').click();
+  assert.equal(await page.locator('#title').textContent(),'Make dinner together');
+  await page.waitForFunction(()=>document.querySelector('#level-stage iframe')?.src.includes('/campfire/'));await page.frameLocator('#level-stage iframe').locator('#fish-meal').waitFor({state:'attached'});
   frame=page.frames().find(f=>f.url().includes('/campfire/index.html'));assert.ok(frame);await frame.locator('#fish-meal').waitFor({state:'attached'});assert.equal(await frame.locator('#fish-meal').evaluate(el=>el.hidden),false);
   assert.ok(frame.url().includes('fish=Smallmouth+bass')||frame.url().includes('fish=Smallmouth%20bass'));
   await frame.evaluate(()=>window.AbundantWaters.complete());await page.locator('#level-continue').click();
-  assert.equal(await page.locator('#title').textContent(),'Look up for a while');assert.deepEqual(errors,[]);
-  console.log('PASS trip shell: Navigation, Fishing and Campfire launch, complete, advance, and pass the caught fish into supper without runtime or resource errors');
+  assert.equal(await page.locator('#title').textContent(),'Look up for a while');
+  await page.waitForFunction(()=>document.querySelector('#level-stage iframe')?.src.includes('/night-sky/'));assert.deepEqual(errors,[]);
+  console.log('PASS trip shell: Navigation, Fishing and Campfire launch, complete, continue straight into the next stop, and pass the caught fish into supper without runtime or resource errors');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
