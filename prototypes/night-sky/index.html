@@ -70,8 +70,8 @@
   <button class="star" data-star="6" style="left:49%;top:43%" aria-label="Bottom star of Dipper bowl"></button>
   <button class="star polaris" id="polaris" style="left:78%;top:18%" aria-label="Polaris, North Star"></button>
   <div class="top"><h1>Look up for a while</h1><p>Smoke Lake · the first night with Dad</p></div>
-  <div class="hint" id="hint">Begin at the far left of the handle. Trace through the bright stars toward the bowl.</div>
-  <div class="bottom"><p role="status" aria-live="polite"><strong id="chapter">The Dipper</strong><span id="status">Drag a finger across the stars, or tap them one at a time. Take your time.</span></p><button id="again" hidden>Trace again</button></div>
+  <div class="hint" id="hint">Drag across the Dipper, starting at the end of the handle.</div>
+  <div class="bottom"><p role="status" aria-live="polite"><strong id="chapter">The Dipper</strong><span id="status">Take your time.</span></p><button id="again" hidden>Trace again</button></div>
 </div>
 <script>
 (() => {
@@ -125,8 +125,8 @@
   document.getElementById("again").addEventListener("click",()=>{
     count=0;done=false;trace.setAttribute("points","");stars.forEach(star=>star.classList.remove("found"));polaris.classList.remove("found");
     document.getElementById("close-bowl").hidden=true;document.getElementById("pointer").hidden=true;
-    chapter.textContent="The Dipper";hint.textContent="Begin at the far left of the handle. Trace through the bright stars toward the bowl.";
-    say("Drag a finger across the stars, or tap them one at a time. Take your time.");
+    chapter.textContent="The Dipper";hint.textContent="Drag across the Dipper, starting at the end of the handle.";
+    say("Take your time.");
     document.getElementById("again").hidden=true;
   });
 })();
