@@ -58,20 +58,27 @@ const base=process.env.GAME_URL||'http://127.0.0.1:8766';
  await page.clock.install({time:new Date('2026-09-28T15:00:00Z')});await page.clock.pauseAt(new Date('2026-09-28T15:00:01Z'));
  await page.route('**/arrival.js',async route=>{const response=await route.fetch(),body=(await response.text()).replace('resize();updateUi(true);requestAnimationFrame(frame);','window.__landing={get game(){return game},P};resize();updateUi(true);requestAnimationFrame(frame);');await route.fulfill({response,body});});
  await page.goto(base);await page.locator('#next').click();
- for(let step=1;step<=11;step++){
+ // Seven trip stops, then Arrival as a side trip (it moved out of the main trip).
+ for(let step=1;step<=7;step++){
   await page.locator('.start-level').click();const iframe=page.frameLocator('#level-stage iframe');await iframe.locator('canvas, svg').first().waitFor({state:'visible'});await page.clock.runFor(100);
-  if(step===3){await iframe.locator('[data-id="canoe"]').click();await iframe.locator('#go').click();}
-  if(step===5)await iframe.locator('#readyBtn').waitFor();
-  if(step===4){
-   const frame=page.frames().find(f=>f.url().includes('/arrival/index.html'));
-   await frame.locator('#lake').focus();await page.keyboard.down('w');await page.clock.runFor(600);await page.keyboard.up('w');
-   await page.locator('#level-exit').click();await page.clock.runFor(100);const state=await frame.evaluate(()=>JSON.stringify(__landing.game));await page.clock.runFor(1500);assert.equal(await frame.evaluate(()=>JSON.stringify(__landing.game)),state);
-   await page.locator('.start-level').click();await page.clock.runFor(200);assert.notEqual(await frame.evaluate(()=>JSON.stringify(__landing.game)),state);
-   await frame.evaluate(()=>{const g=__landing.game;g.mode='walk';g.canoe.y=250;g.canoe.vx=g.canoe.vy=0;g.player.x=450;g.player.y=245;for(const [i,item]of g.items.entries())Object.assign(item,{inBoat:false,x:380+i*70,y:270});});
-   await page.clock.runFor(6000);await page.locator('#level-continue').waitFor({state:'visible'});assert.equal(await frame.evaluate(()=>__landing.game.complete),true);await page.locator('#level-continue').click();assert.equal(await page.locator('#title').textContent(),'Pitch for the afternoon rain');
-  }else{await page.locator('#level-exit').click();await page.locator('#next').click();}
+  if(step===2){await iframe.locator('[data-id="canoe"]').click();await iframe.locator('#go').click();}
+  await page.locator('#level-exit').click();await page.locator('#next').click();
  }
- await context.close();console.log('PASS all 11 trip levels load; Portage / Tarp controls present; arrival fullscreen exit, pause, resume and actual completion advance');
+ assert.equal(await page.locator('#title').textContent(),'The storm has passed');
+ {
+  await page.locator('[data-side="tarp"]').click();await page.frameLocator('#level-stage iframe').locator('#readyBtn').waitFor();await page.locator('#level-exit').click();
+  await page.locator('[data-side="arrival"]').click();await page.frameLocator('#level-stage iframe').locator('canvas').first().waitFor({state:'visible'});await page.clock.runFor(100);
+  const frame=page.frames().find(f=>f.url().includes('/arrival/index.html'));
+  await frame.locator('#lake').focus();await page.keyboard.down('w');await page.clock.runFor(600);await page.keyboard.up('w');
+  await page.locator('#level-exit').click();await page.clock.runFor(100);const state=await frame.evaluate(()=>JSON.stringify(__landing.game));await page.clock.runFor(1500);assert.equal(await frame.evaluate(()=>JSON.stringify(__landing.game)),state);
+  await page.locator('[data-side="arrival"]').click();await page.clock.runFor(200);assert.notEqual(await frame.evaluate(()=>JSON.stringify(__landing.game)),state,'side trip resumes the same game');
+  const resumed=frame;
+  await resumed.evaluate(()=>{const g=__landing.game;g.mode='walk';g.canoe.y=250;g.canoe.vx=g.canoe.vy=0;g.player.x=450;g.player.y=245;for(const [i,item]of g.items.entries())Object.assign(item,{inBoat:false,x:380+i*70,y:270});});
+  await page.clock.runFor(6000);assert.equal(await resumed.evaluate(()=>__landing.game.complete),true);
+  assert.equal(await page.locator('#level-continue').isVisible(),false);await page.locator('#level-exit').click();
+  assert.equal(await page.locator('#title').textContent(),'The storm has passed');
+ }
+ await context.close();console.log('PASS all 7 trip stops load; Portage / Tarp controls present; Arrival side trip pauses on exit, completes, and leaves the trip where it was');
  assert.deepEqual(errors,[]);console.log('PASS no console exceptions or missing local resources');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

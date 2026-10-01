@@ -4,11 +4,12 @@
 
 ## Play
 
-- [Start the connected day-one trip](index.html): break camp, paddle Sawbill, read the shoreline, cross the portage, land and unload at a campsite, make camp, fish, snorkel, cook dinner, hang the food, find Polaris under the night sky, then ride out a storm the next morning at Smoke Lake. Progress lasts only while the page is open; refreshing starts over.
+- [Start the trip](index.html): seven stops from Sawbill to Smoke Lake. Paddle to the portage, carry across, fish for supper, cook it, look up at the stars, hang the food, and ride out a storm the next morning. Your place is saved on this device; finish the trip to start a new one.
+- **Side trips** (listed below the trip): J-Stroke, Bow & Stern, Arriving at Smoke Lake, Tarp & Rain, and Snorkeling. Play them any time; they don't change your place in the trip.
 
 ## Playing a level
 
-Choose an activity in the trip guide, then tap **Start Level** (or **Full Screen**). The level fills the available screen and requests browser fullscreen when supported. Use **Exit Full Screen** in the upper right, or Esc on a keyboard, to return to the guide; **Resume Level** returns to the same in-memory play state. Phones that do not support browser fullscreen use the same viewport-filling player. Continuing to a different trip step starts that level fresh.
+Tap **Start Level** to open a stop. It fills the screen and requests browser fullscreen where supported. Use **Exit Full Screen** in the upper right, or Esc on a keyboard, to return to the trip; **Resume Level** picks up where you left off. When you finish a stop, **Continue trip** moves on. Phones see touch controls only; keyboard hints appear on computers.
 
 ## Design and activities
 

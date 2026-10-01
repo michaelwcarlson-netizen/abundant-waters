@@ -21,22 +21,22 @@
     <div id="intro" class="sheet">
       <div class="paper"><span class="eyebrow">Storm Day</span><h2>A breeze with ideas.</h2>
         <p>Your jacket is loose. The tarp is waiting. Wander over and take a look.</p>
-        <p class="quiet">Walk with the thumb pad or WASD / arrows. Use the camp action to pick things up and put them down.</p>
+        <p class="quiet">Walk with the thumb pad<span class="kbd"> or WASD / arrows</span>. Use the camp action to pick things up and put them down.</p>
         <button id="begin" type="button">Step into camp</button>
       </div>
     </div>
     <div id="pause-sheet" class="sheet" hidden>
       <div class="paper"><span class="eyebrow">Take your time</span><h2>Camp is paused.</h2>
-        <p>Walk with the thumb pad or WASD / arrows. Tap the camp action, or E / Space, to pick up, put down, or take a nearby guyline.</p>
+        <p>Walk with the thumb pad<span class="kbd"> or WASD / arrows</span>. Tap the camp action<span class="kbd">, or E / Space,</span> to pick up, put down, or take a nearby guyline.</p>
         <p>Tow the canoe by its bow. Walking turns the hull; hold the camp action to tie its line where it rests.</p>
         <p>With a guyline in hand, lean sideways to change tension and down to lower the tarp edge. Let go with the camp action.</p>
-        <p class="quiet">There is no right order. Rain can blow under the edges. You can recover things while it rains. P pauses.</p>
+        <p class="quiet">There is no right order. Rain can blow under the edges. You can recover things while it rains.<span class="kbd"> P pauses.</span></p>
         <button id="resume" type="button">Back to camp</button>
       </div>
     </div>
     <div id="controls" aria-label="Camp controls">
       <div id="joystick" role="group" aria-label="Thumb movement pad"><span class="pad-mark" aria-hidden="true">✣</span><span id="thumb" aria-hidden="true"></span><span class="pad-label">Walk</span></div>
-      <div class="interaction"><span id="context">Rain jacket</span><button id="interact" type="button"><span id="action-label">Pick up</span><span id="action-hint">E / Space</span><span id="tie-fill" aria-hidden="true"></span></button></div>
+      <div class="interaction"><span id="context">Rain jacket</span><button id="interact" type="button"><span id="action-label">Pick up</span><span id="action-hint"></span><span id="tie-fill" aria-hidden="true"></span></button></div>
     </div>
     <p id="feedback" role="status" aria-live="polite">You have a little time before the rain.</p>
     <div id="replay" hidden><p id="ending-note">A little corner of camp, kept together.</p><button id="retry" type="button">Same wind again</button></div>

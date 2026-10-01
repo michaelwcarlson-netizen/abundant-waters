@@ -1,5 +1,7 @@
 /* Shared layout adjustments for every activity inside the trip player. */
 [hidden] { display: none !important; }
+/* Keyboard hints only on computers; touch screens see the on-screen controls instead. */
+@media (hover: none), (pointer: coarse) { .kbd { display: none !important; } }
 button { touch-action: manipulation; }
 :focus-visible { outline-offset: 3px; }
 @media (max-width: 700px) {

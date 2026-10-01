@@ -13,7 +13,7 @@ const base=process.env.GAME_URL||'http://127.0.0.1:8766';
    page.on('pageerror',e=>errors.push(e.message));
    if(process.env.BASELINE)await page.route('**/immersive-player.js',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace('if (!touchDevice) close();','close();')});});
    await page.route(`**/prototypes/${level==='jstroke'?'j-stroke':'bow-stern'}/index.html`,async route=>{const response=await route.fetch();const hook=level==='jstroke'?'window.__touchGame={snapshot:()=>({contacts:ptr===null?0:1,paused,x:c.x,y:c.y})};':'window.__touchGame={snapshot:()=>({contacts:pointers.size,paused,x:c.x,y:c.y})};';await route.fulfill({response,body:(await response.text()).replace('\n})();\n</script>',`\n${hook}\n})();\n</script>`)});});
-   await page.goto(base);await page.locator('#next').click();await page.locator(`[data-paddle="${level}"]`).click();await page.locator('.start-level').click();
+   await page.goto(base);await page.locator(`[data-side="${level}"]`).click(); // J-Stroke and Bow & Stern are side trips
    await page.frameLocator('#level-stage iframe').locator('#c').waitFor({state:'visible'});
    const frame=page.frames().find(f=>f.url().includes(`/prototypes/${level==='jstroke'?'j-stroke':'bow-stern'}/`));await frame.waitForFunction(()=>!!window.__touchGame);
    if(level==='bowstern')await frame.locator('#coopBtn').click();
@@ -41,7 +41,7 @@ const base=process.env.GAME_URL||'http://127.0.0.1:8766';
    // Player can still paddle after fallback and then deliberately exit and resume.
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[contact(3,.28,.48)]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[contact(3,.28,.68)]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
    await page.locator('#level-exit').click();await page.waitForFunction(()=>document.getElementById('level-player').hidden);await frame.waitForFunction(()=>__touchGame.snapshot().paused);
-   await page.locator('.start-level').click();await frame.waitForFunction(()=>!__touchGame.snapshot().paused);assert.equal(await page.locator('#level-stage iframe').getAttribute('src'),identity);
+   await page.locator(`[data-side="${level}"]`).click();await frame.waitForFunction(()=>!__touchGame.snapshot().paused);assert.equal(await page.locator('#level-stage iframe').getAttribute('src'),identity);
    await frame.locator('#c').focus();await page.keyboard.press('Escape');await page.waitForFunction(()=>document.getElementById('level-player').hidden);
    console.log(`PASS ${name} ${level}: two contacts, native-exit fallback, live input, explicit Exit/resume/Escape`);await context.close();
   }

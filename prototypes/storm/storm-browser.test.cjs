@@ -104,12 +104,12 @@ const base=process.env.GAME_URL||'http://127.0.0.1:8766';
    '  window.__scene={get game(){return game}}; resize();updateUi(true);requestAnimationFrame(frame);')});
  });
  await page.goto(base);await page.locator('#next').click();
- for(let step=1;step<=11;step++){
+ // Seven trip stops; Storm Day is the last one.
+ for(let step=1;step<=7;step++){
   await page.locator('.start-level').click();
   const iframe=page.frameLocator('#level-stage iframe');await iframe.locator('canvas, svg').first().waitFor({state:'visible'});
-  if(step===3){await iframe.locator('[data-id="canoe"]').click();await iframe.locator('#go').click();}
-  if(step===5){await iframe.locator('#readyBtn').waitFor();}
-  if(step===11){
+  if(step===2){await iframe.locator('[data-id="canoe"]').click();await iframe.locator('#go').click();}
+  if(step===7){
    await iframe.locator('#begin').click();await page.waitForTimeout(200);
    const frame=page.frames().find(f=>f.url().includes('/storm/index.html'));
    const before=await frame.evaluate(()=>__scene.game.time);
@@ -126,7 +126,8 @@ const base=process.env.GAME_URL||'http://127.0.0.1:8766';
    await page.locator('#level-exit').click();await page.locator('#next').click();
   }
  }
- console.log('PASS: all eleven trip levels load; Portage and Tarp & Rain controls remain; Storm immersive exit/resume/progress');
+ await page.locator('[data-side="tarp"]').click();await page.frameLocator('#level-stage iframe').locator('#readyBtn').waitFor();await page.locator('#level-exit').click();
+ console.log('PASS: all seven trip stops load; Portage and Tarp & Rain controls remain; Storm immersive exit/resume/progress');
  assert.deepEqual(errors,[]);assert.deepEqual(failures,[]);
  console.log('PASS: no runtime errors or missing local Storm Day resources');
  }finally{await browser.close();}
